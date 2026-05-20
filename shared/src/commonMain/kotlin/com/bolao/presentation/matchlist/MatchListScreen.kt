@@ -19,9 +19,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Logout
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -36,13 +38,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.bolao.presentation.auth.AuthViewModel
 import com.bolao.presentation.theme.BolaoTheme
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -66,10 +71,12 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun MatchListScreen(
     viewModel: MatchListViewModel = koinViewModel(),
+    authViewModel: AuthViewModel  = koinViewModel(),
 ) {
     BolaoTheme {
         val uiState      by viewModel.uiState.collectAsState()
         val snackbarHost = remember { SnackbarHostState() }
+        val scope        = rememberCoroutineScope()
 
         // Observa erros de save e exibe como Snackbar (UX não-intrusiva)
         val successState = uiState as? MatchListUiState.Success
@@ -109,10 +116,21 @@ fun MatchListScreen(
                         }
                     },
                     colors = TopAppBarDefaults.largeTopAppBarColors(
-                        containerColor       = MaterialTheme.colorScheme.background,
+                        containerColor         = MaterialTheme.colorScheme.background,
                         scrolledContainerColor = MaterialTheme.colorScheme.surface,
                     ),
                     scrollBehavior = scrollBehavior,
+                    actions = {
+                        IconButton(
+                            onClick = { scope.launch { authViewModel.logout() } }
+                        ) {
+                            Icon(
+                                imageVector        = Icons.Rounded.Logout,
+                                contentDescription = "Sair",
+                                tint               = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    },
                 )
             },
             containerColor = MaterialTheme.colorScheme.background,

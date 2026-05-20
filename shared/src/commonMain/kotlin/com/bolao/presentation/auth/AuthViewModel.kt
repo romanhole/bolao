@@ -47,6 +47,11 @@ class AuthViewModel(
         _uiState.update { it.copy(isLoginMode = !it.isLoginMode, error = null) }
     }
 
+    /** Encerra a sessão do usuário atual. App.kt reagirá automaticamente via authState. */
+    suspend fun logout() {
+        authRepository.logout()
+    }
+
     // ── Submissão ─────────────────────────────────────────────────────────────
 
     /**

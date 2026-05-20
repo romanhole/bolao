@@ -46,6 +46,7 @@ kotlin {
             implementation(libs.ktor.client.content.neg)
             implementation(libs.ktor.client.logging)
             implementation(libs.ktor.serialization.json)
+            implementation(libs.ktor.client.websockets) // WebSocket support — necessário para Supabase Realtime
 
             // kotlinx
             implementation(libs.kotlinx.serialization.json)
@@ -69,9 +70,11 @@ kotlin {
             implementation(libs.supabase.auth)       // Auth: login, signup, sessão persistente
         }
 
-        // ── androidMain: engine Ktor para Android ────────────────────────────
+        // ── androidMain: engine OkHttp para Android ────────────────────────
         androidMain.dependencies {
-            implementation(libs.ktor.client.android)
+            // OkHttp: único engine Ktor com suporte a WebSockets no Android
+            // O engine 'Android' (HttpURLConnection) não tem WebSocketCapability
+            implementation(libs.ktor.client.okhttp)
             implementation(libs.koin.android)
             implementation(libs.androidx.activity.compose)
         }
