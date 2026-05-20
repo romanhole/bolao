@@ -73,17 +73,24 @@ fun LeaderboardScreen(
                 }
             }
             is LeaderboardUiState.Success -> {
-                LazyColumn(
-                    contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxSize(),
+                @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+                androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+                    isRefreshing = state.isRefreshing,
+                    onRefresh = viewModel::refresh,
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    itemsIndexed(state.items) { index, item ->
-                        LeaderboardCard(
-                            position = index + 1,
-                            item = item,
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        )
+                    LazyColumn(
+                        contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxSize(),
+                    ) {
+                        itemsIndexed(state.items) { index, item ->
+                            LeaderboardCard(
+                                position = index + 1,
+                                item = item,
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+                        }
                     }
                 }
             }

@@ -19,18 +19,31 @@ class LeaderboardViewModel(
         loadLeaderboard()
     }
 
-    fun loadLeaderboard() {
-        viewModelScope.launch {
+    fun refresh() {
+        val currentState = _uiState.value
+        if (currentState is LeaderboardUiState.Success) {
+            // Se já temos dados, mostra apenas o spinner do Pull-to-Refresh
+            _uiState.value = currentState.copy(isRefreshing = true)
+        } else {
+            // Se falhou antes ou estava carregando, volta pro loading central
             _uiState.value = LeaderboardUiState.Loading
+        }
+        
+        viewModelScope.launch {
             repository.getLeaderboard()
                 .onSuccess { items ->
-                    _uiState.value = LeaderboardUiState.Success(items)
+                    _uiState.value = LeaderboardUiState.Success(items = items, isRefreshing = false)
                 }
                 .onFailure { error ->
                     _uiState.value = LeaderboardUiState.Error(
-                        message = error.message ?: "Erro ao carregar ranking"
+                        message = error.message ?: "Erro ao recarregar ranking"
                     )
                 }
         }
+    }
+
+    fun loadLeaderboard() {
+        _uiState.value = LeaderboardUiState.Loading
+        refresh()
     }
 }

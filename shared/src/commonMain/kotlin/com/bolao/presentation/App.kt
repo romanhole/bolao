@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.SportsSoccer
 import androidx.compose.material.icons.rounded.Logout
@@ -44,6 +45,7 @@ import com.bolao.domain.repository.AuthState
 import com.bolao.presentation.auth.AuthViewModel
 import com.bolao.presentation.auth.LoginScreen
 import com.bolao.presentation.leaderboard.LeaderboardScreen
+import com.bolao.presentation.leagues.LeaguesScreen
 import com.bolao.presentation.matchlist.MatchListScreen
 import com.bolao.presentation.theme.BolaoTheme
 import kotlinx.coroutines.launch
@@ -52,6 +54,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 enum class AppTab(val title: String, val icon: ImageVector) {
     PREDICTIONS("Palpites", Icons.Default.SportsSoccer),
+    LEAGUES("Ligas", Icons.Default.Group),
     LEADERBOARD("Ranking", Icons.Default.Leaderboard)
 }
 
@@ -167,6 +170,7 @@ fun AuthenticatedApp(
             ) { tab ->
                 when (tab) {
                     AppTab.PREDICTIONS -> MatchListScreen()
+                    AppTab.LEAGUES     -> LeaguesScreen()
                     AppTab.LEADERBOARD -> LeaderboardScreen()
                 }
             }
