@@ -6,7 +6,10 @@ import com.bolao.data.repository.PredictionRepositoryImpl
 import com.bolao.domain.repository.AuthRepository
 import com.bolao.domain.repository.MatchRepository
 import com.bolao.domain.repository.PredictionRepository
+import com.bolao.data.repository.LeaderboardRepositoryImpl
+import com.bolao.domain.repository.LeaderboardRepository
 import com.bolao.presentation.auth.AuthViewModel
+import com.bolao.presentation.leaderboard.LeaderboardViewModel
 import com.bolao.presentation.matchlist.MatchListViewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
@@ -28,6 +31,7 @@ val repositoryModule = module {
     single<MatchRepository>      { MatchRepositoryImpl(get()) }
     single<PredictionRepository> { PredictionRepositoryImpl(get()) }
     single<AuthRepository>       { AuthRepositoryImpl(get()) }
+    single<LeaderboardRepository>{ LeaderboardRepositoryImpl(get()) }
 }
 
 /**
@@ -37,4 +41,5 @@ val repositoryModule = module {
 val viewModelModule = module {
     viewModelOf(::MatchListViewModel)
     viewModelOf(::AuthViewModel)
+    viewModelOf(::LeaderboardViewModel)
 }

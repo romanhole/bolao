@@ -6,42 +6,55 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Leaderboard
+import androidx.compose.material.icons.filled.SportsSoccer
+import androidx.compose.material.icons.rounded.Logout
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.bolao.domain.repository.AuthRepository
 import com.bolao.domain.repository.AuthState
+import com.bolao.presentation.auth.AuthViewModel
 import com.bolao.presentation.auth.LoginScreen
+import com.bolao.presentation.leaderboard.LeaderboardScreen
 import com.bolao.presentation.matchlist.MatchListScreen
 import com.bolao.presentation.theme.BolaoTheme
+import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 
-/**
- * Composable raiz da aplicação — gerencia o roteamento entre telas com base
- * no estado de autenticação.
- *
- * ## Fluxo de navegação
- * ```
- * AuthState.Loading         → spinner centralizado (sessão sendo restaurada)
- * AuthState.NotAuthenticated → LoginScreen
- * AuthState.Authenticated   → MatchListScreen
- * ```
- *
- * ## Por que aqui e não na Activity?
- * Como o estado de auth é reativo (Flow), [App] observa e recompõe automaticamente.
- * Sem `startActivity`, sem flags de intent — simplesmente o Compose faz o trabalho.
- *
- * ## BolaoTheme
- * O tema é aplicado uma única vez aqui (não em cada tela filha) para garantir
- * consistência e evitar duplicação de MaterialTheme no composition tree.
- */
+enum class AppTab(val title: String, val icon: ImageVector) {
+    PREDICTIONS("Palpites", Icons.Default.SportsSoccer),
+    LEADERBOARD("Ranking", Icons.Default.Leaderboard)
+}
+
 @Composable
 fun App(
     authRepository: AuthRepository = koinInject(),
@@ -55,8 +68,6 @@ fun App(
             label         = "AuthNavigation",
         ) { state ->
             when (state) {
-
-                // Sessão sendo restaurada do armazenamento — mostra spinner discreto
                 is AuthState.Loading ->
                     Box(
                         modifier         = Modifier
@@ -70,13 +81,94 @@ fun App(
                         )
                     }
 
-                // Não autenticado — tela de login/cadastro
                 is AuthState.NotAuthenticated ->
                     LoginScreen()
 
-                // Autenticado — tela principal de palpites
                 is AuthState.Authenticated ->
-                    MatchListScreen()
+                    AuthenticatedApp()
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AuthenticatedApp(
+    authViewModel: AuthViewModel = koinViewModel(),
+) {
+    var currentTab by remember { mutableStateOf(AppTab.PREDICTIONS) }
+    val scope = rememberCoroutineScope()
+
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
+        rememberTopAppBarState()
+    )
+
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            LargeTopAppBar(
+                title = {
+                    Column {
+                        Text(
+                            text       = currentTab.title,
+                            style      = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Black,
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.largeTopAppBarColors(
+                    containerColor         = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface,
+                ),
+                scrollBehavior = scrollBehavior,
+                actions = {
+                    IconButton(
+                        onClick = { scope.launch { authViewModel.logout() } }
+                    ) {
+                        Icon(
+                            imageVector        = Icons.Rounded.Logout,
+                            contentDescription = "Sair",
+                            tint               = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                },
+            )
+        },
+        bottomBar = {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+            ) {
+                AppTab.entries.forEach { tab ->
+                    NavigationBarItem(
+                        selected = currentTab == tab,
+                        onClick = { currentTab = tab },
+                        icon = {
+                            Icon(
+                                imageVector = tab.icon,
+                                contentDescription = tab.title,
+                            )
+                        },
+                        label = { Text(tab.title) },
+                    )
+                }
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.background,
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+        ) {
+            AnimatedContent(
+                targetState = currentTab,
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                label = "TabNavigation"
+            ) { tab ->
+                when (tab) {
+                    AppTab.PREDICTIONS -> MatchListScreen()
+                    AppTab.LEADERBOARD -> LeaderboardScreen()
+                }
             }
         }
     }
