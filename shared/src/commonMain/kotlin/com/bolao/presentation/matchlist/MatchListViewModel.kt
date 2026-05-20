@@ -3,6 +3,7 @@ package com.bolao.presentation.matchlist
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bolao.domain.model.Prediction
+import com.bolao.domain.repository.AuthRepository
 import com.bolao.domain.repository.MatchRepository
 import com.bolao.domain.repository.PredictionRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,6 +11,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -21,25 +24,24 @@ import kotlinx.coroutines.launch
  * As edições ficam em [_draftEdits] (map em memória). Ao clicar em "Confirmar",
  * [savePrediction] persiste o draft no backend via [PredictionRepository].
  *
- * ## Fonte de dados
- * Os flows reativos de [MatchRepository] e [PredictionRepository] são combinados
- * com o estado de edição local para produzir a lista de [MatchPredictionItem].
- * Quando o Firestore/Supabase emitir uma atualização (placar ao vivo, por exemplo),
- * o [uiState] é atualizado automaticamente sem polling.
+ * ## Autenticação
+ * O userId real é obtido de [AuthRepository.currentUser] no [init].
+ * Como [App] garante que este ViewModel só existe quando o usuário está autenticado,
+ * `filterNotNull().first()` resolve imediatamente com o usuário da sessão ativa.
  *
- * ## ViewModel KMP
- * Usa `androidx.lifecycle.ViewModel` (KMP-compatible desde 2.8.0) e
- * `viewModelScope` disponível em commonMain via a mesma biblioteca.
+ * ## Realtime
+ * O WebSocket já está conectado globalmente (feito no NetworkModule).
+ * Este ViewModel não gerencia connect/disconnect — apenas coleta os flows reativos.
  */
 class MatchListViewModel(
     private val matchRepository: MatchRepository,
     private val predictionRepository: PredictionRepository,
+    private val authRepository: AuthRepository,
 ) : ViewModel() {
 
     companion object {
-        // TODO: substituir pelo ID da competição ativa e pelo usuário autenticado
+        // TODO: tornar configurável por tela quando houver seleção de competição
         private const val COMPETITION_ID = "copa_do_mundo_2026"
-        private const val USER_ID        = "user_current"
     }
 
     private val _uiState = MutableStateFlow<MatchListUiState>(MatchListUiState.Loading)
@@ -59,20 +61,31 @@ class MatchListViewModel(
 
     /** Estado interno por partida — isSaving e mensagem de erro. */
     private data class PerMatchMeta(
-        val isSaving: Boolean = false,
+        val isSaving: Boolean  = false,
         val saveError: String? = null,
     )
 
+    /**
+     * userId do usuário autenticado.
+     * Inicializado no [init] antes de observar dados.
+     */
+    private var currentUserId: String = ""
+
     init {
-        observeData()
+        viewModelScope.launch {
+            // Aguarda o userId real — App.kt garante que estamos autenticados aqui
+            val user = authRepository.currentUser.filterNotNull().first()
+            currentUserId = user.userId
+            observeData()
+        }
     }
 
     // ── Observação de dados ────────────────────────────────────────────────────
 
     /**
      * Combina os 4 flows para construir a lista de [MatchPredictionItem]:
-     * - Flow de partidas (do backend)
-     * - Flow de palpites salvos do usuário (do backend)
+     * - Flow de partidas (Realtime do backend)
+     * - Flow de palpites salvos do usuário (Realtime do backend)
      * - Flow de edições locais (em memória)
      * - Flow de estado de save por partida (em memória)
      */
@@ -80,18 +93,18 @@ class MatchListViewModel(
         viewModelScope.launch {
             combine(
                 matchRepository.observeMatchesByCompetition(COMPETITION_ID),
-                predictionRepository.observePredictionsByUser(USER_ID, COMPETITION_ID),
+                predictionRepository.observePredictionsByUser(currentUserId, COMPETITION_ID),
                 _draftEdits,
                 _perMatchMeta,
             ) { matches, savedPredictions, drafts, meta ->
                 val predByMatchId = savedPredictions.associateBy { it.matchId }
 
                 matches.map { match ->
-                    val saved      = predByMatchId[match.id]
-                    val draft      = drafts[match.id]
-                    val savedHome  = saved?.predictedHome ?: 0
-                    val savedAway  = saved?.predictedAway ?: 0
-                    val matchMeta  = meta[match.id] ?: PerMatchMeta()
+                    val saved     = predByMatchId[match.id]
+                    val draft     = drafts[match.id]
+                    val savedHome = saved?.predictedHome ?: 0
+                    val savedAway = saved?.predictedAway ?: 0
+                    val matchMeta = meta[match.id] ?: PerMatchMeta()
 
                     MatchPredictionItem(
                         match             = match,
@@ -140,9 +153,7 @@ class MatchListViewModel(
 
     /**
      * Persiste o palpite atual para [matchId] no backend.
-     *
-     * Se não houver draft para a partida, a função retorna sem fazer nada —
-     * o botão "Confirmar" só fica habilitado quando [hasUnsavedChanges] é true.
+     * Usa o [currentUserId] real do usuário autenticado.
      */
     fun savePrediction(matchId: String) {
         val draft = _draftEdits.value[matchId] ?: return
@@ -152,16 +163,16 @@ class MatchListViewModel(
             _perMatchMeta.update { it + (matchId to PerMatchMeta(isSaving = true)) }
 
             val prediction = Prediction(
-                id            = "",   // O backend gera o ID
+                id            = "",             // O backend gera o ID via UUID
                 matchId       = matchId,
-                userId        = USER_ID,
+                userId        = currentUserId,  // userId REAL do Supabase Auth
                 predictedHome = draft.first,
                 predictedAway = draft.second,
             )
 
             predictionRepository.savePrediction(prediction)
                 .onSuccess {
-                    // Draft consumido — o flow do backend vai emitir o novo estado
+                    // Draft consumido — o flow do backend emitirá o novo estado via Realtime
                     _draftEdits.update { it - matchId }
                     _perMatchMeta.update { it + (matchId to PerMatchMeta()) }
                 }
@@ -192,7 +203,6 @@ class MatchListViewModel(
     private fun getOrInitDraft(matchId: String): Pair<Int, Int> {
         _draftEdits.value[matchId]?.let { return it }
 
-        // Lê o estado atual para pegar o palpite salvo, se houver
         val currentState = _uiState.value
         if (currentState is MatchListUiState.Success) {
             val item  = currentState.items.find { it.match.id == matchId }

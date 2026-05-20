@@ -1,9 +1,12 @@
 package com.bolao.di
 
+import com.bolao.data.repository.AuthRepositoryImpl
 import com.bolao.data.repository.MatchRepositoryImpl
 import com.bolao.data.repository.PredictionRepositoryImpl
+import com.bolao.domain.repository.AuthRepository
 import com.bolao.domain.repository.MatchRepository
 import com.bolao.domain.repository.PredictionRepository
+import com.bolao.presentation.auth.AuthViewModel
 import com.bolao.presentation.matchlist.MatchListViewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
@@ -11,16 +14,9 @@ import org.koin.dsl.module
 /**
  * Módulo Koin de repositórios — implementações reais com Supabase.
  *
- * ## Troca Fake → Real
- * A única mudança necessária foi aqui: os bindings agora apontam para
- * [MatchRepositoryImpl] e [PredictionRepositoryImpl] em vez das implementações Fake.
- *
- * O [MatchListViewModel] não mudou — ele depende das interfaces [MatchRepository]
- * e [PredictionRepository], nunca das implementações concretas. Isso é Clean Architecture.
- *
  * ## get() — injeção automática do SupabaseClient
- * `get()` resolve o [SupabaseClient] registrado em [networkModule].
- * O Koin garante que é o mesmo singleton para todos os repositórios.
+ * O [SupabaseClient] registrado em [networkModule] é injetado automaticamente
+ * em todos os repositórios via `get()`.
  *
  * ## Rollback para desenvolvimento offline
  * Para voltar aos Fakes (ex: testar UI sem internet), basta trocar:
@@ -31,6 +27,7 @@ import org.koin.dsl.module
 val repositoryModule = module {
     single<MatchRepository>      { MatchRepositoryImpl(get()) }
     single<PredictionRepository> { PredictionRepositoryImpl(get()) }
+    single<AuthRepository>       { AuthRepositoryImpl(get()) }
 }
 
 /**
@@ -39,4 +36,5 @@ val repositoryModule = module {
  */
 val viewModelModule = module {
     viewModelOf(::MatchListViewModel)
+    viewModelOf(::AuthViewModel)
 }

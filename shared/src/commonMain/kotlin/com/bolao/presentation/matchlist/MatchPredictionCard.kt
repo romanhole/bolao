@@ -183,6 +183,20 @@ fun MatchPredictionCard(
                 )
             }
 
+            // ── Placar Real — exibido centralizado quando o jogo não está aberto ──
+            val homeScore = item.match.homeScore
+            val awayScore = item.match.awayScore
+            if (!isEditable && homeScore != null && awayScore != null) {
+                RealScoreLabel(
+                    homeScore = homeScore,
+                    awayScore = awayScore,
+                    modifier  = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 4.dp),
+                )
+            }
+
             // ── Footer: save / pontos / sem palpite ───────────────────────
             MatchCardFooter(
                 item       = item,
@@ -503,6 +517,51 @@ private fun GoalCounter(
                     fontWeight= FontWeight.Black,
                     color     = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center,
+                )
+            }
+        }
+    }
+}
+
+// ── RealScoreLabel ────────────────────────────────────────────────────────────
+
+/**
+ * Label centralizado exibindo o placar real da partida.
+ * Visível apenas quando o jogo não está mais aberto para palpites
+ * (Live, HalfTime, Finished, Interrupted) e os scores estão disponíveis.
+ *
+ * Posicionado entre a área de times e o footer para não duplicar informação
+ * dentro dos [TeamColumn]s individuais.
+ */
+@Composable
+private fun RealScoreLabel(
+    homeScore: Int,
+    awayScore: Int,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier         = modifier,
+        contentAlignment = Alignment.Center,
+    ) {
+        Surface(
+            shape = RoundedCornerShape(8.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+        ) {
+            Row(
+                modifier              = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                verticalAlignment     = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(
+                    text      = "Placar real:",
+                    style     = MaterialTheme.typography.labelSmall,
+                    color     = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text       = "$homeScore × $awayScore",
+                    style      = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color      = MaterialTheme.colorScheme.onSurface,
                 )
             }
         }

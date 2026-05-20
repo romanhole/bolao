@@ -1,14 +1,18 @@
 package com.bolao.di
 
 import com.bolao.data.network.createHttpClient
-import com.bolao.data.network.sharedJson
 import com.bolao.data.remote.SupabaseConfig
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
+import io.github.jan.supabase.realtime.realtime
 import io.ktor.client.HttpClient
-import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.koin.dsl.module
 
 /**
@@ -16,24 +20,26 @@ import org.koin.dsl.module
  *
  * ## SupabaseClient (singleton)
  * O cliente Supabase é compartilhado por todos os repositórios.
- * Internamente, o SDK gerencia um pool de conexões Ktor — não crie múltiplas
- * instâncias (custo de memória e conexões abertas desnecessárias).
+ * Internamente, o SDK gerencia um pool de conexões Ktor.
  *
  * ### Postgrest
  * Habilita queries REST via PostgREST (SELECT, INSERT, UPDATE, UPSERT, DELETE).
- * O serializer padrão do SDK usa `kotlinx.serialization` automaticamente
- * ao detectar classes `@Serializable`.
  *
  * ### Realtime
- * Habilita subscriptions via WebSocket para eventos Postgres Change
- * (INSERT/UPDATE/DELETE em tabelas habilitadas para Realtime no Supabase).
- * [reconnectDelay] define o tempo de espera antes de reconectar após queda.
+ * Habilita subscriptions via WebSocket para eventos Postgres Change.
+ * **IMPORTANTE:** O SDK v3 não conecta automaticamente — chamamos [connect()] logo
+ * após a criação do cliente em um escopo global com [SupervisorJob].
+ * A conexão fica aberta enquanto o app estiver rodando; o SDK cuida de reconexão
+ * automática em caso de queda. Não há necessidade de desconectar manualmente.
+ *
+ * ### Auth
+ * Gerencia sessão do usuário (login, signup, logout).
+ * Persiste o token automaticamente (SharedPreferences no Android / Keychain no iOS).
+ * O `authState` flow em [AuthRepositoryImpl] é alimentado por `sessionStatus`.
  *
  * ## HttpClient (singleton separado)
- * Mantemos o cliente Ktor configurado manualmente para:
- * - Chamadas a Firebase Cloud Functions (se futuramente usarmos em conjunto)
- * - Requests customizados que precisem de headers específicos
- * - Funciona com o padrão expect/actual por plataforma (Android/iOS engines)
+ * Mantemos o cliente Ktor configurado manualmente para requisições customizadas
+ * fora do escopo do Supabase SDK.
  */
 val networkModule = module {
 
@@ -43,8 +49,16 @@ val networkModule = module {
             supabaseKey = SupabaseConfig.ANON_KEY,
         ) {
             install(Postgrest)
-
             install(Realtime)
+            install(Auth)
+        }.also { client ->
+            // ── Conexão global do Realtime WebSocket ──────────────────────────
+            // Chamada uma única vez no startup. O SupervisorJob garante que uma
+            // falha aqui não cancele outros processos do app.
+            // O SDK gerencia reconexão automática — não precisamos de lógica extra.
+            CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
+                client.realtime.connect()
+            }
         }
     }
 

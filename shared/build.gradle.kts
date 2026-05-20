@@ -66,7 +66,7 @@ kotlin {
             // Supabase
             implementation(libs.supabase.postgrest)  // PostgREST: queries + upsert
             implementation(libs.supabase.realtime)   // Realtime: subscrições ao vivo
-            // libs.supabase.auth → adicionar quando implementar autenticação
+            implementation(libs.supabase.auth)       // Auth: login, signup, sessão persistente
         }
 
         // ── androidMain: engine Ktor para Android ────────────────────────────
