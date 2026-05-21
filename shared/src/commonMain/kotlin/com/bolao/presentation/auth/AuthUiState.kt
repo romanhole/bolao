@@ -5,6 +5,7 @@ package com.bolao.presentation.auth
  *
  * @param email             Conteúdo do campo de e-mail
  * @param password          Conteúdo do campo de senha
+ * @param nickname          Apelido do usuário (obrigatório apenas no cadastro)
  * @param isPasswordVisible Controla a visibilidade do texto da senha
  * @param isLoading         Exibe spinner e desabilita o botão durante a requisição
  * @param error             Mensagem de erro a ser exibida (null = sem erro)
@@ -13,6 +14,7 @@ package com.bolao.presentation.auth
 data class AuthUiState(
     val email: String              = "",
     val password: String           = "",
+    val nickname: String           = "",
     val isPasswordVisible: Boolean = false,
     val isLoading: Boolean         = false,
     val error: String?             = null,

@@ -34,23 +34,24 @@ class LeaguesViewModel(
         )
 
     fun loadLeagues() {
-        // Força a re-emissão do trigger, reiniciando o Flow e fazendo um novo fetch inicial
         refreshTrigger.value = Unit
     }
 
-    private val _events = MutableSharedFlow<String>()
+    // Eventos tipados: ShowMessage (Snackbar) ou NavigateToLeague (navegar)
+    private val _events = MutableSharedFlow<LeagueEvent>()
     val events = _events.asSharedFlow()
 
     fun createLeague(name: String) {
         if (name.isBlank()) return
         viewModelScope.launch {
             repository.createLeague(name)
-                .onSuccess {
+                .onSuccess { league ->
                     loadLeagues()
-                    _events.emit("Liga '${it.name}' criada com sucesso! (Código: ${it.inviteCode})")
+                    // Navega diretamente para a liga criada (fecha o dialog e vai para detalhes)
+                    _events.emit(LeagueEvent.NavigateToLeague(league.id))
                 }
-                .onFailure {
-                    _events.emit("Erro ao criar liga: ${it.message}")
+                .onFailure { error ->
+                    _events.emit(LeagueEvent.ShowMessage("Erro ao criar liga: ${error.message}"))
                 }
         }
     }
@@ -61,11 +62,12 @@ class LeaguesViewModel(
             repository.joinLeague(inviteCode.trim())
                 .onSuccess {
                     loadLeagues()
-                    _events.emit("Você entrou na liga com sucesso!")
+                    _events.emit(LeagueEvent.ShowMessage("Você entrou na liga com sucesso!"))
                 }
-                .onFailure {
-                    _events.emit("Erro: ${it.message}")
+                .onFailure { error ->
+                    _events.emit(LeagueEvent.ShowMessage("Erro: ${error.message}"))
                 }
         }
     }
 }
+

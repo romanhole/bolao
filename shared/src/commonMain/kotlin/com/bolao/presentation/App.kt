@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.SportsSoccer
 import androidx.compose.material.icons.rounded.Logout
 import androidx.compose.material3.CircularProgressIndicator
@@ -56,7 +55,6 @@ import org.koin.compose.viewmodel.koinViewModel
 enum class AppTab(val title: String, val icon: ImageVector) {
     PREDICTIONS("Palpites", Icons.Default.SportsSoccer),
     LEAGUES("Ligas", Icons.Default.Group),
-    LEADERBOARD("Ranking", Icons.Default.Leaderboard)
 }
 
 @Composable
@@ -207,7 +205,6 @@ fun MainTabsScreen(
                 when (tab) {
                     AppTab.PREDICTIONS -> MatchListScreen()
                     AppTab.LEAGUES     -> LeaguesScreen(onLeagueClick = onNavigateToLeague)
-                    AppTab.LEADERBOARD -> LeaderboardScreen()
                 }
             }
         }

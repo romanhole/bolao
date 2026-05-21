@@ -57,10 +57,19 @@ fun LeaguesScreen(
     var showJoinDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        viewModel.events.collect { message ->
-            snackbarHost.showSnackbar(message)
-            showCreateDialog = false
-            showJoinDialog = false
+        viewModel.events.collect { event ->
+            when (event) {
+                is LeagueEvent.NavigateToLeague -> {
+                    showCreateDialog = false
+                    showJoinDialog = false
+                    onLeagueClick(event.leagueId)
+                }
+                is LeagueEvent.ShowMessage -> {
+                    showCreateDialog = false
+                    showJoinDialog = false
+                    snackbarHost.showSnackbar(event.message)
+                }
+            }
         }
     }
 
@@ -153,7 +162,10 @@ fun LeaguesScreen(
                 )
             },
             confirmButton = {
-                Button(onClick = { viewModel.createLeague(name) }) {
+                Button(onClick = {
+                    showCreateDialog = false
+                    viewModel.createLeague(name)
+                }) {
                     Text("Criar")
                 }
             },

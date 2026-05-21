@@ -1,17 +1,20 @@
 package com.bolao.di
 
 import com.bolao.data.repository.AuthRepositoryImpl
+import com.bolao.data.repository.LeaderboardRepositoryImpl
 import com.bolao.data.repository.MatchRepositoryImpl
 import com.bolao.data.repository.PredictionRepositoryImpl
 import com.bolao.domain.repository.AuthRepository
+import com.bolao.domain.repository.LeaderboardRepository
+import com.bolao.domain.repository.LeagueRepository
 import com.bolao.domain.repository.MatchRepository
 import com.bolao.domain.repository.PredictionRepository
-import com.bolao.data.repository.LeaderboardRepositoryImpl
-import com.bolao.domain.repository.LeaderboardRepository
 import com.bolao.presentation.auth.AuthViewModel
 import com.bolao.presentation.leaderboard.LeaderboardViewModel
+import com.bolao.presentation.leagues.LeagueDetailViewModel
 import com.bolao.presentation.leagues.LeaguesViewModel
 import com.bolao.presentation.matchlist.MatchListViewModel
+import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
@@ -45,4 +48,6 @@ val viewModelModule = module {
     viewModelOf(::AuthViewModel)
     viewModelOf(::LeaderboardViewModel)
     viewModelOf(::LeaguesViewModel)
+    // LeagueDetailViewModel recebe leagueId via parametersOf no Composable
+    viewModel { params -> LeagueDetailViewModel(supabase = get(), leagueId = params.get()) }
 }

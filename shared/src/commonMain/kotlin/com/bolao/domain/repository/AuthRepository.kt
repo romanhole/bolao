@@ -45,10 +45,10 @@ interface AuthRepository {
     suspend fun login(email: String, password: String): Result<Unit>
 
     /**
-     * Cria uma nova conta com e-mail e senha.
+     * Cria uma nova conta com e-mail, senha e nickname.
      * @return [Result.success] em caso de sucesso, [Result.failure] com a exceção em caso de erro.
      */
-    suspend fun signUp(email: String, password: String): Result<Unit>
+    suspend fun signUp(email: String, password: String, nickname: String): Result<Unit>
 
     /** Encerra a sessão do usuário atual. */
     suspend fun logout()

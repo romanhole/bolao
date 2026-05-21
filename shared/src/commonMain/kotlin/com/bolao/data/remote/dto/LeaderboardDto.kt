@@ -5,11 +5,12 @@ import kotlinx.serialization.Serializable
 
 /**
  * DTO para mapear o retorno da view `leaderboard` do Supabase.
- * A anotação @SerialName traduz do padrão snake_case do Postgres para camelCase no Kotlin.
+ * A view faz JOIN com `profiles` para trazer o nickname.
  */
 @Serializable
 data class LeaderboardDto(
     @SerialName("user_id") val userId: String,
+    @SerialName("nickname") val nickname: String? = null,
     @SerialName("total_points") val totalPoints: Int,
     @SerialName("total_predictions_made") val totalPredictionsMade: Int,
     @SerialName("exact_matches") val exactMatches: Int,

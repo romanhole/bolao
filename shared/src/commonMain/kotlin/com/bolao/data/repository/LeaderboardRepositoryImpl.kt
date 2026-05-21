@@ -21,6 +21,7 @@ class LeaderboardRepositoryImpl(
         dtos.map { dto ->
             LeaderboardItem(
                 userId               = dto.userId,
+                nickname             = dto.nickname ?: dto.userId.take(8),
                 totalPoints          = dto.totalPoints,
                 totalPredictionsMade = dto.totalPredictionsMade,
                 exactMatches         = dto.exactMatches,

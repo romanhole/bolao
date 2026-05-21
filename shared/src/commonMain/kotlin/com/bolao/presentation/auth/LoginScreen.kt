@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
@@ -170,6 +171,37 @@ fun LoginScreen(
                                 unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                             ),
                         )
+
+                        // ── Campo Nickname (apenas no cadastro) ──────────────────────
+                        AnimatedVisibility(
+                            visible = !uiState.isLoginMode,
+                            enter   = fadeIn(),
+                            exit    = fadeOut(),
+                        ) {
+                            OutlinedTextField(
+                                value         = uiState.nickname,
+                                onValueChange = viewModel::onNicknameChange,
+                                label         = { Text("Apelido (Nickname)") },
+                                leadingIcon   = {
+                                    Icon(
+                                        imageVector        = Icons.Rounded.Person,
+                                        contentDescription = null,
+                                        tint               = MaterialTheme.colorScheme.primary,
+                                    )
+                                },
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Text,
+                                    imeAction    = ImeAction.Next,
+                                ),
+                                singleLine = true,
+                                modifier   = Modifier.fillMaxWidth(),
+                                shape      = RoundedCornerShape(12.dp),
+                                colors     = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor   = MaterialTheme.colorScheme.primary,
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                ),
+                            )
+                        }
 
                         // ── Campo Senha ───────────────────────────────────────
                         OutlinedTextField(

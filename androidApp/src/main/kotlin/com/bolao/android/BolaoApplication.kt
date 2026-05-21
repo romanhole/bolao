@@ -4,6 +4,7 @@ import android.app.Application
 import com.bolao.di.networkModule
 import com.bolao.di.repositoryModule
 import com.bolao.di.viewModelModule
+import com.bolao.platform.AppContext
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
@@ -15,6 +16,7 @@ class BolaoApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        AppContext.init(this)
 
         startKoin {
             androidContext(this@BolaoApplication)

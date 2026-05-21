@@ -1,5 +1,6 @@
 package com.bolao.data.repository
 
+import com.bolao.data.remote.dto.ProfileDto
 import com.bolao.domain.model.UserSession
 import com.bolao.domain.repository.AuthRepository
 import com.bolao.domain.repository.AuthState
@@ -7,6 +8,7 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
+import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -69,12 +71,18 @@ class AuthRepositoryImpl(
             }
         }
 
-    override suspend fun signUp(email: String, password: String): Result<Unit> =
+    override suspend fun signUp(email: String, password: String, nickname: String): Result<Unit> =
         runCatching {
             supabase.auth.signUpWith(Email) {
                 this.email    = email
                 this.password = password
             }
+            // Após criar a conta, inserir o perfil com o nickname
+            val userId = supabase.auth.currentUserOrNull()?.id
+                ?: throw Exception("Falha ao obter o ID do usuário recém-criado.")
+            supabase.postgrest["profiles"].insert(
+                ProfileDto(userId = userId, nickname = nickname.trim())
+            )
         }
 
     override suspend fun logout() {
