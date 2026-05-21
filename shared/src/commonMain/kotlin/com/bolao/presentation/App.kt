@@ -45,6 +45,7 @@ import com.bolao.domain.repository.AuthState
 import com.bolao.presentation.auth.AuthViewModel
 import com.bolao.presentation.auth.LoginScreen
 import com.bolao.presentation.leaderboard.LeaderboardScreen
+import com.bolao.presentation.leagues.LeagueDetailScreen
 import com.bolao.presentation.leagues.LeaguesScreen
 import com.bolao.presentation.matchlist.MatchListScreen
 import com.bolao.presentation.theme.BolaoTheme
@@ -94,10 +95,45 @@ fun App(
     }
 }
 
+sealed interface AuthRoute {
+    data object MainTabs : AuthRoute
+    data class LeagueDetail(val leagueId: String) : AuthRoute
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthenticatedApp(
     authViewModel: AuthViewModel = koinViewModel(),
+) {
+    var currentRoute by remember { mutableStateOf<AuthRoute>(AuthRoute.MainTabs) }
+
+    AnimatedContent(
+        targetState = currentRoute,
+        transitionSpec = { fadeIn() togetherWith fadeOut() },
+        label = "AuthRouteNavigation"
+    ) { route ->
+        when (route) {
+            is AuthRoute.MainTabs -> {
+                MainTabsScreen(
+                    authViewModel = authViewModel,
+                    onNavigateToLeague = { currentRoute = AuthRoute.LeagueDetail(it) }
+                )
+            }
+            is AuthRoute.LeagueDetail -> {
+                LeagueDetailScreen(
+                    leagueId = route.leagueId,
+                    onBack = { currentRoute = AuthRoute.MainTabs }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MainTabsScreen(
+    authViewModel: AuthViewModel,
+    onNavigateToLeague: (String) -> Unit
 ) {
     var currentTab by remember { mutableStateOf(AppTab.PREDICTIONS) }
     val scope = rememberCoroutineScope()
@@ -170,7 +206,7 @@ fun AuthenticatedApp(
             ) { tab ->
                 when (tab) {
                     AppTab.PREDICTIONS -> MatchListScreen()
-                    AppTab.LEAGUES     -> LeaguesScreen()
+                    AppTab.LEAGUES     -> LeaguesScreen(onLeagueClick = onNavigateToLeague)
                     AppTab.LEADERBOARD -> LeaderboardScreen()
                 }
             }

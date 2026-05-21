@@ -1,6 +1,7 @@
 package com.bolao.presentation.leagues
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,6 +47,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun LeaguesScreen(
     modifier: Modifier = Modifier,
+    onLeagueClick: (String) -> Unit,
     viewModel: LeaguesViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -120,7 +122,10 @@ fun LeaguesScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             items(state.leagues) { league ->
-                                LeagueCard(league)
+                                LeagueCard(
+                                    league = league,
+                                    onClick = { onLeagueClick(league.id) }
+                                )
                             }
                         }
                     }
@@ -188,9 +193,12 @@ fun LeaguesScreen(
 }
 
 @Composable
-private fun LeagueCard(league: League) {
+private fun LeagueCard(
+    league: League,
+    onClick: () -> Unit
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
