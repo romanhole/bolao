@@ -86,6 +86,11 @@ kotlin {
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
         }
+
+        // ── commonTest: testes unitários KMP ─────────────────────────────────
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+        }
     }
 }
 

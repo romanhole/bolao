@@ -58,6 +58,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.bolao.domain.model.GameStatus
 import com.bolao.domain.model.Team
+import com.bolao.domain.usecase.PredictionCalculator
 import com.bolao.presentation.theme.BolaoGold
 import com.bolao.presentation.theme.BolaoGoldDark
 import com.bolao.presentation.theme.BolaoGoldLight
@@ -189,12 +190,16 @@ fun MatchPredictionCard(
 
             // ── Potencial de Pontos (Real Time) ──
             if (isEditable) {
-                val homeOdd = item.match.homeOdd
-                val drawOdd = item.match.drawOdd
-                val awayOdd = item.match.awayOdd
-                val oddsAvailable = homeOdd != null && drawOdd != null && awayOdd != null
+                val potential = PredictionCalculator.calculatePotential(
+                    predHomeGoals = item.currentHomeGoals,
+                    predAwayGoals = item.currentAwayGoals,
+                    stageMultiplier = item.match.stageMultiplier,
+                    homeOdd = item.match.homeOdd,
+                    drawOdd = item.match.drawOdd,
+                    awayOdd = item.match.awayOdd
+                )
 
-                if (!oddsAvailable) {
+                if (potential == null) {
                     Text(
                         text = "⏳ Multiplicadores de zebra liberados de 5 a 7 dias antes do jogo",
                         style = MaterialTheme.typography.labelSmall,
@@ -206,41 +211,21 @@ fun MatchPredictionCard(
                             .padding(bottom = 12.dp)
                     )
                 } else {
-                    val predDiff = item.currentHomeGoals - item.currentAwayGoals
-                    val predSign = if (predDiff > 0) 1 else if (predDiff < 0) -1 else 0
-                    
-                    val basePoints = 5 * item.match.stageMultiplier
-                    var zebraBonus = 0
-                    var isZebra = false
-                    
-                    val winningOdd = if (predSign == 1) homeOdd else if (predSign == -1) awayOdd else drawOdd
-                    if (winningOdd != null && winningOdd >= 3.0) {
-                        isZebra = true
-                        zebraBonus = when {
-                            winningOdd >= 9.0 -> 7
-                            winningOdd >= 5.0 -> 4
-                            winningOdd >= 3.0 -> 2
-                            else -> 0
-                        }
-                    }
-                    
-                    val maxPotentialPoints = basePoints + zebraBonus
-                    
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 12.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (isZebra) {
+                        if (potential.isZebra) {
                             Text(
-                                text = "🔥 Zebra! Potencial: $maxPotentialPoints pontos",
+                                text = "🔥 Zebra! Potencial: ${potential.maxPotentialPoints} pontos",
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.error,
                             )
                         } else {
                             Text(
-                                text = "⭐ Potencial máximo: $maxPotentialPoints pontos",
+                                text = "⭐ Potencial máximo: ${potential.maxPotentialPoints} pontos",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )

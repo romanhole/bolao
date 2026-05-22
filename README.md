@@ -46,6 +46,12 @@ O usuário pode receber um bônus de risco caso o seu palpite coincida com uma a
 
 *A UI do app (MatchPredictionCard) exibe e calcula no front-end em tempo real (Real-Time Potential) quanto a aposta renderá no máximo se o resultado acontecer, inclusive alterando as cores e mostrando os ícones de zebra!*
 
+## Qualidade e Testes
+
+A segurança das regras de negócio do Bolão é garantida em duas camadas:
+1. **Testes Unitários**: O projeto utiliza `kotlin-test` para garantir que o motor de cálculo (`PredictionCalculator`) obedeça a todos os cenários matemáticos possíveis sem falhas, inclusive validando com segurança jogos não liberados (odds nulas).
+2. **Automação (Git Hook)**: O repositório está configurado para barrar qualquer `git commit` caso um desenvolvedor quebre a lógica de pontuação. O `pre-commit` hook roda automaticamente a task `./gradlew testDebugUnitTest` antes de autorizar o envio de código para a branch principal.
+
 ## Arquitetura e Regra de Ouro
 
 A arquitetura do App foi desenhada em camadas isoladas e desacopladas:
