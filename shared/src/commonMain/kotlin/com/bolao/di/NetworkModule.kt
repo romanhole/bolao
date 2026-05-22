@@ -1,7 +1,7 @@
 package com.bolao.di
 
 import com.bolao.data.network.createHttpClient
-import com.bolao.data.remote.SupabaseConfig
+import com.bolao.config.AppConfig
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
@@ -45,8 +45,8 @@ val networkModule = module {
 
     single<SupabaseClient> {
         createSupabaseClient(
-            supabaseUrl = SupabaseConfig.URL,
-            supabaseKey = SupabaseConfig.ANON_KEY,
+            supabaseUrl = AppConfig.SUPABASE_URL,
+            supabaseKey = AppConfig.SUPABASE_ANON_KEY,
         ) {
             install(Postgrest)
             install(Realtime)

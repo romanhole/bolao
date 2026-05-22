@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
@@ -5,6 +7,22 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.android.library)
 }
+
+// ── Lógica de Leitura Segura de Variáveis ────────────────────────────────────
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+
+val supabaseUrlDev = localProperties.getProperty("SUPABASE_URL_DEV") ?: System.getenv("SUPABASE_URL_DEV") ?: ""
+val supabaseAnonKeyDev = localProperties.getProperty("SUPABASE_ANON_KEY_DEV") ?: System.getenv("SUPABASE_ANON_KEY_DEV") ?: ""
+
+val supabaseUrlProd = localProperties.getProperty("SUPABASE_URL_PROD") ?: System.getenv("SUPABASE_URL_PROD") ?: ""
+val supabaseAnonKeyProd = localProperties.getProperty("SUPABASE_ANON_KEY_PROD") ?: System.getenv("SUPABASE_ANON_KEY_PROD") ?: ""
+
+// As variáveis seguras estão prontas para serem usadas no bloco Android
+
 
 kotlin {
     // ── Targets ────────────────────────────────────────────────────────────────
@@ -100,6 +118,21 @@ android {
 
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
+    }
+
+    buildFeatures {
+        buildConfig = true
+    }
+
+    buildTypes {
+        getByName("debug") {
+            buildConfigField("String", "SUPABASE_URL", "\"${supabaseUrlDev}\"")
+            buildConfigField("String", "SUPABASE_ANON_KEY", "\"${supabaseAnonKeyDev}\"")
+        }
+        getByName("release") {
+            buildConfigField("String", "SUPABASE_URL", "\"${supabaseUrlProd}\"")
+            buildConfigField("String", "SUPABASE_ANON_KEY", "\"${supabaseAnonKeyProd}\"")
+        }
     }
 
     compileOptions {

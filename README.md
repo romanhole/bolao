@@ -52,6 +52,21 @@ A segurança das regras de negócio do Bolão é garantida em duas camadas:
 1. **Testes Unitários**: O projeto utiliza `kotlin-test` para garantir que o motor de cálculo (`PredictionCalculator`) obedeça a todos os cenários matemáticos possíveis sem falhas, inclusive validando com segurança jogos não liberados (odds nulas).
 2. **Automação (Git Hook)**: O repositório está configurado para barrar qualquer `git commit` caso um desenvolvedor quebre a lógica de pontuação. O `pre-commit` hook roda automaticamente a task `./gradlew testDebugUnitTest` antes de autorizar o envio de código para a branch principal.
 
+## Ambientes (Dev e Produção)
+
+Para garantir segurança e testes consistentes, o projeto é dividido em dois bancos de dados Supabase isolados. O Kotlin Multiplatform gerencia isso nativamente sem vazar as chaves no controle de versão:
+- As chaves ficam guardadas no seu `local.properties` (que é ignorado pelo Git).
+- O aplicativo utiliza as chaves de **Dev** automaticamente ao rodar em `debug`.
+- O aplicativo utiliza as chaves de **Produção** automaticamente ao rodar a variante `release` via Android Studio Build Variants.
+
+Para configurar o projeto pela primeira vez, crie um arquivo `local.properties` na raiz com:
+```properties
+SUPABASE_URL_DEV=https://[URL-DEV].supabase.co
+SUPABASE_ANON_KEY_DEV=eyJh...
+SUPABASE_URL_PROD=https://[URL-PROD].supabase.co
+SUPABASE_ANON_KEY_PROD=eyJh...
+```
+
 ## Arquitetura e Regra de Ouro
 
 A arquitetura do App foi desenhada em camadas isoladas e desacopladas:
