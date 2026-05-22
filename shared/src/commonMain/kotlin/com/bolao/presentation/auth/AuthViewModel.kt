@@ -38,9 +38,7 @@ class AuthViewModel(
         _uiState.update { it.copy(password = password, error = null) }
     }
 
-    fun onNicknameChange(nickname: String) {
-        _uiState.update { it.copy(nickname = nickname, error = null) }
-    }
+
 
     fun togglePasswordVisibility() {
         _uiState.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
@@ -78,18 +76,13 @@ class AuthViewModel(
             _uiState.update { it.copy(error = "A senha deve ter pelo menos 6 caracteres") }
             return
         }
-        if (!state.isLoginMode && state.nickname.isBlank()) {
-            _uiState.update { it.copy(error = "Informe um apelido (nickname)") }
-            return
-        }
-
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             val result = if (state.isLoginMode) {
                 authRepository.login(state.email.trim(), state.password)
             } else {
-                authRepository.signUp(state.email.trim(), state.password, state.nickname.trim())
+                authRepository.signUp(state.email.trim(), state.password)
             }
 
             result

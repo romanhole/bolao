@@ -46,6 +46,12 @@ data class MatchDto(
     @SerialName("home_score")          val homeScore: Int? = null,
     @SerialName("away_score")          val awayScore: Int? = null,
 
+    // Odds e Multiplicador (Nullable pois podem não estar disponíveis ainda)
+    @SerialName("home_odd")            val homeOdd: Double? = null,
+    @SerialName("draw_odd")            val drawOdd: Double? = null,
+    @SerialName("away_odd")            val awayOdd: Double? = null,
+    @SerialName("stage_multiplier")    val stageMultiplier: Int = 1,
+
     // Status e dados auxiliares do estado
     @SerialName("status")              val status: String = "scheduled",
     @SerialName("minute_played")       val minutePlayed: Int? = null,

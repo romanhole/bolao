@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface LeagueRepository {
     fun getUserLeagues(): Flow<List<League>>
-    suspend fun createLeague(name: String): Result<League>
-    suspend fun joinLeague(inviteCode: String): Result<Unit>
+    suspend fun createLeague(name: String, nickname: String): Result<League>
+    suspend fun joinLeague(inviteCode: String, nickname: String): Result<Unit>
+    suspend fun getLeagueById(leagueId: String): Result<League>
 }

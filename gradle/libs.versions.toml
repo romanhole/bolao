@@ -13,6 +13,8 @@ android-targetSdk       = "35"
 androidx-activity       = "1.9.3"
 androidx-lifecycle      = "2.8.4"
 supabase                = "3.0.3"
+kamel                   = "1.0.0"
+
 
 [libraries]
 # Ktor Client
@@ -46,6 +48,10 @@ supabase-realtime        = { module = "io.github.jan-tennert.supabase:realtime-k
 # auth-kt: nome correto desde Supabase SDK 2.1+ (gotrue-kt foi renomeado)
 # Adicionar na próxima iteração quando implementar autenticação
 supabase-auth            = { module = "io.github.jan-tennert.supabase:auth-kt",      version.ref = "supabase" }
+
+# Kamel Image Loading
+kamel-image              = { module = "media.kamel:kamel-image-default", version.ref = "kamel" }
+
 
 [plugins]
 kotlin-multiplatform         = { id = "org.jetbrains.kotlin.multiplatform",       version.ref = "kotlin" }

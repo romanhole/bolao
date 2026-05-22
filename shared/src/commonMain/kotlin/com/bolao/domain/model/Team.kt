@@ -14,4 +14,5 @@ data class Team(
     val name: String,
     val shortName: String,
     val logoUrl: String,
+    val apiTeamId: String? = null,
 )

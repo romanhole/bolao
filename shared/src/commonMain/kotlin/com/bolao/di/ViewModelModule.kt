@@ -10,7 +10,7 @@ import com.bolao.domain.repository.LeagueRepository
 import com.bolao.domain.repository.MatchRepository
 import com.bolao.domain.repository.PredictionRepository
 import com.bolao.presentation.auth.AuthViewModel
-import com.bolao.presentation.leaderboard.LeaderboardViewModel
+
 import com.bolao.presentation.leagues.LeagueDetailViewModel
 import com.bolao.presentation.leagues.LeaguesViewModel
 import com.bolao.presentation.matchlist.MatchListViewModel
@@ -46,8 +46,7 @@ val repositoryModule = module {
 val viewModelModule = module {
     viewModelOf(::MatchListViewModel)
     viewModelOf(::AuthViewModel)
-    viewModelOf(::LeaderboardViewModel)
+
     viewModelOf(::LeaguesViewModel)
-    // LeagueDetailViewModel recebe leagueId via parametersOf no Composable
-    viewModel { params -> LeagueDetailViewModel(supabase = get(), leagueId = params.get()) }
+    viewModelOf(::LeagueDetailViewModel)
 }

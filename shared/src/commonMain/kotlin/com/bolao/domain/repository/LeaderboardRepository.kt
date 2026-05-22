@@ -11,5 +11,5 @@ interface LeaderboardRepository {
      * Busca o ranking completo ordenado do primeiro para o último.
      * Retorna [Result.success] com a lista se bem-sucedido, ou [Result.failure] em caso de erro.
      */
-    suspend fun getLeaderboard(): Result<List<LeaderboardItem>>
+    suspend fun getLeaderboard(leagueId: String): Result<List<LeaderboardItem>>
 }

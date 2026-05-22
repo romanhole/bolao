@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.SportsSoccer
 import androidx.compose.material.icons.rounded.Logout
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -43,7 +44,7 @@ import com.bolao.domain.repository.AuthRepository
 import com.bolao.domain.repository.AuthState
 import com.bolao.presentation.auth.AuthViewModel
 import com.bolao.presentation.auth.LoginScreen
-import com.bolao.presentation.leaderboard.LeaderboardScreen
+
 import com.bolao.presentation.leagues.LeagueDetailScreen
 import com.bolao.presentation.leagues.LeaguesScreen
 import com.bolao.presentation.matchlist.MatchListScreen
@@ -51,6 +52,13 @@ import com.bolao.presentation.theme.BolaoTheme
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import io.kamel.core.config.KamelConfig
+import io.kamel.core.config.takeFrom
+import io.kamel.core.config.httpUrlFetcher
+import io.kamel.image.config.LocalKamelConfig
+import io.kamel.image.config.Default
+import io.ktor.client.HttpClient
+import androidx.compose.runtime.CompositionLocalProvider
 
 enum class AppTab(val title: String, val icon: ImageVector) {
     PREDICTIONS("Palpites", Icons.Default.SportsSoccer),
@@ -61,7 +69,16 @@ enum class AppTab(val title: String, val icon: ImageVector) {
 fun App(
     authRepository: AuthRepository = koinInject(),
 ) {
-    BolaoTheme {
+    val httpClient: HttpClient = koinInject()
+    val kamelConfig = remember(httpClient) {
+        KamelConfig {
+            takeFrom(KamelConfig.Default)
+            httpUrlFetcher(httpClient)
+        }
+    }
+
+    CompositionLocalProvider(LocalKamelConfig provides kamelConfig) {
+        BolaoTheme {
         val authState by authRepository.authState.collectAsState(initial = AuthState.Loading)
 
         AnimatedContent(
@@ -90,6 +107,7 @@ fun App(
                     AuthenticatedApp()
             }
         }
+    }
     }
 }
 
@@ -134,6 +152,7 @@ fun MainTabsScreen(
     onNavigateToLeague: (String) -> Unit
 ) {
     var currentTab by remember { mutableStateOf(AppTab.PREDICTIONS) }
+    var showRulesBottomSheet by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
@@ -159,6 +178,15 @@ fun MainTabsScreen(
                 ),
                 scrollBehavior = scrollBehavior,
                 actions = {
+                    if (currentTab == AppTab.PREDICTIONS) {
+                        IconButton(onClick = { showRulesBottomSheet = true }) {
+                            Icon(
+                                imageVector        = Icons.Rounded.Info,
+                                contentDescription = "Regras de Pontuação",
+                                tint               = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
                     IconButton(
                         onClick = { scope.launch { authViewModel.logout() } }
                     ) {
@@ -206,6 +234,12 @@ fun MainTabsScreen(
                     AppTab.PREDICTIONS -> MatchListScreen()
                     AppTab.LEAGUES     -> LeaguesScreen(onLeagueClick = onNavigateToLeague)
                 }
+            }
+
+            if (showRulesBottomSheet) {
+                com.bolao.presentation.matchlist.RulesBottomSheet(
+                    onDismissRequest = { showRulesBottomSheet = false }
+                )
             }
         }
     }

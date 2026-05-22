@@ -41,10 +41,10 @@ class LeaguesViewModel(
     private val _events = MutableSharedFlow<LeagueEvent>()
     val events = _events.asSharedFlow()
 
-    fun createLeague(name: String) {
-        if (name.isBlank()) return
+    fun createLeague(name: String, nickname: String) {
+        if (name.isBlank() || nickname.isBlank()) return
         viewModelScope.launch {
-            repository.createLeague(name)
+            repository.createLeague(name, nickname)
                 .onSuccess { league ->
                     loadLeagues()
                     // Navega diretamente para a liga criada (fecha o dialog e vai para detalhes)
@@ -56,10 +56,10 @@ class LeaguesViewModel(
         }
     }
 
-    fun joinLeague(inviteCode: String) {
-        if (inviteCode.isBlank()) return
+    fun joinLeague(inviteCode: String, nickname: String) {
+        if (inviteCode.isBlank() || nickname.isBlank()) return
         viewModelScope.launch {
-            repository.joinLeague(inviteCode.trim())
+            repository.joinLeague(inviteCode.trim(), nickname.trim())
                 .onSuccess {
                     loadLeagues()
                     _events.emit(LeagueEvent.ShowMessage("Você entrou na liga com sucesso!"))

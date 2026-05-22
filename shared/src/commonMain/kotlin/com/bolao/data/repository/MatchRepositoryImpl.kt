@@ -70,10 +70,11 @@ class MatchRepositoryImpl(
             """
             id,
             home_score, away_score,
+            home_odd, draw_odd, away_odd, stage_multiplier,
             status, minute_played, interrupted_reason,
             scheduled_at, competition_id, competition, round,
-            home_team:teams!home_team_id(id, name, short_name, logo_url),
-            away_team:teams!away_team_id(id, name, short_name, logo_url)
+            home_team:teams!home_team_id(id, name, short_name, logo_url, api_team_id),
+            away_team:teams!away_team_id(id, name, short_name, logo_url, api_team_id)
             """.trimIndent()
         )
     }

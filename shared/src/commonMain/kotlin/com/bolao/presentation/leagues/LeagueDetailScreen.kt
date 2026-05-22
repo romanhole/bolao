@@ -19,6 +19,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,6 +37,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -53,12 +59,17 @@ import org.koin.core.parameter.parametersOf
 fun LeagueDetailScreen(
     leagueId: String,
     onBack: () -> Unit,
-    viewModel: LeagueDetailViewModel = koinViewModel(parameters = { parametersOf(leagueId) })
+    viewModel: LeagueDetailViewModel = koinViewModel()
 ) {
     // Intercepta o botão físico de Voltar no Android
     BackHandlerWrapper(enabled = true, onBack = onBack)
 
+    LaunchedEffect(leagueId) {
+        viewModel.loadLeagueDetail(leagueId)
+    }
+
     val uiState by viewModel.uiState.collectAsState()
+    var showRulesBottomSheet by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -73,6 +84,9 @@ fun LeagueDetailScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { showRulesBottomSheet = true }) {
+                        Icon(Icons.Rounded.Info, contentDescription = "Regras de Pontuação")
+                    }
                     val league = (uiState as? LeagueDetailUiState.Success)?.league
                     if (league != null) {
                         IconButton(onClick = { shareLeagueInvite(league) }) {
@@ -102,7 +116,7 @@ fun LeagueDetailScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(state.message, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
-                        Button(onClick = viewModel::loadLeagueDetail, modifier = Modifier.padding(top = 16.dp)) {
+                        Button(onClick = { viewModel.loadLeagueDetail(leagueId) }, modifier = Modifier.padding(top = 16.dp)) {
                             Text("Tentar novamente")
                         }
                     }
@@ -141,6 +155,12 @@ fun LeagueDetailScreen(
                         }
                     }
                 }
+            }
+
+            if (showRulesBottomSheet) {
+                com.bolao.presentation.matchlist.RulesBottomSheet(
+                    onDismissRequest = { showRulesBottomSheet = false }
+                )
             }
         }
     }

@@ -7,21 +7,21 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
 
 /**
- * Implementação do [LeaderboardRepository] consumindo a view SQL `leaderboard` no Supabase via HTTP PostgREST.
- * Não utiliza Realtime, faz fetch sob demanda.
+ * Implementação do [LeaderboardRepository] consumindo a view SQL `league_leaderboard`.
  */
 class LeaderboardRepositoryImpl(
     private val supabase: SupabaseClient,
 ) : LeaderboardRepository {
 
-    override suspend fun getLeaderboard(): Result<List<LeaderboardItem>> = runCatching {
-        // Faz um select simples na view. A ordenação já é garantida pela lógica da view no backend.
-        val dtos = supabase.postgrest["leaderboard"].select().decodeList<LeaderboardDto>()
+    override suspend fun getLeaderboard(leagueId: String): Result<List<LeaderboardItem>> = runCatching {
+        val dtos = supabase.postgrest["league_leaderboard"]
+            .select { filter { eq("league_id", leagueId) } }
+            .decodeList<LeaderboardDto>()
         
         dtos.map { dto ->
             LeaderboardItem(
                 userId               = dto.userId,
-                nickname             = dto.nickname ?: dto.userId.take(8),
+                nickname             = dto.nickname,
                 totalPoints          = dto.totalPoints,
                 totalPredictionsMade = dto.totalPredictionsMade,
                 exactMatches         = dto.exactMatches,

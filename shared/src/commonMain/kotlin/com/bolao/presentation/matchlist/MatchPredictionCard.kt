@@ -49,6 +49,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -65,6 +66,9 @@ import com.bolao.presentation.theme.DarkCardVariant
 import com.bolao.presentation.theme.HalfTimeAmber
 import com.bolao.presentation.theme.LiveRed
 import com.bolao.presentation.theme.LiveRedMuted
+import androidx.compose.foundation.layout.fillMaxSize
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -181,6 +185,68 @@ fun MatchPredictionCard(
                     onDecrement = onAwayGoalDecrement,
                     modifier    = Modifier.weight(1f),
                 )
+            }
+
+            // ── Potencial de Pontos (Real Time) ──
+            if (isEditable) {
+                val homeOdd = item.match.homeOdd
+                val drawOdd = item.match.drawOdd
+                val awayOdd = item.match.awayOdd
+                val oddsAvailable = homeOdd != null && drawOdd != null && awayOdd != null
+
+                if (!oddsAvailable) {
+                    Text(
+                        text = "⏳ Multiplicadores de zebra liberados de 5 a 7 dias antes do jogo",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .padding(bottom = 12.dp)
+                    )
+                } else {
+                    val predDiff = item.currentHomeGoals - item.currentAwayGoals
+                    val predSign = if (predDiff > 0) 1 else if (predDiff < 0) -1 else 0
+                    
+                    val basePoints = 5 * item.match.stageMultiplier
+                    var zebraBonus = 0
+                    var isZebra = false
+                    
+                    val winningOdd = if (predSign == 1) homeOdd else if (predSign == -1) awayOdd else drawOdd
+                    if (winningOdd != null && winningOdd >= 3.0) {
+                        isZebra = true
+                        zebraBonus = when {
+                            winningOdd >= 9.0 -> 7
+                            winningOdd >= 5.0 -> 4
+                            winningOdd >= 3.0 -> 2
+                            else -> 0
+                        }
+                    }
+                    
+                    val maxPotentialPoints = basePoints + zebraBonus
+                    
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isZebra) {
+                            Text(
+                                text = "🔥 Zebra! Potencial: $maxPotentialPoints pontos",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        } else {
+                            Text(
+                                text = "⭐ Potencial máximo: $maxPotentialPoints pontos",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
             }
 
             // ── Placar Real — exibido centralizado quando o jogo não está aberto ──
@@ -364,8 +430,8 @@ private fun TeamColumn(
         horizontalAlignment   = Alignment.CenterHorizontally,
         verticalArrangement   = Arrangement.spacedBy(8.dp),
     ) {
-        // Logo placeholder (substitua por AsyncImage + Coil quando tiver URLs reais)
-        TeamLogoPlaceholder(team = team)
+        // Logo do time carregado via proxy ou placeholder se não disponível
+        TeamLogoImage(team = team)
 
         // Nome do time — truncado para não quebrar o layout
         Text(
@@ -419,6 +485,68 @@ private fun TeamLogoPlaceholder(
             color     = MaterialTheme.colorScheme.onPrimaryContainer,
         )
     }
+}
+
+/**
+ * Tenta carregar o escudo do time via proxy de imagem da API.
+ * Se apiTeamId for nulo/vazio, ou o carregamento falhar, cai de volta para o placeholder.
+ */
+@Composable
+private fun TeamLogoImage(
+    team: Team,
+    modifier: Modifier = Modifier,
+) {
+    val apiTeamId = team.apiTeamId
+    if (!apiTeamId.isNullOrBlank()) {
+        val logoUrl = "https://sports.bzzoiro.com/img/team/$apiTeamId/"
+        val resource = asyncPainterResource(data = logoUrl)
+        Box(
+            modifier = modifier
+                .size(56.dp)
+                .clip(CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            KamelImage(
+                resource = { resource },
+                contentDescription = "Escudo do ${team.name}",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Fit,
+                onLoading = { _ ->
+                    ShimmerPlaceholder()
+                },
+                onFailure = { exception ->
+                    TeamLogoPlaceholder(team = team)
+                }
+            )
+        }
+    } else {
+        TeamLogoPlaceholder(team = team, modifier = modifier)
+    }
+}
+
+/**
+ * Efeito de shimmer simples (pulsação de alpha) para o carregamento da imagem.
+ */
+@Composable
+private fun ShimmerPlaceholder(
+    modifier: Modifier = Modifier,
+) {
+    val transition = rememberInfiniteTransition(label = "Shimmer")
+    val alpha by transition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 0.7f,
+        animationSpec = InfiniteRepeatableSpec(
+            animation = tween(1000, easing = EaseInOutCubic),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "ShimmerAlpha",
+    )
+    Box(
+        modifier = modifier
+            .size(56.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = alpha))
+    )
 }
 
 /**

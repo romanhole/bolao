@@ -68,6 +68,9 @@ kotlin {
             implementation(libs.supabase.postgrest)  // PostgREST: queries + upsert
             implementation(libs.supabase.realtime)   // Realtime: subscrições ao vivo
             implementation(libs.supabase.auth)       // Auth: login, signup, sessão persistente
+
+            // Kamel Image Loader (Compose Multiplatform)
+            implementation(libs.kamel.image)
         }
 
         // ── androidMain: engine OkHttp para Android ────────────────────────

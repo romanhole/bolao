@@ -32,6 +32,10 @@ fun MatchDto.toDomain(): Match = Match(
     scheduledAt = Instant.parse(scheduledAt),
     competition = competition,
     round       = round,
+    homeOdd     = homeOdd,
+    drawOdd     = drawOdd,
+    awayOdd     = awayOdd,
+    stageMultiplier = stageMultiplier,
 )
 
 /**
@@ -61,4 +65,5 @@ fun TeamDto.toDomain(): Team = Team(
     name      = name,
     shortName = shortName,
     logoUrl   = logoUrl,
+    apiTeamId = apiTeamId,
 )

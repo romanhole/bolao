@@ -9,8 +9,9 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class LeaderboardDto(
+    @SerialName("league_id") val leagueId: String,
     @SerialName("user_id") val userId: String,
-    @SerialName("nickname") val nickname: String? = null,
+    @SerialName("nickname") val nickname: String,
     @SerialName("total_points") val totalPoints: Int,
     @SerialName("total_predictions_made") val totalPredictionsMade: Int,
     @SerialName("exact_matches") val exactMatches: Int,

@@ -25,4 +25,5 @@ data class TeamDto(
     @SerialName("name")       val name: String,
     @SerialName("short_name") val shortName: String,
     @SerialName("logo_url")   val logoUrl: String = "",
+    @SerialName("api_team_id") val apiTeamId: String? = null,
 )

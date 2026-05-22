@@ -150,21 +150,30 @@ fun LeaguesScreen(
 
     if (showCreateDialog) {
         var name by remember { mutableStateOf("") }
+        var nickname by remember { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { showCreateDialog = false },
             title = { Text("Criar Nova Liga") },
             text = {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Nome da Liga") },
-                    singleLine = true
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text("Nome da Liga") },
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = nickname,
+                        onValueChange = { nickname = it },
+                        label = { Text("Seu Apelido nesta Liga") },
+                        singleLine = true
+                    )
+                }
             },
             confirmButton = {
                 Button(onClick = {
                     showCreateDialog = false
-                    viewModel.createLeague(name)
+                    viewModel.createLeague(name, nickname)
                 }) {
                     Text("Criar")
                 }
@@ -179,19 +188,31 @@ fun LeaguesScreen(
 
     if (showJoinDialog) {
         var code by remember { mutableStateOf("") }
+        var nickname by remember { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { showJoinDialog = false },
             title = { Text("Entrar em uma Liga") },
             text = {
-                OutlinedTextField(
-                    value = code,
-                    onValueChange = { code = it },
-                    label = { Text("Código de Convite") },
-                    singleLine = true
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = code,
+                        onValueChange = { code = it },
+                        label = { Text("Código de Convite") },
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = nickname,
+                        onValueChange = { nickname = it },
+                        label = { Text("Seu Apelido nesta Liga") },
+                        singleLine = true
+                    )
+                }
             },
             confirmButton = {
-                Button(onClick = { viewModel.joinLeague(code) }) {
+                Button(onClick = {
+                    showJoinDialog = false
+                    viewModel.joinLeague(code, nickname)
+                }) {
                     Text("Entrar")
                 }
             },

@@ -79,7 +79,7 @@ class LeagueRepositoryImpl(
         }
     }
 
-    override suspend fun createLeague(name: String): Result<League> = runCatching {
+    override suspend fun createLeague(name: String, nickname: String): Result<League> = runCatching {
         val userId = authRepository.requireUserId()
         
         // Gera código de 6 caracteres maiúsculos + números
@@ -102,7 +102,8 @@ class LeagueRepositoryImpl(
         // Insere o owner como membro
         val memberDto = LeagueMemberDto(
             leagueId = leagueId,
-            userId = userId
+            userId = userId,
+            nickname = nickname
         )
         supabase.postgrest["league_members"].insert(memberDto)
 
@@ -114,7 +115,7 @@ class LeagueRepositoryImpl(
         )
     }
 
-    override suspend fun joinLeague(inviteCode: String): Result<Unit> = runCatching {
+    override suspend fun joinLeague(inviteCode: String, nickname: String): Result<Unit> = runCatching {
         val userId = authRepository.requireUserId()
 
         // 1. Busca a liga pelo invite_code
@@ -145,12 +146,34 @@ class LeagueRepositoryImpl(
         // 3. Entra na liga
         val memberDto = LeagueMemberDto(
             leagueId = leagueId,
-            userId = userId
+            userId = userId,
+            nickname = nickname
         )
         
-        supabase.postgrest["league_members"].insert(memberDto)
+        try {
+            supabase.postgrest["league_members"].insert(memberDto)
+        } catch (e: Exception) {
+            if (e.message?.contains("uq_league_nickname") == true) {
+                throw Exception("Este apelido já está em uso nesta liga.")
+            }
+            throw e
+        }
     }
     
+    override suspend fun getLeagueById(leagueId: String): Result<League> = runCatching {
+        val leagues = supabase.postgrest["leagues"]
+            .select { filter { eq("id", leagueId) } }
+            .decodeList<LeagueDto>()
+
+        val dto = leagues.firstOrNull() ?: throw Exception("Liga não encontrada.")
+        League(
+            id = dto.id ?: leagueId,
+            name = dto.name,
+            inviteCode = dto.inviteCode,
+            ownerId = dto.ownerId
+        )
+    }
+
     private suspend fun AuthRepository.requireUserId(): String {
         return authState.first { it is com.bolao.domain.repository.AuthState.Authenticated }
             .let { (it as com.bolao.domain.repository.AuthState.Authenticated).user.userId }
