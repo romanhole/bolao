@@ -65,4 +65,9 @@ class FakePredictionRepository : PredictionRepository {
 
     override fun observeLeaderboard(competitionId: String): Flow<List<Prediction>> =
         _predictions
+
+    override suspend fun getPredictionsForUsers(userIds: List<String>): Result<List<Prediction>> {
+        val list = _predictions.value.filter { it.userId in userIds }
+        return Result.success(list)
+    }
 }

@@ -41,7 +41,7 @@ class MatchListViewModel(
 
     companion object {
         // TODO: tornar configurável por tela quando houver seleção de competição
-        private const val COMPETITION_ID = "copa_do_mundo_2026"
+        private const val COMPETITION_ID = "league_22"
     }
 
     private val _uiState = MutableStateFlow<MatchListUiState>(MatchListUiState.Loading)

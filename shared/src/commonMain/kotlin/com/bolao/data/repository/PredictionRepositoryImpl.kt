@@ -160,6 +160,20 @@ class PredictionRepositoryImpl(
             }
         }
 
+    // ── getPredictionsForUsers ────────────────────────────────────────────────
+
+    override suspend fun getPredictionsForUsers(userIds: List<String>): Result<List<Prediction>> =
+        runCatching {
+            if (userIds.isEmpty()) return@runCatching emptyList()
+            supabase
+                .from(TABLE)
+                .select {
+                    filter { isIn("user_id", userIds) }
+                }
+                .decodeList<PredictionDto>()
+                .map { it.toDomain() }
+        }
+
     // ── Helpers privados ──────────────────────────────────────────────────────
 
     private suspend fun fetchPredictionsByUser(userId: String): List<Prediction> =

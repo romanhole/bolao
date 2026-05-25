@@ -44,4 +44,10 @@ interface PredictionRepository {
      * @param competitionId ID da competição / grupo do bolão.
      */
     fun observeLeaderboard(competitionId: String): Flow<List<Prediction>>
+
+    /**
+     * Retorna todos os palpites (snapshot) para uma lista de usuários.
+     * Ideal para cruzar placares ao vivo com as apostas dos membros da liga.
+     */
+    suspend fun getPredictionsForUsers(userIds: List<String>): Result<List<Prediction>>
 }

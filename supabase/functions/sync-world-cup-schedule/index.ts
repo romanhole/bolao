@@ -58,28 +58,34 @@ serve(async (req) => {
 
   try {
     addLog("Starting synchronization...");
-    let url = "https://sports.bzzoiro.com/api/v2/events/?league_id=27&date_from=2026-06-11&date_to=2026-07-19";
+    const ACTIVE_LEAGUES = [27, 22];
     const events: any[] = [];
     
-    // 1. Fetch all pages of matches from BZZOIRO API
-    while (url) {
-      addLog(`Fetching page: ${url}`);
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          "Authorization": `Token ${BZZOIRO_API_KEY}`
+    // 1. Fetch all pages of matches from BZZOIRO API for each active league
+    for (const leagueId of ACTIVE_LEAGUES) {
+      let url = `https://sports.bzzoiro.com/api/v2/events/?league_id=${leagueId}&date_from=2026-01-01&date_to=2026-12-31`;
+      
+      while (url) {
+        addLog(`Fetching page: ${url}`);
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            "Authorization": `Token ${BZZOIRO_API_KEY}`
+          }
+        });
+
+        if (!response.ok) {
+          addLog(`BZZOIRO API responded with status: ${response.status} for league ${leagueId}`);
+          break; // Stop fetching this league if there's an error
         }
-      });
 
-      if (!response.ok) {
-        throw new Error(`BZZOIRO API responded with status: ${response.status}`);
+        const data = await response.json();
+        const pageEvents = data.results || data.events || [];
+        const enrichedEvents = pageEvents.map((e: any) => ({ ...e, __league_id: leagueId }));
+        events.push(...enrichedEvents);
+
+        url = data.next || null;
       }
-
-      const data = await response.json();
-      const pageEvents = data.results || data.events || [];
-      events.push(...pageEvents);
-
-      url = data.next || null;
     }
 
     addLog(`Fetched total of ${events.length} events from API.`);
@@ -206,6 +212,9 @@ serve(async (req) => {
       const homeId = event.home_team_id ? String(event.home_team_id) : (event.home_team?.id ? String(event.home_team.id) : "");
       const awayId = event.away_team_id ? String(event.away_team_id) : (event.away_team?.id ? String(event.away_team.id) : "");
 
+      const compId = event.__league_id === 22 ? "league_22" : "copa_do_mundo_2026";
+      const compName = event.__league_id === 22 ? "League 22" : "World Cup";
+
       return {
         api_fixture_id: String(event.id),
         home_team_id: dbTeamMap.get(homeId),
@@ -213,10 +222,10 @@ serve(async (req) => {
         home_score: typeof event.home_score === 'number' ? event.home_score : null,
         away_score: typeof event.away_score === 'number' ? event.away_score : null,
         status: dbStatus,
-        minute_played: event.current_minute || null,
+        minute_played: dbStatus === "live" ? (event.current_minute || null) : null,
         scheduled_at: event.event_date || event.scheduled_at || new Date().toISOString(),
-        competition_id: "copa_do_mundo_2026",
-        competition: "World Cup",
+        competition_id: compId,
+        competition: compName,
         round: event.group_name || event.round_name || event.round || "Group Stage"
       };
     }).filter((m: any) => m.home_team_id && m.away_team_id); // Filter out matches where teams couldn't be resolved

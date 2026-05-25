@@ -12,7 +12,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -144,11 +147,22 @@ fun LeagueDetailScreen(
                                 verticalArrangement = Arrangement.spacedBy(12.dp),
                                 modifier = Modifier.fillMaxSize(),
                             ) {
-                                itemsIndexed(state.ranking) { index, item ->
+                                if (state.liveMatchesDetails.isNotEmpty()) {
+                                    item {
+                                        LiveMatchesCarousel(state.liveMatchesDetails)
+                                    }
+                                }
+
+                                itemsIndexed(
+                                    items = state.ranking,
+                                    key = { _, item -> item.userId }
+                                ) { index, item ->
                                     LeagueRankingCard(
                                         position = index + 1,
                                         item = item,
-                                        modifier = Modifier.padding(horizontal = 16.dp)
+                                        modifier = Modifier
+                                            .padding(horizontal = 16.dp)
+                                            .animateItem()
                                     )
                                 }
                             }
@@ -267,3 +281,94 @@ private fun avatarColorFor(userId: String): Color {
 
 /** Compartilha o código de convite da liga via Intent nativo (expect/actual). */
 expect fun shareLeagueInvite(league: League)
+
+@Composable
+private fun LiveMatchesCarousel(liveMatchesDetails: List<LiveMatchDetail>) {
+    Column(modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp)) {
+        Text(
+            text = "🔴 AO VIVO",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Black,
+            color = Color(0xFFFF4B4B),
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+        )
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            items(liveMatchesDetails, key = { it.match.id }) { detail ->
+                LiveMatchCard(detail = detail, modifier = Modifier.width(320.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun LiveMatchCard(detail: LiveMatchDetail, modifier: Modifier = Modifier) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        modifier = modifier
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Header: Jogo e Placar
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${detail.match.homeTeam.shortName} ${detail.match.homeScore ?: 0} x ${detail.match.awayScore ?: 0} ${detail.match.awayTeam.shortName}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                val min = (detail.match.status as? com.bolao.domain.model.GameStatus.Live)?.minutePlayed
+                Text(
+                    text = if (min != null) "$min'" else "Ao Vivo",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFFFF4B4B),
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Palpites da galera
+            Text(
+                text = "Palpites ao vivo:",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            if (detail.partialRanking.isEmpty()) {
+                Text("Ninguém palpitou.", style = MaterialTheme.typography.bodySmall)
+            } else {
+                detail.partialRanking.take(5).forEach { score ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "${score.nickname} (${score.predictedHome}-${score.predictedAway})",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Text(
+                            text = "+${score.partialPoints} pts",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = if (score.partialPoints > 0) BolaoGold else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                if (detail.partialRanking.size > 5) {
+                    Text(
+                        text = "e mais ${detail.partialRanking.size - 5} palpites...",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            }
+        }
+    }
+}
