@@ -19,7 +19,9 @@ Aplicativo de palpites esportivos Premium construído inteiramente com **Kotlin 
 
 - **Autenticação Segura**: Gerenciada nativamente com sessões persistidas via Supabase Auth.
 - **Sincronismo em Tempo Real**: Os palpites e placares de ligas privadas são atualizados utilizando o motor de banco de dados e Supabase Realtime (PostgreSQL).
-- **Ligas Privadas**: Capacidade de criar ligas exclusivas, gerar links de convite (Share) e visualizar o Ranking (Leaderboard) de membros em tempo real.
+- **Dashboard Ao Vivo (Segunda Tela)**: Telas de liga reativas com carrossel dinâmico das partidas em andamento e mini-rankings instantâneos com a parcial dos apostadores, usando WebSockets de baixa latência (Supabase Channel Unique IDs).
+- **Ligas Privadas**: Capacidade de criar ligas exclusivas, gerar links de convite (Share) e visualizar o Ranking (Leaderboard) de membros.
+- **Seletor Inteligente de Rodadas**: Aba de listagem dinâmica com Auto-Foco que desliza a tela automaticamente para a próxima partida não-finalizada, poupando tempo de navegação.
 - **Interface Rica**: BottomSheets interativos de explicação, cartões dinâmicos de apostas, suporte à edição segura apenas para partidas ativas.
 - **Design Premium**: Estilo moderno utilizando Paleta Luxuosa (Gold/Green), fontes legíveis e painéis fluidos (Material 3 adaptado).
 
@@ -75,9 +77,13 @@ A arquitetura do App foi desenhada em camadas isoladas e desacopladas:
 UI (Compose) ──► ViewModel ──► Repository ──► Supabase (Remote DB / Auth)
 ```
 
-**Regra de Ouro:** O módulo cliente `shared` (Mobile) **nunca** faz chamadas HTTP diretas às APIs de Futebol (como API-Football). O app fala única e exclusivamente com o nosso banco de dados. 
-- O Sincronismo da base esportiva ocorre em **Edge Functions** escondidas que rodam rotinas em segundo plano todo dia.
+**Regra de Ouro:** O módulo cliente `shared` (Mobile) **nunca** faz chamadas HTTP diretas às APIs de Futebol (como BZZOIRO Sports). O app fala única e exclusivamente com o nosso banco de dados no Supabase. 
+- O sincronismo da base esportiva (Jogos e Odds) ocorre em **Edge Functions** escondidas via `pg_cron` e `pg_net`:
+  - `update-live-matches` (1 em 1 minuto): Atualiza os placares das partidas em andamento para refletir no Dashboard Live.
+  - `update-upcoming-odds` (Diário): Congela e injeta os multiplicadores (Odds) baseados em 1X2.
+  - `sync-world-cup-schedule` (Diário): Mantém a agenda limpa, apagando ruídos e garantindo escalabilidade.
 - As partidas são **"Congeladas" 48h antes** do início do jogo, cravando no banco de dados a versão final da *Odd* que valerá os prêmios da Zebra, blindando o App de alterações suspeitas horas antes da partida começar.
+- O Realtime do App exige que as tabelas `matches` e `predictions` pertençam à publicação `supabase_realtime` no banco.
 
 ## Como Abrir e Rodar
 

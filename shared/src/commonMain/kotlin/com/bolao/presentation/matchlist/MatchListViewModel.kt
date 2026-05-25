@@ -41,11 +41,13 @@ class MatchListViewModel(
 
     companion object {
         // TODO: tornar configurável por tela quando houver seleção de competição
-        private const val COMPETITION_ID = "league_22"
+        private const val COMPETITION_ID = "brasileirao_2026"
     }
 
     private val _uiState = MutableStateFlow<MatchListUiState>(MatchListUiState.Loading)
     val uiState: StateFlow<MatchListUiState> = _uiState.asStateFlow()
+
+    private val _selectedRound = MutableStateFlow<String?>(null)
 
     /**
      * Edições locais ainda não salvas no backend.
@@ -96,10 +98,26 @@ class MatchListViewModel(
                 predictionRepository.observePredictionsByUser(currentUserId, COMPETITION_ID),
                 _draftEdits,
                 _perMatchMeta,
-            ) { matches, savedPredictions, drafts, meta ->
+                _selectedRound
+            ) { matches, savedPredictions, drafts, meta, currentRound ->
+                val availableRounds = matches.map { it.round }.distinct()
+                
+                var activeRound = currentRound
+                if (activeRound == null && matches.isNotEmpty()) {
+                    val firstRelevant = matches.firstOrNull { 
+                        it.status is com.bolao.domain.model.GameStatus.Scheduled || 
+                        it.status is com.bolao.domain.model.GameStatus.Live 
+                    }
+                    activeRound = firstRelevant?.round ?: availableRounds.firstOrNull()
+                    if (activeRound != null) {
+                        _selectedRound.value = activeRound
+                    }
+                }
+
+                val filteredMatches = matches.filter { it.round == activeRound }
                 val predByMatchId = savedPredictions.associateBy { it.matchId }
 
-                matches.map { match ->
+                val items = filteredMatches.map { match ->
                     val saved     = predByMatchId[match.id]
                     val draft     = drafts[match.id]
                     val savedHome = saved?.predictedHome ?: 0
@@ -117,19 +135,26 @@ class MatchListViewModel(
                         saveError         = matchMeta.saveError,
                     )
                 }
+                MatchListUiState.Success(items, availableRounds, activeRound)
             }
             .catch { e ->
                 _uiState.value = MatchListUiState.Error(
                     e.message ?: "Erro ao carregar partidas"
                 )
             }
-            .collect { items ->
-                _uiState.value = MatchListUiState.Success(items)
+            .collect { state ->
+                if (state is MatchListUiState.Success) {
+                    _uiState.value = state
+                }
             }
         }
     }
 
     // ── Ações do usuário ───────────────────────────────────────────────────────
+
+    fun selectRound(round: String) {
+        _selectedRound.value = round
+    }
 
     /**
      * Incrementa ou decrementa os gols do time mandante em [delta] (+1 ou -1).

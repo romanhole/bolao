@@ -58,7 +58,7 @@ class PredictionRepositoryImpl(
     ): Flow<List<Prediction>> = channelFlow {
         // Emissão inicial
         send(fetchPredictionsByUser(userId))
-        val channel = supabase.channel("predictions-user-$userId")
+        val channel = supabase.channel("predictions-user-$userId-${kotlin.random.Random.nextInt()}")
 
         channel
             .postgresChangeFlow<PostgresAction>(schema = "public") {
@@ -86,7 +86,7 @@ class PredictionRepositoryImpl(
     ): Flow<Prediction?> = channelFlow {
         send(fetchPredictionForMatch(userId, matchId))
 
-        val channel = supabase.channel("prediction-$userId-$matchId")
+        val channel = supabase.channel("prediction-$userId-$matchId-${kotlin.random.Random.nextInt()}")
 
         channel
             .postgresChangeFlow<PostgresAction>(schema = "public") {
@@ -143,7 +143,7 @@ class PredictionRepositoryImpl(
     override fun observeLeaderboard(competitionId: String): Flow<List<Prediction>> =
         channelFlow {
             send(fetchLeaderboard())
-            val channel = supabase.channel("leaderboard-$competitionId")
+            val channel = supabase.channel("leaderboard-$competitionId-${kotlin.random.Random.nextInt()}")
 
             channel
                 .postgresChangeFlow<PostgresAction>(schema = "public") {

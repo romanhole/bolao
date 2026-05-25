@@ -33,6 +33,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -76,14 +78,53 @@ fun MatchListScreen(
             }
 
             is MatchListUiState.Success -> {
-                MatchListContent(
-                    items           = state.items,
-                    onUpdateHome    = viewModel::updateHomeGoals,
-                    onUpdateAway    = viewModel::updateAwayGoals,
-                    onSave          = viewModel::savePrediction,
-                    modifier        = Modifier.fillMaxSize(),
-                    contentPadding  = PaddingValues(top = 16.dp, bottom = 100.dp),
-                )
+                val listState = rememberLazyListState()
+                
+                // Encontra o índice da primeira partida não finalizada na lista atual
+                val firstAvailableIndex = remember(state.items) {
+                    state.items.indexOfFirst { 
+                        it.match.status is com.bolao.domain.model.GameStatus.Scheduled || 
+                        it.match.status is com.bolao.domain.model.GameStatus.Live 
+                    }.takeIf { it >= 0 }
+                }
+
+                // Auto-scroll sempre que a aba do mês mudar
+                LaunchedEffect(state.selectedRound) {
+                    firstAvailableIndex?.let { index ->
+                        listState.animateScrollToItem(index)
+                    }
+                }
+
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        if (state.availableRounds.isNotEmpty()) {
+                            androidx.compose.material3.ScrollableTabRow(
+                                selectedTabIndex = state.availableRounds.indexOf(state.selectedRound).coerceAtLeast(0),
+                                edgePadding = 16.dp,
+                                containerColor = MaterialTheme.colorScheme.background,
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                            ) {
+                                state.availableRounds.forEach { round ->
+                                    androidx.compose.material3.Tab(
+                                        selected = state.selectedRound == round,
+                                        onClick = { viewModel.selectRound(round) },
+                                        text = { Text(round, style = MaterialTheme.typography.titleSmall) }
+                                    )
+                                }
+                            }
+                        }
+                        
+                        MatchListContent(
+                            items           = state.items,
+                            onUpdateHome    = viewModel::updateHomeGoals,
+                            onUpdateAway    = viewModel::updateAwayGoals,
+                            onSave          = viewModel::savePrediction,
+                            modifier        = Modifier.fillMaxSize().weight(1f),
+                            listState       = listState,
+                            contentPadding  = PaddingValues(top = 16.dp, bottom = 100.dp),
+                        )
+                    }
+                }
             }
         }
 
@@ -102,9 +143,11 @@ private fun MatchListContent(
     onUpdateAway: (String, Int) -> Unit,
     onSave: (String) -> Unit,
     modifier: Modifier = Modifier,
+    listState: LazyListState = rememberLazyListState(),
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     LazyColumn(
+        state               = listState,
         modifier            = modifier,
         contentPadding      = contentPadding,
         verticalArrangement = Arrangement.spacedBy(16.dp),

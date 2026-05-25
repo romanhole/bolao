@@ -34,7 +34,11 @@ sealed class MatchListUiState {
     data object Loading : MatchListUiState()
 
     /** Dados prontos. [items] pode estar vazio. */
-    data class Success(val items: List<MatchPredictionItem>) : MatchListUiState()
+    data class Success(
+        val items: List<MatchPredictionItem>,
+        val availableRounds: List<String> = emptyList(),
+        val selectedRound: String? = null
+    ) : MatchListUiState()
 
     /** Falha irrecuperável ao carregar dados do backend. */
     data class Error(val message: String) : MatchListUiState()

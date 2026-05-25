@@ -58,7 +58,7 @@ serve(async (req) => {
 
   try {
     addLog("Starting synchronization...");
-    const ACTIVE_LEAGUES = [27, 22];
+    const ACTIVE_LEAGUES = [27, 9];
     const events: any[] = [];
     
     // 1. Fetch all pages of matches from BZZOIRO API for each active league
@@ -212,8 +212,24 @@ serve(async (req) => {
       const homeId = event.home_team_id ? String(event.home_team_id) : (event.home_team?.id ? String(event.home_team.id) : "");
       const awayId = event.away_team_id ? String(event.away_team_id) : (event.away_team?.id ? String(event.away_team.id) : "");
 
-      const compId = event.__league_id === 22 ? "league_22" : "copa_do_mundo_2026";
-      const compName = event.__league_id === 22 ? "League 22" : "World Cup";
+      const compId = event.__league_id === 9 ? "brasileirao_2026" : "copa_do_mundo_2026";
+      const compName = event.__league_id === 9 ? "Brasileirão" : "World Cup";
+
+      const scheduledDateObj = new Date(event.event_date || event.scheduled_at || new Date().toISOString());
+      let extractedRound = event.group_name || event.round_name || event.round || event.round_info?.round || event.roundInfo?.round;
+      
+      let finalRoundName = "Group Stage";
+      if (!extractedRound || extractedRound === "Regular Season") {
+        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        finalRoundName = `${monthNames[scheduledDateObj.getMonth()]} ${scheduledDateObj.getFullYear()}`;
+      } else {
+        const roundStr = String(extractedRound);
+        if (!isNaN(Number(roundStr))) {
+          finalRoundName = `Rodada ${roundStr}`;
+        } else {
+          finalRoundName = roundStr;
+        }
+      }
 
       return {
         api_fixture_id: String(event.id),
@@ -223,10 +239,10 @@ serve(async (req) => {
         away_score: typeof event.away_score === 'number' ? event.away_score : null,
         status: dbStatus,
         minute_played: dbStatus === "live" ? (event.current_minute || null) : null,
-        scheduled_at: event.event_date || event.scheduled_at || new Date().toISOString(),
+        scheduled_at: scheduledDateObj.toISOString(),
         competition_id: compId,
         competition: compName,
-        round: event.group_name || event.round_name || event.round || "Group Stage"
+        round: finalRoundName
       };
     }).filter((m: any) => m.home_team_id && m.away_team_id); // Filter out matches where teams couldn't be resolved
 

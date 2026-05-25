@@ -87,9 +87,9 @@ class MatchRepositoryImpl(
             send(fetchMatches(competitionId))
 
             // 2. Canal Realtime para a tabela matches
-            //    O nome do canal deve ser único por conexão; inclui competitionId
-            //    para suportar múltiplas competições abertas simultaneamente
-            val channel = supabase.channel("matches-competition-$competitionId")
+            // Usamos Random para garantir que múltiplas telas possam assinar
+            // a mesma tabela simultaneamente sem que o 'removeChannel' de uma mate a outra
+            val channel = supabase.channel("matches-competition-$competitionId-${kotlin.random.Random.nextInt()}")
 
             // 3. Subscribe ao flow de eventos Postgres Change (INSERT/UPDATE/DELETE)
             //    Ao receber qualquer evento, re-faz o fetch completo com joins
