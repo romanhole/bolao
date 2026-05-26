@@ -120,7 +120,7 @@ fun MatchPredictionCard(
     onSave: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val isEditable = item.match.isPredictionAllowed
+    val isEditable = item.isPredictionAllowed
 
     ElevatedCard(
         modifier  = modifier.fillMaxWidth(),

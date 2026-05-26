@@ -37,10 +37,10 @@ data class Match(
 ) {
     /**
      * Retorna true se a janela de palpites ainda está aberta.
-     * Regra de negócio: palpites são aceitos apenas antes da partida começar.
+     * Regra de negócio: palpites são aceitos apenas antes da partida começar, usando relógio local.
      */
     val isPredictionAllowed: Boolean
-        get() = status is GameStatus.Scheduled
+        get() = status is GameStatus.Scheduled && kotlinx.datetime.Clock.System.now() < scheduledAt
 
     /** Placar formatado para exibição, ex: "2 – 1" ou "– : –" */
     val scoreDisplay: String

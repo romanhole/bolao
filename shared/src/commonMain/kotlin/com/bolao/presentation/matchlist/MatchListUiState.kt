@@ -23,6 +23,7 @@ data class MatchPredictionItem(
     val hasUnsavedChanges: Boolean,
     val isSaving: Boolean = false,
     val saveError: String? = null,
+    val isPredictionAllowed: Boolean = false,
 )
 
 /**

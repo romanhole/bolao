@@ -67,6 +67,14 @@ class MatchListViewModel(
         val saveError: String? = null,
     )
 
+    private data class StateData(
+        val matches: List<com.bolao.domain.model.Match>,
+        val savedPredictions: List<Prediction>,
+        val drafts: Map<String, Pair<Int, Int>>,
+        val meta: Map<String, PerMatchMeta>,
+        val currentRound: String?
+    )
+
     /**
      * userId do usuário autenticado.
      * Inicializado no [init] antes de observar dados.
@@ -92,14 +100,31 @@ class MatchListViewModel(
      * - Flow de estado de save por partida (em memória)
      */
     private fun observeData() {
+        val clockTick = kotlinx.coroutines.flow.flow {
+            while (true) {
+                emit(kotlinx.datetime.Clock.System.now().toEpochMilliseconds())
+                kotlinx.coroutines.delay(5000)
+            }
+        }
+
         viewModelScope.launch {
-            combine(
+            val combinedData = combine(
                 matchRepository.observeMatchesByCompetition(COMPETITION_ID),
                 predictionRepository.observePredictionsByUser(currentUserId, COMPETITION_ID),
                 _draftEdits,
                 _perMatchMeta,
                 _selectedRound
             ) { matches, savedPredictions, drafts, meta, currentRound ->
+                StateData(matches, savedPredictions, drafts, meta, currentRound)
+            }
+
+            combine(combinedData, clockTick) { data, _ ->
+                val matches = data.matches
+                val savedPredictions = data.savedPredictions
+                val drafts = data.drafts
+                val meta = data.meta
+                val currentRound = data.currentRound
+                
                 val availableRounds = matches.map { it.round }.distinct()
                 
                 var activeRound = currentRound
@@ -129,10 +154,11 @@ class MatchListViewModel(
                         savedPrediction   = saved,
                         currentHomeGoals  = draft?.first  ?: savedHome,
                         currentAwayGoals  = draft?.second ?: savedAway,
-                        hasUnsavedChanges = draft != null &&
-                            (draft.first != savedHome || draft.second != savedAway),
+                        hasUnsavedChanges = saved == null || (draft != null &&
+                            (draft.first != savedHome || draft.second != savedAway)),
                         isSaving          = matchMeta.isSaving,
                         saveError         = matchMeta.saveError,
+                        isPredictionAllowed = match.isPredictionAllowed,
                     )
                 }
                 MatchListUiState.Success(items, availableRounds, activeRound)
@@ -181,7 +207,8 @@ class MatchListViewModel(
      * Usa o [currentUserId] real do usuário autenticado.
      */
     fun savePrediction(matchId: String) {
-        val draft = _draftEdits.value[matchId] ?: return
+        // Se o usuário não mexeu nos contadores, o draft será nulo. Assumimos o 0x0 inicial da tela.
+        val draft = _draftEdits.value[matchId] ?: Pair(0, 0)
 
         viewModelScope.launch {
             // Sinaliza "salvando" para desabilitar o botão e mostrar spinner
