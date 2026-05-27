@@ -58,7 +58,7 @@ serve(async (req) => {
 
   try {
     addLog("Starting synchronization...");
-    const ACTIVE_LEAGUES = [27, 9];
+    const ACTIVE_LEAGUES = [27];
     const events: any[] = [];
     
     // 1. Fetch all pages of matches from BZZOIRO API for each active league
@@ -212,22 +212,37 @@ serve(async (req) => {
       const homeId = event.home_team_id ? String(event.home_team_id) : (event.home_team?.id ? String(event.home_team.id) : "");
       const awayId = event.away_team_id ? String(event.away_team_id) : (event.away_team?.id ? String(event.away_team.id) : "");
 
-      const compId = event.__league_id === 9 ? "brasileirao_2026" : "copa_do_mundo_2026";
-      const compName = event.__league_id === 9 ? "Brasileirão" : "World Cup";
+      const compId = "copa_do_mundo_2026";
+      const compName = "World Cup";
 
       const scheduledDateObj = new Date(event.event_date || event.scheduled_at || new Date().toISOString());
       let extractedRound = event.group_name || event.round_name || event.round || event.round_info?.round || event.roundInfo?.round;
       
-      let finalRoundName = "Group Stage";
-      if (!extractedRound || extractedRound === "Regular Season") {
-        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-        finalRoundName = `${monthNames[scheduledDateObj.getMonth()]} ${scheduledDateObj.getFullYear()}`;
-      } else {
-        const roundStr = String(extractedRound);
-        if (!isNaN(Number(roundStr))) {
+      let finalRoundName = "Fase de Grupos";
+      if (extractedRound) {
+        const roundStr = String(extractedRound).toLowerCase().trim();
+        if (roundStr === "1" || roundStr === "rodada 1" || roundStr.includes("round 1") || roundStr.includes("matchday 1")) {
+          finalRoundName = "Rodada 1";
+        } else if (roundStr === "2" || roundStr === "rodada 2" || roundStr.includes("round 2") || roundStr.includes("matchday 2")) {
+          finalRoundName = "Rodada 2";
+        } else if (roundStr === "3" || roundStr === "rodada 3" || roundStr.includes("round 3") || roundStr.includes("matchday 3")) {
+          finalRoundName = "Rodada 3";
+        } else if (roundStr.includes("32") || roundStr.includes("16-avos")) {
+          finalRoundName = "16-avos de final";
+        } else if (roundStr.includes("16") || roundStr.includes("oitavas") || roundStr.includes("eighth")) {
+          finalRoundName = "Oitavas de final";
+        } else if (roundStr.includes("quarter") || roundStr.includes("quartas")) {
+          finalRoundName = "Quartas de final";
+        } else if (roundStr.includes("semi")) {
+          finalRoundName = "Semifinais";
+        } else if (roundStr.includes("3rd") || roundStr.includes("terceiro") || roundStr.includes("third")) {
+          finalRoundName = "Terceiro Lugar";
+        } else if (roundStr.includes("final")) {
+          finalRoundName = "Final";
+        } else if (!isNaN(Number(roundStr))) {
           finalRoundName = `Rodada ${roundStr}`;
         } else {
-          finalRoundName = roundStr;
+          finalRoundName = String(extractedRound);
         }
       }
 

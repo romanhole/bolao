@@ -10,7 +10,7 @@
         android:name=".BolaoApplication"
         android:label="Bolão"
         android:icon="@mipmap/ic_launcher"
-        android:theme="@android:style/Theme.Material.NoActionBar"
+        android:theme="@style/Theme.Bolao.Splash"
         android:supportsRtl="true">
 
         <activity

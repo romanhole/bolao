@@ -41,7 +41,7 @@ class MatchListViewModel(
 
     companion object {
         // TODO: tornar configurável por tela quando houver seleção de competição
-        private const val COMPETITION_ID = "brasileirao_2026"
+        private const val COMPETITION_ID = "copa_do_mundo_2026"
     }
 
     private val _uiState = MutableStateFlow<MatchListUiState>(MatchListUiState.Loading)
@@ -125,7 +125,19 @@ class MatchListViewModel(
                 val meta = data.meta
                 val currentRound = data.currentRound
                 
-                val availableRounds = matches.map { it.round }.distinct()
+                val rawRounds = matches.map { it.round }.distinct()
+                val orderMap = mapOf(
+                    "Rodada 1" to 1,
+                    "Rodada 2" to 2,
+                    "Rodada 3" to 3,
+                    "16-avos de final" to 4,
+                    "Oitavas de final" to 5,
+                    "Quartas de final" to 6,
+                    "Semifinais" to 7,
+                    "Terceiro Lugar" to 8,
+                    "Final" to 9
+                )
+                val availableRounds = rawRounds.sortedBy { orderMap[it] ?: 99 }
                 
                 var activeRound = currentRound
                 if (activeRound == null && matches.isNotEmpty()) {

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tema para a Splash Screen (Obrigatório para Android 12+) -->
+    <style name="Theme.Bolao.Splash" parent="Theme.SplashScreen">
+        <!-- Fundo Escuro Premium -->
+        <item name="windowSplashScreenBackground">#121212</item>
+        
+        <!-- Ícone Animado (Usando o ícone estático atual como placeholder) -->
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        
+        <!-- Define o tema que será carregado APÓS a splash screen terminar -->
+        <item name="postSplashScreenTheme">@android:style/Theme.Material.NoActionBar</item>
+    </style>
+</resources>

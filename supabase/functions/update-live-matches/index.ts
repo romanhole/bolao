@@ -8,7 +8,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "
 serve(async (req) => {
   try {
     // 1. Fetch data from BZZOIRO API for active leagues
-    const ACTIVE_LEAGUES = [27, 9];
+    const ACTIVE_LEAGUES = [27];
     const events: any[] = [];
 
     for (const leagueId of ACTIVE_LEAGUES) {
