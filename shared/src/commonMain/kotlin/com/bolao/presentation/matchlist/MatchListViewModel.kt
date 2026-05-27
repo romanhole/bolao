@@ -127,15 +127,16 @@ class MatchListViewModel(
                 
                 val rawRounds = matches.map { it.round }.distinct()
                 val orderMap = mapOf(
-                    "Rodada 1" to 1,
-                    "Rodada 2" to 2,
-                    "Rodada 3" to 3,
-                    "16-avos de final" to 4,
-                    "Oitavas de final" to 5,
-                    "Quartas de final" to 6,
-                    "Semifinais" to 7,
-                    "Terceiro Lugar" to 8,
-                    "Final" to 9
+                    "Fase de Grupos" to 1,
+                    "Rodada 1" to 2,
+                    "Rodada 2" to 3,
+                    "Rodada 3" to 4,
+                    "16-avos de final" to 5,
+                    "Oitavas de final" to 6,
+                    "Quartas de final" to 7,
+                    "Semifinais" to 8,
+                    "Terceiro Lugar" to 9,
+                    "Final" to 10
                 )
                 val availableRounds = rawRounds.sortedBy { orderMap[it] ?: 99 }
                 

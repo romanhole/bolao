@@ -5,6 +5,64 @@ const BZZOIRO_API_KEY = Deno.env.get("BZZOIRO_API_KEY") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
+/**
+ * Retorna a fase da Copa do Mundo 2026 com base na data do jogo.
+ * Usado como fallback quando a API não fornece um round_name válido.
+ * Datas oficiais da FIFA para a Copa 2026 (EUA/México/Canadá).
+ */
+function getPhaseByDate(date: Date): string {
+  const m = date.getUTCMonth() + 1;
+  const d = date.getUTCDate();
+  // Fase de Grupos: 11 a 26 de junho
+  if (m === 6 && d <= 27) return "Fase de Grupos";
+  // 16-avos de final: 28 jun - 3 jul
+  if ((m === 6 && d >= 28) || (m === 7 && d <= 3)) return "16-avos de final";
+  // Oitavas de final: 4 - 9 jul
+  if (m === 7 && d >= 4 && d <= 9) return "Oitavas de final";
+  // Quartas de final: 10 - 13 jul
+  if (m === 7 && d >= 10 && d <= 13) return "Quartas de final";
+  // Semifinais: 14 - 16 jul
+  if (m === 7 && d >= 14 && d <= 16) return "Semifinais";
+  // Terceiro Lugar: 17 - 18 jul
+  if (m === 7 && d >= 17 && d <= 18) return "Terceiro Lugar";
+  // Final: 19 jul em diante
+  if (m === 7 && d >= 19) return "Final";
+  return "Fase de Grupos";
+}
+
+/**
+ * Mapeia os dados brutos de round da API Bzzoiro para as fases
+ * oficiais da Copa do Mundo 2026 em português.
+ */
+function mapRound(event: any, scheduledDateObj: Date): string {
+  const groupName = event.group_name ? String(event.group_name).trim() : "";
+  // round_name tem prioridade sobre group_name para detectar fases eliminatórias
+  const roundName = event.round_name || event.round || event.round_info?.round || event.roundInfo?.round;
+
+  // "Group A", "Group B", ..., "Group L" — sempre é Fase de Grupos
+  if (/^Group\s+[A-Za-z0-9]+$/i.test(groupName)) return "Fase de Grupos";
+
+  if (roundName) {
+    const r = String(roundName).toLowerCase().trim();
+    if (r === "group stage" || r === "fase de grupos") return "Fase de Grupos";
+    if (r.includes("matchday 1") || r === "1") return "Rodada 1";
+    if (r.includes("matchday 2") || r === "2") return "Rodada 2";
+    if (r.includes("matchday 3") || r === "3") return "Rodada 3";
+    if (r.includes("32") || r.includes("16-avos") || r.includes("round of 32")) return "16-avos de final";
+    if (r.includes("round of 16") || r.includes("16") || r.includes("oitavas") || r.includes("eighth")) return "Oitavas de final";
+    if (r.includes("quarter") || r.includes("quartas")) return "Quartas de final";
+    if (r.includes("semi")) return "Semifinais";
+    if (r.includes("3rd") || r.includes("terceiro") || r.includes("third place")) return "Terceiro Lugar";
+    if (r.includes("final")) return "Final";
+    if (!isNaN(Number(r))) return `Rodada ${r}`;
+    // round_name desconhecido — usa o calendário da Copa como fallback
+    return getPhaseByDate(scheduledDateObj);
+  }
+
+  // Nenhum dado de round disponível — usa calendário oficial
+  return getPhaseByDate(scheduledDateObj);
+}
+
 function generateShortName(name: string, apiId: string, existingShortNames: Set<string>): string {
   let cleanName = name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
   if (cleanName.length >= 3 && cleanName.length <= 4) {
@@ -216,35 +274,7 @@ serve(async (req) => {
       const compName = "World Cup";
 
       const scheduledDateObj = new Date(event.event_date || event.scheduled_at || new Date().toISOString());
-      let extractedRound = event.group_name || event.round_name || event.round || event.round_info?.round || event.roundInfo?.round;
-      
-      let finalRoundName = "Fase de Grupos";
-      if (extractedRound) {
-        const roundStr = String(extractedRound).toLowerCase().trim();
-        if (roundStr === "1" || roundStr === "rodada 1" || roundStr.includes("round 1") || roundStr.includes("matchday 1")) {
-          finalRoundName = "Rodada 1";
-        } else if (roundStr === "2" || roundStr === "rodada 2" || roundStr.includes("round 2") || roundStr.includes("matchday 2")) {
-          finalRoundName = "Rodada 2";
-        } else if (roundStr === "3" || roundStr === "rodada 3" || roundStr.includes("round 3") || roundStr.includes("matchday 3")) {
-          finalRoundName = "Rodada 3";
-        } else if (roundStr.includes("32") || roundStr.includes("16-avos")) {
-          finalRoundName = "16-avos de final";
-        } else if (roundStr.includes("16") || roundStr.includes("oitavas") || roundStr.includes("eighth")) {
-          finalRoundName = "Oitavas de final";
-        } else if (roundStr.includes("quarter") || roundStr.includes("quartas")) {
-          finalRoundName = "Quartas de final";
-        } else if (roundStr.includes("semi")) {
-          finalRoundName = "Semifinais";
-        } else if (roundStr.includes("3rd") || roundStr.includes("terceiro") || roundStr.includes("third")) {
-          finalRoundName = "Terceiro Lugar";
-        } else if (roundStr.includes("final")) {
-          finalRoundName = "Final";
-        } else if (!isNaN(Number(roundStr))) {
-          finalRoundName = `Rodada ${roundStr}`;
-        } else {
-          finalRoundName = String(extractedRound);
-        }
-      }
+      const finalRoundName = mapRound(event, scheduledDateObj);
 
       return {
         api_fixture_id: String(event.id),
