@@ -13,7 +13,8 @@ Aplicativo de palpites esportivos Premium construído inteiramente com **Kotlin 
 | **Serialização** | kotlinx.serialization 1.7.3 |
 | **Coroutines** | kotlinx.coroutines 1.9.0 |
 | **Injeção de Dep.** | Koin 4.0.0 |
-| **Linguagem** | Kotlin 2.0.21 |
+| **Linguagem** | Kotlin 2.1.0 |
+| **PWA / Web** | WebAssembly (WasmJs) |
 
 ## Funcionalidades Principais
 
@@ -21,9 +22,8 @@ Aplicativo de palpites esportivos Premium construído inteiramente com **Kotlin 
 - **Sincronismo em Tempo Real**: Os palpites e placares de ligas privadas são atualizados utilizando o motor de banco de dados e Supabase Realtime (PostgreSQL).
 - **Dashboard Ao Vivo (Segunda Tela)**: Telas de liga reativas com carrossel dinâmico das partidas em andamento e mini-rankings instantâneos com a parcial dos apostadores, usando WebSockets de baixa latência (Supabase Channel Unique IDs).
 - **Ligas Privadas**: Capacidade de criar ligas exclusivas, gerar links de convite (Share) e visualizar o Ranking (Leaderboard) de membros.
+- **Progressive Web App (PWA)**: Compilado 100% em Kotlin para WebAssembly. Permite aos usuários instalarem o app diretamente pelo Safari do iOS, sem necessidade de passar pelas aprovações ou taxas da App Store.
 - **Seletor Inteligente de Rodadas**: Aba de listagem dinâmica com Auto-Foco que desliza a tela automaticamente para a próxima partida não-finalizada, poupando tempo de navegação.
-- **Interface Rica**: BottomSheets interativos de explicação, cartões dinâmicos de apostas, suporte à edição segura apenas para partidas ativas.
-- **Design Premium**: Estilo moderno utilizando Paleta Luxuosa (Gold/Green), fontes legíveis e painéis fluidos (Material 3 adaptado).
 
 ## Sistema de Pontuação (Zebra e Multiplicadores)
 
@@ -40,54 +40,69 @@ O usuário *só pontua* se acertar primeiramente a **tendência do jogo** (quem 
 A pontuação base calculada acima é multiplicada por um peso (`stage_multiplier`). Jogos normais valem x1, Quartas de final valem x2, Semi x3, etc.
 
 ### 3. 🔥 Bônus de Zebra (Em Faixas)
-O usuário pode receber um bônus de risco caso o seu palpite coincida com uma alta probabilidade de "Zebra". Essa probabilidade é calculada a partir do mercado padrão de Odds Reais (1X2).
-**Apenas se acertar a tendência (Vencedor ou Empate) e o evento for surpresa**, ele ganha pontos extras:
+O usuário pode receber um bônus de risco caso o seu palpite coincida com uma alta probabilidade de "Zebra" (Calculada usando as Odds Reais). Apenas se acertar a tendência e o evento for uma surpresa, ele ganha pontos extras:
 - **Odd entre 3.00 e 4.99**: +2 pontos.
 - **Odd entre 5.00 e 8.99**: +4 pontos.
 - **Odd acima de 9.00**: +7 pontos.
 
-*A UI do app (MatchPredictionCard) exibe e calcula no front-end em tempo real (Real-Time Potential) quanto a aposta renderá no máximo se o resultado acontecer, inclusive alterando as cores e mostrando os ícones de zebra!*
-
 ## Qualidade e Testes
 
 A segurança das regras de negócio do Bolão é garantida em duas camadas:
-1. **Testes Unitários**: O projeto utiliza `kotlin-test` para garantir que o motor de cálculo (`PredictionCalculator`) obedeça a todos os cenários matemáticos possíveis sem falhas, inclusive validando com segurança jogos não liberados (odds nulas).
-2. **Automação (Git Hook)**: O repositório está configurado para barrar qualquer `git commit` caso um desenvolvedor quebre a lógica de pontuação. O `pre-commit` hook roda automaticamente a task `./gradlew testDebugUnitTest` antes de autorizar o envio de código para a branch principal.
+1. **Testes Unitários**: O projeto utiliza `kotlin-test` para garantir que o motor de cálculo (`PredictionCalculator`) obedeça a todos os cenários matemáticos possíveis.
+2. **Automação (Git Hook)**: O repositório está configurado para barrar qualquer `git commit` caso um desenvolvedor quebre a lógica de pontuação. O `pre-commit` hook roda automaticamente a task `./gradlew testDebugUnitTest`.
 
-## Ambientes (Dev e Produção)
+## Ambientes e Configuração
 
-Para garantir segurança e testes consistentes, o projeto é dividido em dois bancos de dados Supabase isolados. O Kotlin Multiplatform gerencia isso nativamente sem vazar as chaves no controle de versão:
-- As chaves ficam guardadas no seu `local.properties` (que é ignorado pelo Git).
-- O aplicativo utiliza as chaves de **Dev** automaticamente ao rodar em `debug`.
-- O aplicativo utiliza as chaves de **Produção** automaticamente ao rodar a variante `release` via Android Studio Build Variants.
+O projeto é dividido em dois bancos de dados Supabase isolados. Crie um arquivo `local.properties` na raiz do projeto com o seguinte formato:
 
-Para configurar o projeto pela primeira vez, crie um arquivo `local.properties` na raiz com:
 ```properties
+# Variáveis de Desenvolvimento (Debug)
 SUPABASE_URL_DEV=https://[URL-DEV].supabase.co
 SUPABASE_ANON_KEY_DEV=eyJh...
+
+# Variáveis de Produção (Release)
 SUPABASE_URL_PROD=https://[URL-PROD].supabase.co
 SUPABASE_ANON_KEY_PROD=eyJh...
+
+# Configuração da Keystore para Geração do Android App Bundle (.aab)
+RELEASE_STORE_FILE=androidApp/bolao-release-key.keystore
+RELEASE_STORE_PASSWORD=sua-senha
+RELEASE_KEY_ALIAS=seu-alias
+RELEASE_KEY_PASSWORD=sua-senha-da-chave
 ```
 
-## Arquitetura e Regra de Ouro
-
-A arquitetura do App foi desenhada em camadas isoladas e desacopladas:
+## Arquitetura e Servidor
 
 ```text
 UI (Compose) ──► ViewModel ──► Repository ──► Supabase (Remote DB / Auth)
 ```
 
-**Regra de Ouro:** O módulo cliente `shared` (Mobile) **nunca** faz chamadas HTTP diretas às APIs de Futebol (como BZZOIRO Sports). O app fala única e exclusivamente com o nosso banco de dados no Supabase. 
-- O sincronismo da base esportiva (Jogos e Odds) ocorre em **Edge Functions** escondidas via `pg_cron` e `pg_net`:
-  - `update-live-matches` (1 em 1 minuto): Atualiza os placares das partidas em andamento para refletir no Dashboard Live.
-  - `update-upcoming-odds` (Diário): Congela e injeta os multiplicadores (Odds) baseados em 1X2.
-  - `sync-world-cup-schedule` (Diário): Mantém a agenda limpa, apagando ruídos e garantindo escalabilidade.
-- As partidas são **"Congeladas" 48h antes** do início do jogo, cravando no banco de dados a versão final da *Odd* que valerá os prêmios da Zebra, blindando o App de alterações suspeitas horas antes da partida começar.
-- O Realtime do App exige que as tabelas `matches` e `predictions` pertençam à publicação `supabase_realtime` no banco.
+**Regra de Ouro:** O módulo cliente `shared` (Mobile/Web) **nunca** faz chamadas HTTP diretas às APIs de Futebol. O app fala única e exclusivamente com o nosso banco de dados no Supabase. 
+- O sincronismo da base esportiva ocorre em **Edge Functions** escondidas:
+  - `update-live-matches`: Atualiza os placares das partidas em andamento.
+  - `update-upcoming-odds`: Congela e injeta os multiplicadores (Odds).
+  - `sync-world-cup-schedule`: Mantém a agenda limpa, sincronizando o catálogo oficial da API.
+- As partidas são **Congeladas no banco 48h antes**, garantindo a proteção contra manipulação das Odds da zebra.
 
-## Como Abrir e Rodar
+## Compilando e Publicando
 
-1. No Android Studio: `File → Open` → selecione a pasta raiz `bolao/`
-2. Aguarde a sincronização completa do script Gradle.
-3. Certifique-se de configurar a conexão com sua tabela Supabase.
-4. Selecione a Run Configuration `androidApp` e faça o deploy no emulador ou aparelho físico.
+### 1. WebAssembly PWA (iOS Distribution sem App Store)
+Para empacotar o aplicativo como um Progressive Web App rodando via WebAssembly, execute no terminal:
+```bash
+./gradlew clean :shared:wasmJsBrowserDistribution
+```
+Todos os binários, recursos HTML, JS e o ServiceWorker do PWA serão gerados na pasta: `shared/build/dist/wasmJs/productionExecutable/`. Hospede o conteúdo dessa pasta em qualquer provedor de hospedagem web.
+
+### 2. Android App Bundle (Google Play Store)
+A variante de release já vem ofuscada com o ProGuard/R8. Com o `local.properties` preenchido com as chaves da sua Keystore, gere o arquivo de produção executando:
+```bash
+./gradlew clean :androidApp:bundleRelease
+```
+O pacote `.aab` será gerado pronto para submissão no Google Play Console.
+
+### 3. Deploy de Funções Supabase (Backend em Produção)
+Para empacotar e enviar suas Edge Functions para a nuvem do Supabase, certifique-se de que o CLI está autenticado, faça o link do projeto de produção e execute:
+```bash
+npx supabase functions deploy sync-world-cup-schedule --no-verify-jwt
+npx supabase functions deploy update-upcoming-odds --no-verify-jwt
+```
