@@ -1,7 +1,7 @@
 package com.bolao.domain.model
 
 import kotlinx.datetime.Instant
-import kotlinx.serialization.Serializable
+
 
 /**
  * Entidade de domínio que representa uma partida de futebol.
@@ -19,7 +19,7 @@ import kotlinx.serialization.Serializable
  * @property competition  Nome da competição (ex: "Copa do Mundo", "Brasileirão").
  * @property round        Rodada ou fase (ex: "Rodada 1", "Quartas de Final").
  */
-@Serializable
+
 data class Match(
     val id: String,
     val homeTeam: Team,

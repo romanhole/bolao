@@ -1,6 +1,6 @@
 package com.bolao.domain.model
 
-import kotlinx.serialization.Serializable
+
 
 /**
  * Entidade de domínio que representa o palpite de um usuário para uma partida.
@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
  * @property predictedAway  Gols que o usuário prevê para o time visitante.
  * @property pointsEarned   Pontos concedidos após o jogo encerrar (null = jogo em aberto).
  */
-@Serializable
+
 data class Prediction(
     val id: String,
     val matchId: String,
@@ -44,7 +44,7 @@ data class Prediction(
  * Resultado previsto: vitória do mandante, empate ou vitória do visitante.
  * Segue a terminologia padrão "1X2" do mercado de apostas esportivas.
  */
-@Serializable
+
 enum class PredictionOutcome {
     HomeWin, Draw, AwayWin
 }

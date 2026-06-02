@@ -144,12 +144,29 @@ ALTER TABLE public.predictions    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.leagues        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.league_members ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "teams_readable_by_all" ON public.teams;
 CREATE POLICY "teams_readable_by_all" ON public.teams FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "matches_readable_by_all" ON public.matches;
 CREATE POLICY "matches_readable_by_all" ON public.matches FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "leagues_select_all" ON public.leagues;
 CREATE POLICY "leagues_select_all" ON public.leagues FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "leagues_insert_own" ON public.leagues;
 CREATE POLICY "leagues_insert_own" ON public.leagues FOR INSERT WITH CHECK (owner_id = auth.uid()::text);
+
+DROP POLICY IF EXISTS "league_members_select_all" ON public.league_members;
 CREATE POLICY "league_members_select_all" ON public.league_members FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "league_members_insert_own" ON public.league_members;
 CREATE POLICY "league_members_insert_own" ON public.league_members FOR INSERT WITH CHECK (user_id = auth.uid()::text);
+
+DROP POLICY IF EXISTS "predictions_select_own" ON public.predictions;
 CREATE POLICY "predictions_select_own" ON public.predictions FOR SELECT USING (user_id = auth.uid()::text);
+
+DROP POLICY IF EXISTS "predictions_insert_own" ON public.predictions;
 CREATE POLICY "predictions_insert_own" ON public.predictions FOR INSERT WITH CHECK (user_id = auth.uid()::text);
+
+DROP POLICY IF EXISTS "predictions_update_own" ON public.predictions;
 CREATE POLICY "predictions_update_own" ON public.predictions FOR UPDATE USING (user_id = auth.uid()::text) WITH CHECK (user_id = auth.uid()::text);

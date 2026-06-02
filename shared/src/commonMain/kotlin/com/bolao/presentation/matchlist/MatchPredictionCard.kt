@@ -813,9 +813,9 @@ private fun SaveButton(
 private fun formatMatchDateTime(instant: Instant): String {
     val local = instant.toLocalDateTime(TimeZone.currentSystemDefault())
 
-    val dayAbbr = when (local.dayOfWeek.value) {
-        1 -> "Seg"; 2 -> "Ter"; 3 -> "Qua"
-        4 -> "Qui"; 5 -> "Sex"; 6 -> "Sáb"
+    val dayAbbr = when (local.dayOfWeek.ordinal) {
+        0 -> "Seg"; 1 -> "Ter"; 2 -> "Qua"
+        3 -> "Qui"; 4 -> "Sex"; 5 -> "Sáb"
         else -> "Dom"
     }
     val day   = local.dayOfMonth.toString().padStart(2, '0')

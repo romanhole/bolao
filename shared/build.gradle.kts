@@ -47,6 +47,23 @@ kotlin {
         }
     }
 
+    wasmJs {
+        moduleName = "shared"
+        browser {
+            val projectDirPath = project.projectDir.path
+            commonWebpackConfig {
+                outputFileName = "shared.js"
+                devServer = (devServer ?: org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig.DevServer()).apply {
+                    static = (static ?: mutableListOf()).apply {
+                        // Serve resources from the resources directory
+                        add(projectDirPath + "/src/wasmJsMain/resources")
+                    }
+                }
+            }
+        }
+        binaries.executable()
+    }
+
     // ── Source Sets ────────────────────────────────────────────────────────────
     sourceSets {
 
@@ -105,6 +122,13 @@ kotlin {
             implementation(libs.ktor.client.darwin)
         }
 
+        // ── wasmJsMain: engine Ktor para Web (JS) ────────────────────────────
+        val wasmJsMain by getting {
+            dependencies {
+                implementation(libs.ktor.client.js)
+            }
+        }
+
         // ── commonTest: testes unitários KMP ─────────────────────────────────
         commonTest.dependencies {
             implementation(kotlin("test"))
@@ -139,4 +163,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+}
+
+// ── Resolução de Conflitos KMP Wasm ──────────────────────────────────────────
+configurations.all {
+    // Impede que bibliotecas antigas arrastem a stdlib velha do Wasm, o que causava crash no linker do K2
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-wasm")
 }

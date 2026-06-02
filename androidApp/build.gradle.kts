@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)       // kotlin.android — NÃO multiplatform aqui
@@ -13,13 +16,28 @@ android {
         minSdk        = libs.versions.android.minSdk.get().toInt()
         targetSdk     = libs.versions.android.targetSdk.get().toInt()
         versionCode   = 1
-        versionName   = "0.1.0"
+        versionName   = "1.0.0"
+    }
+
+    signingConfigs {
+        create("release") {
+            val localPropsFile = project.rootProject.file("local.properties")
+            if (localPropsFile.exists()) {
+                val properties = Properties()
+                properties.load(FileInputStream(localPropsFile))
+
+                storeFile = project.rootProject.file(properties.getProperty("RELEASE_STORE_FILE", "bolao-release.jks"))
+                storePassword = properties.getProperty("RELEASE_STORE_PASSWORD")
+                keyAlias = properties.getProperty("RELEASE_KEY_ALIAS")
+                keyPassword = properties.getProperty("RELEASE_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
-            signingConfig = signingConfigs.getByName("debug") // <-- Assinatura provisória para rodar release localmente
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
