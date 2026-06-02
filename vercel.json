@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/proxy-img/:path*",
-      "destination": "https://sports.bzzoiro.com/img/:path*"
+      "destination": "/api/proxy-img/:path*"
     }
   ]
 }

@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.SportsSoccer
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
@@ -107,9 +108,11 @@ fun LoginScreen(
                         ),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(
-                        text  = "⚽",
-                        style = MaterialTheme.typography.headlineLarge,
+                    Icon(
+                        imageVector        = Icons.Rounded.SportsSoccer,
+                        contentDescription = "Bolão",
+                        tint               = Color.White,
+                        modifier           = Modifier.size(48.dp),
                     )
                 }
 
