@@ -8,7 +8,7 @@
 
     <application
         android:name=".BolaoApplication"
-        android:label="Bolão"
+        android:label="Bolão Campeão"
         android:icon="@mipmap/ic_launcher"
         android:theme="@style/Theme.Bolao.Splash"
         android:supportsRtl="true">

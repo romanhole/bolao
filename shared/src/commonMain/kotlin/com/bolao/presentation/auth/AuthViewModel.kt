@@ -44,6 +44,14 @@ class AuthViewModel(
         _uiState.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
     }
 
+    fun onConfirmPasswordChange(password: String) {
+        _uiState.update { it.copy(confirmPassword = password, error = null) }
+    }
+
+    fun toggleConfirmPasswordVisibility() {
+        _uiState.update { it.copy(isConfirmPasswordVisible = !it.isConfirmPasswordVisible) }
+    }
+
     /** Alterna entre modo login e modo cadastro, limpando erros. */
     fun toggleMode() {
         _uiState.update { it.copy(isLoginMode = !it.isLoginMode, error = null) }
@@ -76,6 +84,10 @@ class AuthViewModel(
             _uiState.update { it.copy(error = "A senha deve ter pelo menos 6 caracteres") }
             return
         }
+        if (!state.isLoginMode && state.password != state.confirmPassword) {
+            _uiState.update { it.copy(error = "As senhas não coincidem") }
+            return
+        }
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
@@ -87,9 +99,14 @@ class AuthViewModel(
 
             result
                 .onSuccess {
-                    // Sucesso: authRepository.authState emitirá Authenticated
-                    // e App.kt navegará automaticamente para MatchListScreen
-                    _uiState.update { it.copy(isLoading = false) }
+                    if (state.isLoginMode) {
+                        // Sucesso no login: authRepository.authState emitirá Authenticated
+                        _uiState.update { it.copy(isLoading = false) }
+                    } else {
+                        // Sucesso no cadastro: exibe diálogo de e-mail e inicia cronômetro
+                        _uiState.update { it.copy(isLoading = false, isConfirmEmailDialogVisible = true) }
+                        startResendCooldown()
+                    }
                 }
                 .onFailure { error ->
                     _uiState.update {
@@ -99,6 +116,32 @@ class AuthViewModel(
                         )
                     }
                 }
+        }
+    }
+
+    // ── Resend Email & Dialog ──────────────────────────────────────────────────
+
+    fun dismissConfirmDialog() {
+        _uiState.update { it.copy(isConfirmEmailDialogVisible = false) }
+    }
+
+    fun resendEmail() {
+        val state = _uiState.value
+        if (state.resendCooldownSeconds > 0 || state.email.isBlank()) return
+
+        viewModelScope.launch {
+            authRepository.resendConfirmationEmail(state.email)
+            startResendCooldown()
+        }
+    }
+
+    private fun startResendCooldown() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(resendCooldownSeconds = 30) }
+            while (_uiState.value.resendCooldownSeconds > 0) {
+                kotlinx.coroutines.delay(1000)
+                _uiState.update { it.copy(resendCooldownSeconds = it.resendCooldownSeconds - 1) }
+            }
         }
     }
 
@@ -115,6 +158,6 @@ class AuthViewModel(
         message.contains("Password should be at least")        -> "A senha deve ter pelo menos 6 caracteres."
         message.contains("Unable to validate email address")   -> "E-mail inválido."
         message.contains("rate limit")                         -> "Muitas tentativas. Aguarde um momento."
-        else                                                    -> "Erro ao autenticar. Tente novamente."
+        else                                                    -> "Erro: $message"
     }
 }

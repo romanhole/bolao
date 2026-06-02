@@ -220,6 +220,56 @@ fun LoginScreen(
                             ),
                         )
 
+                        // ── Campo Confirmar Senha (Apenas Cadastro) ─────────────────
+                        AnimatedVisibility(
+                            visible = !uiState.isLoginMode,
+                        ) {
+                            OutlinedTextField(
+                                value         = uiState.confirmPassword,
+                                onValueChange = viewModel::onConfirmPasswordChange,
+                                label         = { Text("Confirmar Senha") },
+                                leadingIcon   = {
+                                    Icon(
+                                        imageVector        = Icons.Rounded.Lock,
+                                        contentDescription = null,
+                                        tint               = MaterialTheme.colorScheme.primary,
+                                    )
+                                },
+                                trailingIcon = {
+                                    IconButton(onClick = viewModel::toggleConfirmPasswordVisibility) {
+                                        Icon(
+                                            imageVector = if (uiState.isConfirmPasswordVisible)
+                                                Icons.Rounded.VisibilityOff
+                                            else
+                                                Icons.Rounded.Visibility,
+                                            contentDescription = if (uiState.isConfirmPasswordVisible)
+                                                "Ocultar senha"
+                                            else
+                                                "Mostrar senha",
+                                        )
+                                    }
+                                },
+                                visualTransformation = if (uiState.isConfirmPasswordVisible)
+                                    VisualTransformation.None
+                                else
+                                    PasswordVisualTransformation(),
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Password,
+                                    imeAction    = ImeAction.Done,
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = { viewModel.submit() }
+                                ),
+                                singleLine = true,
+                                modifier   = Modifier.fillMaxWidth(),
+                                shape      = RoundedCornerShape(12.dp),
+                                colors     = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor   = MaterialTheme.colorScheme.primary,
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                ),
+                            )
+                        }
+
                         // ── Mensagem de erro ──────────────────────────────────
                         AnimatedVisibility(
                             visible = uiState.error != null,
@@ -278,6 +328,55 @@ fun LoginScreen(
 
                 Spacer(Modifier.height(48.dp))
             }
+        }
+
+        // ── Diálogo de Confirmação de E-mail ──────────────────────────────────
+        if (uiState.isConfirmEmailDialogVisible) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { viewModel.dismissConfirmDialog() },
+                title = {
+                    Text(
+                        text       = "Verifique seu E-mail",
+                        fontWeight = FontWeight.Bold,
+                        color      = MaterialTheme.colorScheme.primary
+                    )
+                },
+                text = {
+                    Text(
+                        text  = "Enviamos um link de confirmação para ${uiState.email}. Você precisa clicar no link para ativar sua conta antes de fazer o login.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = { viewModel.dismissConfirmDialog() },
+                        colors  = ButtonDefaults.buttonColors(
+                            containerColor = BolaoGreen,
+                            contentColor   = Color.Black
+                        )
+                    ) {
+                        Text("Entendi", fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { viewModel.resendEmail() },
+                        enabled = uiState.resendCooldownSeconds == 0
+                    ) {
+                        Text(
+                            text = if (uiState.resendCooldownSeconds > 0)
+                                "Reenviar em ${uiState.resendCooldownSeconds}s"
+                            else
+                                "Reenviar e-mail",
+                            color = if (uiState.resendCooldownSeconds > 0) 
+                                MaterialTheme.colorScheme.outline 
+                            else 
+                                MaterialTheme.colorScheme.primary
+                        )
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.surface,
+            )
         }
     }
 }

@@ -14,9 +14,14 @@ package com.bolao.presentation.auth
 data class AuthUiState(
     val email: String              = "",
     val password: String           = "",
+    val confirmPassword: String    = "",
 
-    val isPasswordVisible: Boolean = false,
-    val isLoading: Boolean         = false,
-    val error: String?             = null,
-    val isLoginMode: Boolean       = true,
+    val isPasswordVisible: Boolean        = false,
+    val isConfirmPasswordVisible: Boolean = false,
+    val isLoading: Boolean                = false,
+    val error: String?                    = null,
+    val isLoginMode: Boolean              = true,
+
+    val isConfirmEmailDialogVisible: Boolean = false,
+    val resendCooldownSeconds: Int           = 0,
 )

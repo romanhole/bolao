@@ -79,6 +79,11 @@ class AuthRepositoryImpl(
             }
         }
 
+    override suspend fun resendConfirmationEmail(email: String): Result<Unit> =
+        runCatching {
+            supabase.auth.resendEmail(io.github.jan.supabase.auth.OtpType.Email.SIGNUP, email)
+        }
+
     override suspend fun logout() {
         supabase.auth.signOut()
     }

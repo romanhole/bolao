@@ -50,6 +50,12 @@ interface AuthRepository {
      */
     suspend fun signUp(email: String, password: String): Result<Unit>
 
+    /**
+     * Reenvia o e-mail de confirmação para a conta recém-criada.
+     * @return [Result.success] em caso de sucesso, [Result.failure] em caso de erro.
+     */
+    suspend fun resendConfirmationEmail(email: String): Result<Unit>
+
     /** Encerra a sessão do usuário atual. */
     suspend fun logout()
 }
