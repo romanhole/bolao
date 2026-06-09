@@ -483,7 +483,8 @@ private fun TeamLogoImage(
 ) {
     val apiTeamId = team.apiTeamId
     if (!apiTeamId.isNullOrBlank()) {
-        val logoUrl = "https://bolao-campeao-26.vercel.app/api/proxy-img/team/$apiTeamId/"
+        val originalUrl = "https://sports.bzzoiro.com/img/team/$apiTeamId/"
+        val logoUrl = "https://bolao-campeao-26.vercel.app/api/proxy-img?url=$originalUrl"
         val resource = asyncPainterResource(data = logoUrl)
         Box(
             modifier = modifier

@@ -55,6 +55,9 @@ class MatchListViewModel(
      */
     private val _draftEdits = MutableStateFlow<Map<String, Pair<Int, Int>>>(emptyMap())
 
+    /** Override local para atualizar a UI imediatamente enquanto o realtime não chega. */
+    private val _savedPredictionsOverride = MutableStateFlow<Map<String, Prediction>>(emptyMap())
+
     /**
      * Metadados de UI por partida (estado do save: salvando / erro).
      * Separado do combine principal para evitar re-emissão desnecessária do flow de dados.
@@ -110,7 +113,14 @@ class MatchListViewModel(
         viewModelScope.launch {
             val combinedData = combine(
                 matchRepository.observeMatchesByCompetition(COMPETITION_ID),
-                predictionRepository.observePredictionsByUser(currentUserId, COMPETITION_ID),
+                combine(
+                    predictionRepository.observePredictionsByUser(currentUserId, COMPETITION_ID),
+                    _savedPredictionsOverride
+                ) { list, overrides ->
+                    val map = list.associateBy { it.matchId }.toMutableMap()
+                    map.putAll(overrides)
+                    map.values.toList()
+                },
                 _draftEdits,
                 _perMatchMeta,
                 _selectedRound
@@ -236,10 +246,12 @@ class MatchListViewModel(
             )
 
             predictionRepository.savePrediction(prediction)
-                .onSuccess {
+                .onSuccess { savedPred ->
                     // Draft consumido — o flow do backend emitirá o novo estado via Realtime
                     _draftEdits.update { it - matchId }
                     _perMatchMeta.update { it + (matchId to PerMatchMeta()) }
+                    // Override local: o usuário vê imediatamente a mudança na UI, sem depender do Realtime!
+                    _savedPredictionsOverride.update { it + (matchId to savedPred) }
                 }
                 .onFailure { error ->
                     _perMatchMeta.update {
