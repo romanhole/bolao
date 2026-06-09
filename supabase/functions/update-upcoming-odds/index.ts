@@ -71,25 +71,14 @@ serve(async (req) => {
         }
 
         const oddsJson = await response.json();
-        const markets = oddsJson.markets || [];
-        
-        // Procura mercado 1X2 Principal
-        const market1x2 = markets.find((m: any) => 
-          m.name?.toLowerCase() === "1x2" || m.id === 1
-        );
+        const oddsData = oddsJson.odds;
 
-        if (market1x2 && market1x2.selections) {
-          let homeOdd = null;
-          let drawOdd = null;
-          let awayOdd = null;
+        if (oddsData) {
+          const homeOdd = oddsData.home_win;
+          const drawOdd = oddsData.draw;
+          const awayOdd = oddsData.away_win;
 
-          market1x2.selections.forEach((sel: any) => {
-            if (sel.name === "1" || sel.name === "Home") homeOdd = sel.odd;
-            if (sel.name === "X" || sel.name === "Draw") drawOdd = sel.odd;
-            if (sel.name === "2" || sel.name === "Away") awayOdd = sel.odd;
-          });
-
-          // Atualiza no banco as 3 odds preenchidas
+          // Atualiza no banco as 3 odds se estiverem preenchidas
           if (homeOdd && drawOdd && awayOdd) {
             const { error: updateError } = await supabase
               .from("matches")
@@ -102,6 +91,8 @@ serve(async (req) => {
 
             if (!updateError) {
               updatedCount++;
+            } else {
+              addLog(`Supabase update error for match ${match.api_fixture_id}: ${updateError.message}`);
             }
           }
         }

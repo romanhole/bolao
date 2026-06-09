@@ -31,7 +31,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Remove
+import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.Whatshot
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
@@ -200,16 +202,27 @@ fun MatchPredictionCard(
                 )
 
                 if (potential == null) {
-                    Text(
-                        text = "⏳ Multiplicadores de zebra liberados de 5 a 7 dias antes do jogo",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp)
-                            .padding(bottom = 12.dp)
-                    )
+                            .padding(bottom = 12.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Schedule,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp).padding(end = 4.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "Multiplicadores de zebra liberados de 5 a 7 dias antes do jogo",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 } else {
                     Box(
                         modifier = Modifier
@@ -218,17 +231,33 @@ fun MatchPredictionCard(
                         contentAlignment = Alignment.Center
                     ) {
                         if (potential.isZebra) {
-                            Text(
-                                text = "🔥 Zebra! Potencial: ${potential.maxPotentialPoints} pontos",
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.error,
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Whatshot,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp).padding(end = 4.dp),
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                                Text(
+                                    text = "ZEBRA! Potencial: ${potential.maxPotentialPoints} pontos",
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.error,
+                                )
+                            }
                         } else {
-                            Text(
-                                text = "⭐ Potencial máximo: ${potential.maxPotentialPoints} pontos",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Star,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp).padding(end = 4.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "Potencial máximo: ${potential.maxPotentialPoints} pontos",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
                         }
                     }
                 }
