@@ -57,6 +57,11 @@ fun LeaguesScreen(
     var showJoinDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
+        // Garante refresh ao voltar para esta tela (fallback independente do Realtime)
+        viewModel.loadLeagues()
+    }
+
+    LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
                 is LeagueEvent.NavigateToLeague -> {

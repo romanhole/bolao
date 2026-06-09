@@ -7,15 +7,18 @@ import com.bolao.domain.repository.AuthRepository
 import com.bolao.domain.repository.LeagueRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresChangeFlow
+import io.github.jan.supabase.realtime.realtime
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 class LeagueRepositoryImpl(
@@ -23,24 +26,29 @@ class LeagueRepositoryImpl(
     private val authRepository: AuthRepository,
 ) : LeagueRepository {
 
-    override fun getUserLeagues(): Flow<List<League>> = flow {
+    override fun getUserLeagues(): Flow<List<League>> = channelFlow {
         val userId = authRepository.requireUserId()
 
-        // Canal Realtime para ser notificado quando for adicionado em novas ligas
-        val channel = supabase.channel("league_members_changes")
-        val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
-            table = "league_members"
-            filter("user_id", io.github.jan.supabase.postgrest.query.filter.FilterOperator.EQ, userId)
-        }
-        
+        // Sufixo aleatório evita colisão de canais ao reconectar
+        val channel = supabase.channel("league_members_changes_${Random.nextInt()}")
+
+        channel
+            .postgresChangeFlow<PostgresAction>(schema = "public") {
+                table = "league_members"
+                filter("user_id", FilterOperator.EQ, userId)
+            }
+            .onEach { trySend(fetchLeaguesForUser(userId)) }
+            .launchIn(this)
+
         channel.subscribe()
 
-        // Emite a lista inicial e depois reage a cada mudança na tabela
-        val updates = changes
-            .map { fetchLeaguesForUser(userId) }
-            .onStart { emit(fetchLeaguesForUser(userId)) }
+        // Emissão inicial imediata
+        send(fetchLeaguesForUser(userId))
 
-        emitAll(updates)
+        // awaitClose garante que o canal é liberado quando o flow é cancelado
+        awaitClose {
+            launch { supabase.realtime.removeChannel(channel) }
+        }
     }
 
     private suspend fun fetchLeaguesForUser(userId: String): List<League> {

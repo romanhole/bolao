@@ -87,7 +87,7 @@ class LeagueDetailViewModel(
                 val allPredictions = predictionsResult.getOrNull() ?: emptyList()
 
                 // Observa partidas ao vivo para somar pontos reativos na memória
-                matchRepository.observeMatchesByCompetition("brasileirao_2026")
+                matchRepository.observeMatchesByCompetition("copa_do_mundo_2026")
                     .map { matches ->
                         val liveMatches = matches.filter { it.status is com.bolao.domain.model.GameStatus.Live }
                         
