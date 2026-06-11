@@ -42,7 +42,7 @@ A pontuação base calculada acima é multiplicada por um peso (`stage_multiplie
 | Fase | Multiplicador |
 |------|--------------|
 | Fase de Grupos / Rodadas normais | **×1** |
-| Oitavas de Final | **×1.5** |
+| 16-avos / Oitavas de Final | **×1.5** |
 | Quartas de Final | **×2** |
 | Semifinal | **×2** |
 | Final | **×2.5** |
