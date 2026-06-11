@@ -29,7 +29,7 @@ data class Match(
     val homeOdd: Double? = null,
     val drawOdd: Double? = null,
     val awayOdd: Double? = null,
-    val stageMultiplier: Int = 1,
+    val stageMultiplier: Float = 1.0f,
     val status: GameStatus = GameStatus.Scheduled,
     val scheduledAt: Instant,
     val competition: String,

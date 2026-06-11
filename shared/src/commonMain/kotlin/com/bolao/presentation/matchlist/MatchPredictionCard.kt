@@ -140,6 +140,7 @@ fun MatchPredictionCard(
                 round       = item.match.round,
                 scheduledAt = item.match.scheduledAt,
                 status      = item.match.status,
+                stageMultiplier = item.match.stageMultiplier,
                 modifier    = Modifier
                     .fillMaxWidth()
                     .background(
@@ -302,6 +303,7 @@ private fun MatchCardHeader(
     round: String,
     scheduledAt: Instant,
     status: GameStatus,
+    stageMultiplier: Float = 1.0f,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -324,10 +326,16 @@ private fun MatchCardHeader(
                 overflow = TextOverflow.Ellipsis,
             )
         }
+        // Badge do multiplicador de fase (visível apenas quando > 1.0x)
+        if (stageMultiplier > 1.0f) {
+            Spacer(Modifier.width(6.dp))
+            StageMultiplierBadge(multiplier = stageMultiplier)
+        }
         Spacer(Modifier.width(8.dp))
         StatusBadge(status = status)
     }
 }
+
 
 // ── Status Badge ──────────────────────────────────────────────────────────────
 
@@ -364,6 +372,53 @@ private fun StatusBadge(status: GameStatus) {
                 text  = status.reason,
                 color = LiveRed,
             )
+    }
+}
+
+/** Badge visual do multiplicador de fase. Só exibido quando multiplier > 1.0x.
+ *
+ * Escala de cores:
+ * - x1.5 → dourado suave (BolaoGold com alpha baixo)
+ * - x2.0 → dourado
+ * - x2.5 → dourado brilhante com ícone de estrela
+ */
+@Composable
+private fun StageMultiplierBadge(multiplier: Float) {
+    val label = when {
+        multiplier >= 2.5f -> "×2.5"
+        multiplier >= 2.0f -> "×2"
+        multiplier >= 1.5f -> "×1.5"
+        else -> return // Abaixo de 1.5 não exibe badge
+    }
+    val badgeColor = when {
+        multiplier >= 2.5f -> BolaoGold
+        multiplier >= 2.0f -> BolaoGold.copy(alpha = 0.85f)
+        else               -> BolaoGold.copy(alpha = 0.65f)
+    }
+    Surface(
+        shape = RoundedCornerShape(50),
+        color = badgeColor.copy(alpha = 0.18f),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
+            if (multiplier >= 2.5f) {
+                Icon(
+                    imageVector = Icons.Rounded.Star,
+                    contentDescription = null,
+                    modifier = Modifier.size(10.dp),
+                    tint = badgeColor,
+                )
+            }
+            Text(
+                text       = label,
+                style      = MaterialTheme.typography.labelSmall,
+                color      = badgeColor,
+                fontWeight = FontWeight.ExtraBold,
+            )
+        }
     }
 }
 
