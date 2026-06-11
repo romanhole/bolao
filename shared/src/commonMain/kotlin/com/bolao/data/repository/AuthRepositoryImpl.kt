@@ -6,11 +6,16 @@ import com.bolao.domain.repository.AuthRepository
 import com.bolao.domain.repository.AuthState
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.parseSessionFromUrl
+
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
 
 /**
  * Implementação real de [AuthRepository] usando o Supabase Auth SDK (auth-kt v3.x).
@@ -73,7 +78,7 @@ class AuthRepositoryImpl(
 
     override suspend fun signUp(email: String, password: String): Result<Unit> =
         runCatching {
-            supabase.auth.signUpWith(Email) {
+            supabase.auth.signUpWith(Email, redirectUrl = "bolao://confirm-email") {
                 this.email    = email
                 this.password = password
             }
@@ -87,4 +92,38 @@ class AuthRepositoryImpl(
     override suspend fun logout() {
         supabase.auth.signOut()
     }
+
+    private val _isResetPasswordMode = MutableStateFlow(false)
+    override val isResetPasswordMode: Flow<Boolean> = _isResetPasswordMode.asStateFlow()
+
+    override suspend fun handleDeepLink(url: String) {
+        runCatching {
+            val session = supabase.auth.parseSessionFromUrl(url)
+            supabase.auth.importSession(session)
+        }
+        if (url.contains("reset-password") || url.contains("type=recovery")) {
+            _isResetPasswordMode.value = true
+        }
+    }
+
+    override fun clearResetPasswordMode() {
+        _isResetPasswordMode.value = false
+    }
+
+    override suspend fun sendPasswordResetEmail(email: String): Result<Unit> =
+        runCatching {
+            supabase.auth.resetPasswordForEmail(
+                email = email,
+                redirectUrl = "bolao://reset-password"
+            )
+        }
+
+    override suspend fun updatePassword(newPassword: String): Result<Unit> =
+        runCatching {
+            supabase.auth.updateUser {
+                password = newPassword
+            }
+        }
 }
+
+

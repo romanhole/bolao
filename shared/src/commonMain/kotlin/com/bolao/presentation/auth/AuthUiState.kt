@@ -24,4 +24,21 @@ data class AuthUiState(
 
     val isConfirmEmailDialogVisible: Boolean = false,
     val resendCooldownSeconds: Int           = 0,
+
+    // Fluxo "Esqueci minha senha"
+    val isForgotPasswordMode: Boolean    = false,
+    val forgotPasswordEmail: String      = "",
+    val resetEmailSent: Boolean          = false,
+    val forgotPasswordLoading: Boolean   = false,
+    val forgotPasswordError: String?     = null,
+
+    // Fluxo "Definir nova senha" (após deep link)
+    val isResetPasswordMode: Boolean     = false,
+    val newPassword: String              = "",
+    val confirmNewPassword: String       = "",
+    val isNewPasswordVisible: Boolean    = false,
+    val isConfirmNewPasswordVisible: Boolean = false,
+    val resetPasswordLoading: Boolean    = false,
+    val resetPasswordError: String?      = null,
 )
+

@@ -58,4 +58,21 @@ interface AuthRepository {
 
     /** Encerra a sessão do usuário atual. */
     suspend fun logout()
+
+    /** Envia e-mail de recuperação com link de reset */
+    suspend fun sendPasswordResetEmail(email: String): Result<Unit>
+
+    /** Define nova senha (após autenticação via link de reset) */
+    suspend fun updatePassword(newPassword: String): Result<Unit>
+
+    /** Flow que emite se o fluxo de redefinição de senha está ativo */
+    val isResetPasswordMode: Flow<Boolean>
+
+    /** Processa o deep link recebido, importando a sessão se houver tokens */
+    suspend fun handleDeepLink(url: String)
+
+    /** Limpa o estado de redefinição de senha */
+    fun clearResetPasswordMode()
 }
+
+

@@ -28,6 +28,17 @@ class AuthViewModel(
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
+    init {
+        viewModelScope.launch {
+            authRepository.isResetPasswordMode.collect { isReset ->
+                _uiState.update { it.copy(isResetPasswordMode = isReset) }
+            }
+        }
+        if (isRecoveryUrl()) {
+            enterResetPasswordMode()
+        }
+    }
+
     // ── Atualizações de campos ─────────────────────────────────────────────────
 
     fun onEmailChange(email: String) {
@@ -160,4 +171,139 @@ class AuthViewModel(
         message.contains("rate limit")                         -> "Muitas tentativas. Aguarde um momento."
         else                                                    -> "Erro: $message"
     }
+
+    // ── Fluxo Esqueci minha senha / Reset de senha ─────────────────────────────
+
+    fun onForgotPasswordClick() {
+        _uiState.update { 
+            it.copy(
+                isForgotPasswordMode = true,
+                forgotPasswordEmail = "",
+                resetEmailSent = false,
+                forgotPasswordLoading = false,
+                forgotPasswordError = null
+            )
+        }
+    }
+
+    fun onForgotPasswordEmailChange(value: String) {
+        _uiState.update { it.copy(forgotPasswordEmail = value, forgotPasswordError = null) }
+    }
+
+    fun onBackFromForgotPassword() {
+        _uiState.update { 
+            it.copy(
+                isForgotPasswordMode = false,
+                forgotPasswordError = null
+            )
+        }
+    }
+
+    fun submitForgotPassword() {
+        val email = _uiState.value.forgotPasswordEmail.trim()
+        if (email.isBlank()) {
+            _uiState.update { it.copy(forgotPasswordError = "Informe o e-mail") }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(forgotPasswordLoading = true, forgotPasswordError = null) }
+            authRepository.sendPasswordResetEmail(email)
+                .onSuccess {
+                    _uiState.update { it.copy(forgotPasswordLoading = false, resetEmailSent = true) }
+                }
+                .onFailure { error ->
+                    _uiState.update { 
+                        it.copy(
+                            forgotPasswordLoading = false, 
+                            forgotPasswordError = parseAuthError(error.message)
+                        ) 
+                    }
+                }
+        }
+    }
+
+    fun enterResetPasswordMode() {
+        viewModelScope.launch {
+            authRepository.handleDeepLink("")
+        }
+        _uiState.update {
+            it.copy(
+                isResetPasswordMode = true,
+                newPassword = "",
+                confirmNewPassword = "",
+                resetPasswordError = null
+            )
+        }
+    }
+
+    fun onNewPasswordChange(value: String) {
+        _uiState.update { it.copy(newPassword = value, resetPasswordError = null) }
+    }
+
+    fun onConfirmNewPasswordChange(value: String) {
+        _uiState.update { it.copy(confirmNewPassword = value, resetPasswordError = null) }
+    }
+
+    fun toggleNewPasswordVisibility() {
+        _uiState.update { it.copy(isNewPasswordVisible = !_uiState.value.isNewPasswordVisible) }
+    }
+
+    fun toggleConfirmNewPasswordVisibility() {
+        _uiState.update { it.copy(isConfirmNewPasswordVisible = !_uiState.value.isConfirmNewPasswordVisible) }
+    }
+
+    fun cancelResetPassword() {
+        viewModelScope.launch {
+            authRepository.logout()
+            authRepository.clearResetPasswordMode()
+            _uiState.update { 
+                it.copy(
+                    isResetPasswordMode = false,
+                    newPassword = "",
+                    confirmNewPassword = "",
+                    resetPasswordError = null
+                ) 
+            }
+        }
+    }
+
+    fun submitNewPassword() {
+        val state = _uiState.value
+        if (state.newPassword.isBlank()) {
+            _uiState.update { it.copy(resetPasswordError = "Informe a nova senha") }
+            return
+        }
+        if (state.newPassword.length < 6) {
+            _uiState.update { it.copy(resetPasswordError = "A senha deve ter pelo menos 6 caracteres") }
+            return
+        }
+        if (state.newPassword != state.confirmNewPassword) {
+            _uiState.update { it.copy(resetPasswordError = "As senhas não coincidem") }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(resetPasswordLoading = true, resetPasswordError = null) }
+            authRepository.updatePassword(state.newPassword)
+                .onSuccess {
+                    authRepository.clearResetPasswordMode()
+                    _uiState.update { 
+                        it.copy(
+                            resetPasswordLoading = false,
+                            isResetPasswordMode = false,
+                            newPassword = "",
+                            confirmNewPassword = ""
+                        ) 
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update { 
+                        it.copy(
+                            resetPasswordLoading = false, 
+                            resetPasswordError = parseAuthError(error.message)
+                        ) 
+                    }
+                }
+        }
+    }
 }
+

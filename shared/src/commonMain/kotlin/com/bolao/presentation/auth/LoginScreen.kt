@@ -1,8 +1,10 @@
 package com.bolao.presentation.auth
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -59,19 +61,6 @@ import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * Tela de login e cadastro.
- *
- * ## Design
- * - Fundo escuro com gradiente radial suave
- * - Card central com efeito glassmorphism
- * - Campo de e-mail com ícone de e-mail
- * - Campo de senha com botão de mostrar/ocultar
- * - Animação de transição entre modo login ↔ cadastro
- * - Spinner e desabilita botão durante loading
- *
- * ## Navegação
- * Não há navegação explícita — o [App] composable raiz observa
- * [AuthRepository.authState] e redireciona para [MatchListScreen]
- * automaticamente após login/cadastro bem-sucedido.
  */
 @Composable
 fun LoginScreen(
@@ -86,251 +75,16 @@ fun LoginScreen(
                 .background(MaterialTheme.colorScheme.background),
             contentAlignment = Alignment.Center,
         ) {
-            Column(
-                modifier            = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 28.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                Spacer(Modifier.height(48.dp))
-
-                // ── Logo ─────────────────────────────────────────────────────
-                Box(
-                    modifier = Modifier
-                        .size(88.dp)
-                        .clip(CircleShape)
-                        .background(
-                            brush = Brush.linearGradient(
-                                listOf(BolaoGreen, BolaoGold.copy(alpha = 0.8f))
-                            )
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text  = "B",
-                        style = MaterialTheme.typography.displayMedium.copy(
-                            fontWeight = FontWeight.Black,
-                            color      = Color.White,
-                        ),
-                    )
+            AnimatedContent(
+                targetState = uiState.isForgotPasswordMode,
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                label = "ForgotModeTransition"
+            ) { isForgotMode ->
+                if (isForgotMode) {
+                    ForgotPasswordContent(viewModel = viewModel, uiState = uiState)
+                } else {
+                    LoginContent(viewModel = viewModel, uiState = uiState)
                 }
-
-                // ── Título ───────────────────────────────────────────────────
-                Text(
-                    text       = "Bolão",
-                    style      = MaterialTheme.typography.displaySmall,
-                    fontWeight = FontWeight.Black,
-                    color      = MaterialTheme.colorScheme.primary,
-                )
-
-                Text(
-                    text      = if (uiState.isLoginMode)
-                        "Entre para fazer seus palpites"
-                    else
-                        "Crie sua conta gratuitamente",
-                    style     = MaterialTheme.typography.bodyMedium,
-                    color     = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
-
-                Spacer(Modifier.height(4.dp))
-
-                // ── Card do formulário ────────────────────────────────────────
-                Surface(
-                    shape = RoundedCornerShape(24.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 4.dp,
-                    shadowElevation = 8.dp,
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp),
-                    ) {
-
-                        // ── Campo E-mail ──────────────────────────────────────
-                        OutlinedTextField(
-                            value         = uiState.email,
-                            onValueChange = viewModel::onEmailChange,
-                            label         = { Text("E-mail") },
-                            leadingIcon   = {
-                                Icon(
-                                    imageVector        = Icons.Rounded.Email,
-                                    contentDescription = null,
-                                    tint               = MaterialTheme.colorScheme.primary,
-                                )
-                            },
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Email,
-                                imeAction    = ImeAction.Next,
-                            ),
-                            singleLine = true,
-                            modifier   = Modifier.fillMaxWidth(),
-                            shape      = RoundedCornerShape(12.dp),
-                            colors     = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor   = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                            ),
-                        )
-
-
-
-                        // ── Campo Senha ───────────────────────────────────────
-                        OutlinedTextField(
-                            value         = uiState.password,
-                            onValueChange = viewModel::onPasswordChange,
-                            label         = { Text("Senha") },
-                            leadingIcon   = {
-                                Icon(
-                                    imageVector        = Icons.Rounded.Lock,
-                                    contentDescription = null,
-                                    tint               = MaterialTheme.colorScheme.primary,
-                                )
-                            },
-                            trailingIcon = {
-                                IconButton(onClick = viewModel::togglePasswordVisibility) {
-                                    Icon(
-                                        imageVector = if (uiState.isPasswordVisible)
-                                            Icons.Rounded.VisibilityOff
-                                        else
-                                            Icons.Rounded.Visibility,
-                                        contentDescription = if (uiState.isPasswordVisible)
-                                            "Ocultar senha"
-                                        else
-                                            "Mostrar senha",
-                                    )
-                                }
-                            },
-                            visualTransformation = if (uiState.isPasswordVisible)
-                                VisualTransformation.None
-                            else
-                                PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Password,
-                                imeAction    = ImeAction.Done,
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = { viewModel.submit() }
-                            ),
-                            singleLine = true,
-                            modifier   = Modifier.fillMaxWidth(),
-                            shape      = RoundedCornerShape(12.dp),
-                            colors     = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor   = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                            ),
-                        )
-
-                        // ── Campo Confirmar Senha (Apenas Cadastro) ─────────────────
-                        AnimatedVisibility(
-                            visible = !uiState.isLoginMode,
-                        ) {
-                            OutlinedTextField(
-                                value         = uiState.confirmPassword,
-                                onValueChange = viewModel::onConfirmPasswordChange,
-                                label         = { Text("Confirmar Senha") },
-                                leadingIcon   = {
-                                    Icon(
-                                        imageVector        = Icons.Rounded.Lock,
-                                        contentDescription = null,
-                                        tint               = MaterialTheme.colorScheme.primary,
-                                    )
-                                },
-                                trailingIcon = {
-                                    IconButton(onClick = viewModel::toggleConfirmPasswordVisibility) {
-                                        Icon(
-                                            imageVector = if (uiState.isConfirmPasswordVisible)
-                                                Icons.Rounded.VisibilityOff
-                                            else
-                                                Icons.Rounded.Visibility,
-                                            contentDescription = if (uiState.isConfirmPasswordVisible)
-                                                "Ocultar senha"
-                                            else
-                                                "Mostrar senha",
-                                        )
-                                    }
-                                },
-                                visualTransformation = if (uiState.isConfirmPasswordVisible)
-                                    VisualTransformation.None
-                                else
-                                    PasswordVisualTransformation(),
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.Password,
-                                    imeAction    = ImeAction.Done,
-                                ),
-                                keyboardActions = KeyboardActions(
-                                    onDone = { viewModel.submit() }
-                                ),
-                                singleLine = true,
-                                modifier   = Modifier.fillMaxWidth(),
-                                shape      = RoundedCornerShape(12.dp),
-                                colors     = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor   = MaterialTheme.colorScheme.primary,
-                                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                                ),
-                            )
-                        }
-
-                        // ── Mensagem de erro ──────────────────────────────────
-                        AnimatedVisibility(
-                            visible = uiState.error != null,
-                            enter   = fadeIn(),
-                            exit    = fadeOut(),
-                        ) {
-                            Text(
-                                text     = uiState.error.orEmpty(),
-                                style    = MaterialTheme.typography.bodySmall,
-                                color    = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                        }
-
-                        // ── Botão de submit ───────────────────────────────────
-                        Button(
-                            onClick  = viewModel::submit,
-                            enabled  = !uiState.isLoading,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(52.dp),
-                            shape  = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = BolaoGreen,
-                                contentColor   = Color.Black,
-                            ),
-                        ) {
-                            if (uiState.isLoading) {
-                                CircularProgressIndicator(
-                                    modifier    = Modifier.size(22.dp),
-                                    strokeWidth = 2.5.dp,
-                                    color       = Color.Black,
-                                )
-                            } else {
-                                Text(
-                                    text       = if (uiState.isLoginMode) "Entrar" else "Criar Conta",
-                                    style      = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Bold,
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // ── Toggle login ↔ cadastro ───────────────────────────────────
-                TextButton(onClick = viewModel::toggleMode) {
-                    Text(
-                        text  = if (uiState.isLoginMode)
-                            "Não tem conta? Criar agora"
-                        else
-                            "Já tem conta? Entrar",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
-
-                Spacer(Modifier.height(48.dp))
             }
         }
 
@@ -382,5 +136,496 @@ fun LoginScreen(
                 containerColor = MaterialTheme.colorScheme.surface,
             )
         }
+    }
+}
+
+@Composable
+private fun LoginContent(
+    viewModel: AuthViewModel,
+    uiState: AuthUiState,
+) {
+    Column(
+        modifier            = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 28.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Spacer(Modifier.height(48.dp))
+
+        // ── Logo ─────────────────────────────────────────────────────
+        Box(
+            modifier = Modifier
+                .size(88.dp)
+                .clip(CircleShape)
+                .background(
+                    brush = Brush.linearGradient(
+                        listOf(BolaoGreen, BolaoGold.copy(alpha = 0.8f))
+                    )
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text  = "B",
+                style = MaterialTheme.typography.displayMedium.copy(
+                    fontWeight = FontWeight.Black,
+                    color      = Color.White,
+                ),
+            )
+        }
+
+        // ── Título ───────────────────────────────────────────────────
+        Text(
+            text       = "Bolão",
+            style      = MaterialTheme.typography.displaySmall,
+            fontWeight = FontWeight.Black,
+            color      = MaterialTheme.colorScheme.primary,
+        )
+
+        Text(
+            text      = if (uiState.isLoginMode)
+                "Entre para fazer seus palpites"
+            else
+                "Crie sua conta gratuitamente",
+            style     = MaterialTheme.typography.bodyMedium,
+            color     = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+
+        Spacer(Modifier.height(4.dp))
+
+        // ── Card do formulário ────────────────────────────────────────
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 4.dp,
+            shadowElevation = 8.dp,
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+
+                // ── Campo E-mail ──────────────────────────────────────
+                OutlinedTextField(
+                    value         = uiState.email,
+                    onValueChange = viewModel::onEmailChange,
+                    label         = { Text("E-mail") },
+                    leadingIcon   = {
+                        Icon(
+                            imageVector        = Icons.Rounded.Email,
+                            contentDescription = null,
+                            tint               = MaterialTheme.colorScheme.primary,
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        imeAction    = ImeAction.Next,
+                    ),
+                    singleLine = true,
+                    modifier   = Modifier.fillMaxWidth(),
+                    shape      = RoundedCornerShape(12.dp),
+                    colors     = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor   = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    ),
+                )
+
+                // ── Campo Senha ───────────────────────────────────────
+                OutlinedTextField(
+                    value         = uiState.password,
+                    onValueChange = viewModel::onPasswordChange,
+                    label         = { Text("Senha") },
+                    leadingIcon   = {
+                        Icon(
+                            imageVector        = Icons.Rounded.Lock,
+                            contentDescription = null,
+                            tint               = MaterialTheme.colorScheme.primary,
+                        )
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = viewModel::togglePasswordVisibility) {
+                            Icon(
+                                imageVector = if (uiState.isPasswordVisible)
+                                    Icons.Rounded.VisibilityOff
+                                else
+                                    Icons.Rounded.Visibility,
+                                contentDescription = if (uiState.isPasswordVisible)
+                                    "Ocultar senha"
+                                else
+                                    "Mostrar senha",
+                            )
+                        }
+                    },
+                    visualTransformation = if (uiState.isPasswordVisible)
+                        VisualTransformation.None
+                    else
+                        PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction    = if (uiState.isLoginMode) ImeAction.Done else ImeAction.Next,
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = { if (uiState.isLoginMode) viewModel.submit() }
+                    ),
+                    singleLine = true,
+                    modifier   = Modifier.fillMaxWidth(),
+                    shape      = RoundedCornerShape(12.dp),
+                    colors     = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor   = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    ),
+                )
+
+                // ── Esqueci minha Senha (Apenas Login) ─────────────────
+                AnimatedVisibility(
+                    visible = uiState.isLoginMode,
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.CenterEnd
+                    ) {
+                        TextButton(
+                            onClick = viewModel::onForgotPasswordClick,
+                            modifier = Modifier.padding(vertical = 0.dp)
+                        ) {
+                            Text(
+                                text = "Esqueci minha senha",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                }
+
+                // ── Campo Confirmar Senha (Apenas Cadastro) ─────────────────
+                AnimatedVisibility(
+                    visible = !uiState.isLoginMode,
+                ) {
+                    OutlinedTextField(
+                        value         = uiState.confirmPassword,
+                        onValueChange = viewModel::onConfirmPasswordChange,
+                        label         = { Text("Confirmar Senha") },
+                        leadingIcon   = {
+                            Icon(
+                                imageVector        = Icons.Rounded.Lock,
+                                contentDescription = null,
+                                tint               = MaterialTheme.colorScheme.primary,
+                            )
+                        },
+                        trailingIcon = {
+                            IconButton(onClick = viewModel::toggleConfirmPasswordVisibility) {
+                                Icon(
+                                    imageVector = if (uiState.isConfirmPasswordVisible)
+                                        Icons.Rounded.VisibilityOff
+                                    else
+                                        Icons.Rounded.Visibility,
+                                    contentDescription = if (uiState.isConfirmPasswordVisible)
+                                        "Ocultar senha"
+                                    else
+                                        "Mostrar senha",
+                                )
+                            }
+                        },
+                        visualTransformation = if (uiState.isConfirmPasswordVisible)
+                            VisualTransformation.None
+                        else
+                            PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction    = ImeAction.Done,
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = { viewModel.submit() }
+                        ),
+                        singleLine = true,
+                        modifier   = Modifier.fillMaxWidth(),
+                        shape      = RoundedCornerShape(12.dp),
+                        colors     = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor   = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        ),
+                    )
+                }
+
+                // ── Mensagem de erro ──────────────────────────────────
+                AnimatedVisibility(
+                    visible = uiState.error != null,
+                    enter   = fadeIn(),
+                    exit    = fadeOut(),
+                ) {
+                    Text(
+                        text     = uiState.error.orEmpty(),
+                        style    = MaterialTheme.typography.bodySmall,
+                        color    = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+
+                // ── Botão de submit ───────────────────────────────────
+                Button(
+                    onClick  = viewModel::submit,
+                    enabled  = !uiState.isLoading,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape  = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = BolaoGreen,
+                        contentColor   = Color.Black,
+                    ),
+                ) {
+                    if (uiState.isLoading) {
+                        CircularProgressIndicator(
+                            modifier    = Modifier.size(22.dp),
+                            strokeWidth = 2.5.dp,
+                            color       = Color.Black,
+                        )
+                    } else {
+                        Text(
+                            text       = if (uiState.isLoginMode) "Entrar" else "Criar Conta",
+                            style      = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+            }
+        }
+
+        // ── Toggle login ↔ cadastro ───────────────────────────────────
+        TextButton(onClick = viewModel::toggleMode) {
+            Text(
+                text  = if (uiState.isLoginMode)
+                    "Não tem conta? Criar agora"
+                else
+                    "Já tem conta? Entrar",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+
+        Spacer(Modifier.height(48.dp))
+    }
+}
+
+@Composable
+private fun ForgotPasswordContent(
+    viewModel: AuthViewModel,
+    uiState: AuthUiState,
+) {
+    Column(
+        modifier            = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 28.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Spacer(Modifier.height(48.dp))
+
+        // ── Logo ─────────────────────────────────────────────────────
+        Box(
+            modifier = Modifier
+                .size(88.dp)
+                .clip(CircleShape)
+                .background(
+                    brush = Brush.linearGradient(
+                        listOf(BolaoGreen, BolaoGold.copy(alpha = 0.8f))
+                    )
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text  = "B",
+                style = MaterialTheme.typography.displayMedium.copy(
+                    fontWeight = FontWeight.Black,
+                    color      = Color.White,
+                ),
+            )
+        }
+
+        AnimatedContent(
+            targetState = uiState.resetEmailSent,
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
+            label = "ResetEmailSentTransition"
+        ) { emailSent ->
+            if (emailSent) {
+                // ── Card de e-mail enviado ────────────────────────
+                Surface(
+                    shape = RoundedCornerShape(24.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 4.dp,
+                    shadowElevation = 8.dp,
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        Text(
+                            text = "✉",
+                            style = MaterialTheme.typography.displayMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+
+                        Text(
+                            text = "E-mail enviado!",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Text(
+                            text = "Verifique sua caixa de entrada e clique no link para redefinir sua senha.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(Modifier.height(8.dp))
+
+                        Button(
+                            onClick = viewModel::onBackFromForgotPassword,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = BolaoGreen,
+                                contentColor = Color.Black,
+                            ),
+                        ) {
+                            Text(
+                                text = "Voltar ao login",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
+                }
+            } else {
+                // ── Card de recuperar senha ───────────────────────
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text       = "Recuperar Senha",
+                        style      = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.Black,
+                        color      = MaterialTheme.colorScheme.primary,
+                    )
+
+                    Text(
+                        text      = "Informe seu e-mail cadastrado",
+                        style     = MaterialTheme.typography.bodyMedium,
+                        color     = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+
+                    Spacer(Modifier.height(4.dp))
+
+                    Surface(
+                        shape = RoundedCornerShape(24.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        tonalElevation = 4.dp,
+                        shadowElevation = 8.dp,
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp),
+                            verticalArrangement = Arrangement.spacedBy(14.dp),
+                        ) {
+                            // Campo E-mail
+                            OutlinedTextField(
+                                value = uiState.forgotPasswordEmail,
+                                onValueChange = viewModel::onForgotPasswordEmailChange,
+                                label = { Text("E-mail") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Email,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                    )
+                                },
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Email,
+                                    imeAction = ImeAction.Done,
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = { viewModel.submitForgotPassword() }
+                                ),
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                ),
+                            )
+
+                            // Erro
+                            AnimatedVisibility(
+                                visible = uiState.forgotPasswordError != null,
+                                enter = fadeIn(),
+                                exit = fadeOut(),
+                            ) {
+                                Text(
+                                    text = uiState.forgotPasswordError.orEmpty(),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            }
+
+                            // Botão
+                            Button(
+                                onClick = viewModel::submitForgotPassword,
+                                enabled = !uiState.forgotPasswordLoading,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = BolaoGreen,
+                                    contentColor = Color.Black,
+                                ),
+                            ) {
+                                if (uiState.forgotPasswordLoading) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(22.dp),
+                                        strokeWidth = 2.5.dp,
+                                        color = Color.Black,
+                                    )
+                                } else {
+                                    Text(
+                                        text = "Enviar link de recuperação",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Botão voltar
+                    TextButton(onClick = viewModel::onBackFromForgotPassword) {
+                        Text(
+                            text = "Voltar ao login",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(48.dp))
     }
 }
