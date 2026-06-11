@@ -18,7 +18,7 @@ class LeaguesViewModel(
     private val repository: LeagueRepository
 ) : ViewModel() {
 
-    private val refreshTrigger = MutableStateFlow(Unit)
+    private val refreshTrigger = MutableStateFlow(0)
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<LeaguesUiState> = refreshTrigger
@@ -34,7 +34,7 @@ class LeaguesViewModel(
         )
 
     fun loadLeagues() {
-        refreshTrigger.value = Unit
+        refreshTrigger.value += 1
     }
 
     // Eventos tipados: ShowMessage (Snackbar) ou NavigateToLeague (navegar)
