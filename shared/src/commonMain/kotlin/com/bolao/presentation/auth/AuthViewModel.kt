@@ -145,65 +145,6 @@ class AuthViewModel(
         }
     }
 
-    // ── Trocar Senha ──────────────────────────────────────────────────────────────
-
-    fun onNewPasswordChange(value: String) {
-        _uiState.update { it.copy(newPassword = value, changePasswordError = null) }
-    }
-
-    fun onConfirmNewPasswordChange(value: String) {
-        _uiState.update { it.copy(confirmNewPassword = value, changePasswordError = null) }
-    }
-
-    fun toggleNewPasswordVisibility() {
-        _uiState.update { it.copy(isNewPasswordVisible = !it.isNewPasswordVisible) }
-    }
-
-    fun toggleConfirmNewPasswordVisibility() {
-        _uiState.update { it.copy(isConfirmNewPasswordVisible = !it.isConfirmNewPasswordVisible) }
-    }
-
-    fun resetChangePasswordState() {
-        _uiState.update {
-            it.copy(
-                newPassword = "",
-                confirmNewPassword = "",
-                isNewPasswordVisible = false,
-                isConfirmNewPasswordVisible = false,
-                changePasswordLoading = false,
-                changePasswordError = null,
-                changePasswordSuccess = false,
-            )
-        }
-    }
-
-    fun submitChangePassword() {
-        val state = _uiState.value
-        if (state.newPassword.length < 6) {
-            _uiState.update { it.copy(changePasswordError = "A senha deve ter pelo menos 6 caracteres.") }
-            return
-        }
-        if (state.newPassword != state.confirmNewPassword) {
-            _uiState.update { it.copy(changePasswordError = "As senhas não coincidem.") }
-            return
-        }
-        viewModelScope.launch {
-            _uiState.update { it.copy(changePasswordLoading = true, changePasswordError = null) }
-            authRepository.updatePassword(state.newPassword)
-                .onSuccess {
-                    _uiState.update { it.copy(changePasswordLoading = false, changePasswordSuccess = true) }
-                }
-                .onFailure { error ->
-                    _uiState.update {
-                        it.copy(
-                            changePasswordLoading = false,
-                            changePasswordError = parseAuthError(error.message),
-                        )
-                    }
-                }
-        }
-    }
-
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /**
