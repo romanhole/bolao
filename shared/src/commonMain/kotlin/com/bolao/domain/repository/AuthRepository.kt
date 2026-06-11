@@ -56,6 +56,12 @@ interface AuthRepository {
      */
     suspend fun resendConfirmationEmail(email: String): Result<Unit>
 
+    /**
+     * Atualiza a senha do usuário autenticado.
+     * @return [Result.success] em caso de sucesso, [Result.failure] com a exceção em caso de erro.
+     */
+    suspend fun updatePassword(newPassword: String): Result<Unit>
+
     /** Encerra a sessão do usuário atual. */
     suspend fun logout()
 }

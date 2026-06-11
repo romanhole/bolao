@@ -84,6 +84,13 @@ class AuthRepositoryImpl(
             supabase.auth.resendEmail(io.github.jan.supabase.auth.OtpType.Email.SIGNUP, email)
         }
 
+    override suspend fun updatePassword(newPassword: String): Result<Unit> =
+        runCatching {
+            supabase.auth.updateUser {
+                password = newPassword
+            }
+        }
+
     override suspend fun logout() {
         supabase.auth.signOut()
     }

@@ -24,4 +24,13 @@ data class AuthUiState(
 
     val isConfirmEmailDialogVisible: Boolean = false,
     val resendCooldownSeconds: Int           = 0,
+
+    // Trocar Senha
+    val newPassword: String                  = "",
+    val confirmNewPassword: String           = "",
+    val isNewPasswordVisible: Boolean        = false,
+    val isConfirmNewPasswordVisible: Boolean = false,
+    val changePasswordLoading: Boolean       = false,
+    val changePasswordError: String?         = null,
+    val changePasswordSuccess: Boolean       = false,
 )

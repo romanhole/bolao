@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Stars
 import androidx.compose.material.icons.rounded.Logout
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -43,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import com.bolao.domain.repository.AuthRepository
 import com.bolao.domain.repository.AuthState
 import com.bolao.presentation.auth.AuthViewModel
+import com.bolao.presentation.auth.ChangePasswordSheet
 import com.bolao.presentation.auth.LoginScreen
 
 import com.bolao.presentation.leagues.LeagueDetailScreen
@@ -153,6 +155,7 @@ fun MainTabsScreen(
 ) {
     var currentTab by remember { mutableStateOf(AppTab.PREDICTIONS) }
     var showRulesBottomSheet by remember { mutableStateOf(false) }
+    var showChangePasswordSheet by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
@@ -186,6 +189,15 @@ fun MainTabsScreen(
                                 tint               = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
+                    }
+                    IconButton(
+                        onClick = { showChangePasswordSheet = true }
+                    ) {
+                        Icon(
+                            imageVector        = Icons.Rounded.Lock,
+                            contentDescription = "Trocar Senha",
+                            tint               = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                     IconButton(
                         onClick = { scope.launch { authViewModel.logout() } }
@@ -239,6 +251,15 @@ fun MainTabsScreen(
             if (showRulesBottomSheet) {
                 com.bolao.presentation.matchlist.RulesBottomSheet(
                     onDismissRequest = { showRulesBottomSheet = false }
+                )
+            }
+
+            if (showChangePasswordSheet) {
+                ChangePasswordSheet(
+                    onDismiss = {
+                        showChangePasswordSheet = false
+                        authViewModel.resetChangePasswordState()
+                    }
                 )
             }
         }
