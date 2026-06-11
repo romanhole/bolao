@@ -1,5 +1,7 @@
 package com.bolao.domain.usecase
 
+import kotlin.math.roundToInt
+
 /**
  * Calculadora de pontos isolada na camada de Domínio.
  * Responsável por calcular potenciais de aposta e os pontos reais.
@@ -19,7 +21,7 @@ object PredictionCalculator {
     fun calculatePotential(
         predHomeGoals: Int,
         predAwayGoals: Int,
-        stageMultiplier: Int,
+        stageMultiplier: Float,
         homeOdd: Double?,
         drawOdd: Double?,
         awayOdd: Double?
@@ -31,7 +33,7 @@ object PredictionCalculator {
         val predDiff = predHomeGoals - predAwayGoals
         val predSign = if (predDiff > 0) 1 else if (predDiff < 0) -1 else 0
         
-        val basePoints = 5 * stageMultiplier
+        val basePoints = (5 * stageMultiplier).roundToInt()
         var zebraBonus = 0
         var isZebra = false
         
@@ -61,7 +63,7 @@ object PredictionCalculator {
         predAway: Int,
         actualHome: Int,
         actualAway: Int,
-        stageMultiplier: Int,
+        stageMultiplier: Float,
         homeOdd: Double?,
         drawOdd: Double?,
         awayOdd: Double?
@@ -92,6 +94,6 @@ object PredictionCalculator {
             }
         }
 
-        return (basePoints * stageMultiplier) + zebraBonus
+        return (basePoints * stageMultiplier).roundToInt() + zebraBonus
     }
 }

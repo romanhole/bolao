@@ -50,7 +50,7 @@ data class MatchDto(
     @SerialName("home_odd")            val homeOdd: Double? = null,
     @SerialName("draw_odd")            val drawOdd: Double? = null,
     @SerialName("away_odd")            val awayOdd: Double? = null,
-    @SerialName("stage_multiplier")    val stageMultiplier: Int = 1,
+    @SerialName("stage_multiplier")    val stageMultiplier: Float = 1.0f,
 
     // Status e dados auxiliares do estado
     @SerialName("status")              val status: String = "scheduled",

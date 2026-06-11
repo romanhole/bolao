@@ -37,7 +37,17 @@ O usuário *só pontua* se acertar primeiramente a **tendência do jogo** (quem 
 - **Erro (0 pts)**: Errou o vencedor ou empate.
 
 ### 2. Multiplicador de Fase
-A pontuação base calculada acima é multiplicada por um peso (`stage_multiplier`). Jogos normais valem x1, Quartas de final valem x2, Semi x3, etc.
+A pontuação base calculada acima é multiplicada por um peso (`stage_multiplier`). Os multiplicadores são calibrados para valorizar as fases eliminatórias sem inflar demais os pontos:
+
+| Fase | Multiplicador |
+|------|--------------|
+| Fase de Grupos / Rodadas normais | **×1** |
+| 16-avos / Oitavas de Final | **×1.5** |
+| Quartas de Final | **×2** |
+| Semifinal | **×2** |
+| Final | **×2.5** |
+
+> O resultado final de pontos é sempre **arredondado para inteiro** (`ROUND`), garantindo que a pontuação exibida seja sempre um número inteiro mesmo com multiplicadores decimais (ex: 1 pt × 1.5 = 2 pts).
 
 ### 3. 🔥 Bônus de Zebra (Em Faixas)
 O usuário pode receber um bônus de risco caso o seu palpite coincida com uma alta probabilidade de "Zebra" (Calculada usando as Odds Reais). Apenas se acertar a tendência e o evento for uma surpresa, ele ganha pontos extras:
