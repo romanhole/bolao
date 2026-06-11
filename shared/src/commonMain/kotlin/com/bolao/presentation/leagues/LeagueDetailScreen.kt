@@ -38,6 +38,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -73,6 +76,7 @@ fun LeagueDetailScreen(
 
     val uiState by viewModel.uiState.collectAsState()
     var showRulesBottomSheet by remember { mutableStateOf(false) }
+    var selectedLiveMatch by remember { mutableStateOf<LiveMatchDetail?>(null) }
 
     Scaffold(
         topBar = {
@@ -149,7 +153,10 @@ fun LeagueDetailScreen(
                             ) {
                                 if (state.liveMatchesDetails.isNotEmpty()) {
                                     item {
-                                        LiveMatchesCarousel(state.liveMatchesDetails)
+                                        LiveMatchesCarousel(
+                                            liveMatchesDetails = state.liveMatchesDetails,
+                                            onShowAll = { selectedLiveMatch = it }
+                                        )
                                     }
                                 }
 
@@ -174,6 +181,13 @@ fun LeagueDetailScreen(
             if (showRulesBottomSheet) {
                 com.bolao.presentation.matchlist.RulesBottomSheet(
                     onDismissRequest = { showRulesBottomSheet = false }
+                )
+            }
+
+            if (selectedLiveMatch != null) {
+                LiveMatchPredictionsSheet(
+                    detail = selectedLiveMatch!!,
+                    onDismiss = { selectedLiveMatch = null }
                 )
             }
         }
@@ -283,7 +297,7 @@ private fun avatarColorFor(userId: String): Color {
 expect fun shareLeagueInvite(league: League)
 
 @Composable
-private fun LiveMatchesCarousel(liveMatchesDetails: List<LiveMatchDetail>) {
+private fun LiveMatchesCarousel(liveMatchesDetails: List<LiveMatchDetail>, onShowAll: (LiveMatchDetail) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp)) {
         Row(
             modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
@@ -307,14 +321,14 @@ private fun LiveMatchesCarousel(liveMatchesDetails: List<LiveMatchDetail>) {
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             items(liveMatchesDetails, key = { it.match.id }) { detail ->
-                LiveMatchCard(detail = detail, modifier = Modifier.width(320.dp))
+                LiveMatchCard(detail = detail, modifier = Modifier.width(320.dp), onShowAll = { onShowAll(detail) })
             }
         }
     }
 }
 
 @Composable
-private fun LiveMatchCard(detail: LiveMatchDetail, modifier: Modifier = Modifier) {
+private fun LiveMatchCard(detail: LiveMatchDetail, modifier: Modifier = Modifier, onShowAll: () -> Unit) {
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surfaceVariant,
@@ -371,12 +385,102 @@ private fun LiveMatchCard(detail: LiveMatchDetail, modifier: Modifier = Modifier
                     }
                 }
                 if (detail.partialRanking.size > 5) {
-                    Text(
-                        text = "e mais ${detail.partialRanking.size - 5} palpites...",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
+                    TextButton(
+                        onClick = onShowAll,
+                        contentPadding = PaddingValues(0.dp),
+                        modifier = Modifier.padding(top = 4.dp).height(24.dp)
+                    ) {
+                        Text(
+                            text = "Ver todos os ${detail.partialRanking.size} palpites →",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = BolaoGold
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LiveMatchPredictionsSheet(detail: LiveMatchDetail, onDismiss: () -> Unit) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${detail.match.homeTeam.shortName} ${detail.match.homeScore ?: 0} x ${detail.match.awayScore ?: 0} ${detail.match.awayTeam.shortName}",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                val min = (detail.match.status as? com.bolao.domain.model.GameStatus.Live)?.minutePlayed
+                Text(
+                    text = if (min != null) "$min'" else "Ao Vivo",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color(0xFFFF4B4B),
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Text(
+                text = "${detail.partialRanking.size} palpites",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
+            )
+
+            // Lista de palpites
+            LazyColumn(
+                contentPadding = PaddingValues(bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                itemsIndexed(detail.partialRanking) { index, score ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "${index + 1}º",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.width(32.dp)
+                        )
+                        Text(
+                            text = score.nickname,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "(${score.predictedHome}-${score.predictedAway})",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                        Text(
+                            text = "+${score.partialPoints} pts",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = if (score.partialPoints > 0) BolaoGold else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.width(64.dp),
+                            textAlign = TextAlign.End
+                        )
+                    }
                 }
             }
         }
