@@ -7,6 +7,8 @@ import com.bolao.domain.repository.AuthState
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.parseSessionFromUrl
+import com.bolao.presentation.auth.getRedirectUrl
+
 
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
@@ -78,7 +80,7 @@ class AuthRepositoryImpl(
 
     override suspend fun signUp(email: String, password: String): Result<Unit> =
         runCatching {
-            supabase.auth.signUpWith(Email, redirectUrl = "bolao://confirm-email") {
+            supabase.auth.signUpWith(Email, redirectUrl = getRedirectUrl("confirm-email")) {
                 this.email    = email
                 this.password = password
             }
@@ -114,7 +116,7 @@ class AuthRepositoryImpl(
         runCatching {
             supabase.auth.resetPasswordForEmail(
                 email = email,
-                redirectUrl = "bolao://reset-password"
+                redirectUrl = getRedirectUrl("reset-password")
             )
         }
 

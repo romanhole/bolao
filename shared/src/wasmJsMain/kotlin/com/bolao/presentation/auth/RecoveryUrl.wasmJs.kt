@@ -7,3 +7,8 @@ actual fun isRecoveryUrl(): Boolean {
     val href = window.location.href
     return hash.contains("type=recovery") || href.contains("type=recovery")
 }
+
+actual fun getRedirectUrl(type: String): String {
+    return window.location.origin
+}
+
