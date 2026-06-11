@@ -1,5 +1,5 @@
 {
-  "buildCommand": "./gradlew :shared:wasmJsBrowserDistribution",
+  "buildCommand": "curl -sL https://corretto.aws/downloads/latest/amazon-corretto-17-x64-linux-jdk.tar.gz | tar -xz && export JAVA_HOME=$PWD/$(ls -d amazon-corretto-17* | head -n 1) && export PATH=$JAVA_HOME/bin:$PATH && ./gradlew :shared:wasmJsBrowserDistribution",
   "outputDirectory": "shared/build/dist/wasmJs/productionExecutable",
   "installCommand": "chmod +x gradlew",
   "framework": null,
