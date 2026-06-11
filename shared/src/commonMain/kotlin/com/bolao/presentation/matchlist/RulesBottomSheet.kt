@@ -124,6 +124,29 @@ fun RulesBottomSheet(
 
             Spacer(modifier = Modifier.height(1.dp).fillMaxWidth().background(MaterialTheme.colorScheme.outlineVariant))
 
+            // Stage Multipliers
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = "2. Multiplicador de Fase",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                Text(
+                    text = "Jogos de fases eliminatórias valem mais pontos. O multiplicador aparece em dourado nos cards das partidas.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                RuleRow(title = "Fase de Grupos", value = "×1", desc = "Partidas normais sem multiplicador extra.")
+                RuleRow(title = "16-avos e Oitavas", value = "×1.5", desc = "Peso 1.5x na pontuação base.")
+                RuleRow(title = "Quartas e Semifinal", value = "×2", desc = "Peso 2x na pontuação base.")
+                RuleRow(title = "Final", value = "×2.5", desc = "Peso máximo de 2.5x na pontuação base.")
+            }
+
+            Spacer(modifier = Modifier.height(1.dp).fillMaxWidth().background(MaterialTheme.colorScheme.outlineVariant))
+
             // Zebra points
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(
@@ -131,7 +154,7 @@ fun RulesBottomSheet(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
-                        text = "2. Bônus de Zebra em Faixas",
+                        text = "3. Bônus de Zebra em Faixas",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
