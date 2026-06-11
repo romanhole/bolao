@@ -79,7 +79,10 @@ class LeagueDetailViewModel(
 
             if (leagueResult.isSuccess && leaderboardResult.isSuccess) {
                 val league = leagueResult.getOrThrow()
-                val baseLeaderboard = leaderboardResult.getOrThrow()
+                val baseLeaderboard = leaderboardResult.getOrThrow().sortedWith(
+                    compareByDescending<LeaderboardItem> { it.totalPoints }
+                        .thenByDescending { it.exactMatches }
+                )
                 
                 // Busca todos os palpites dos membros desta liga
                 val userIds = baseLeaderboard.map { it.userId }
@@ -127,7 +130,10 @@ class LeagueDetailViewModel(
                                     detail.partialRanking.find { it.userId == item.userId }?.partialPoints ?: 0
                                 }
                                 item.copy(totalPoints = item.totalPoints + livePoints)
-                            }.sortedByDescending { it.totalPoints }
+                            }.sortedWith(
+                                compareByDescending<LeaderboardItem> { it.totalPoints }
+                                    .thenByDescending { it.exactMatches }
+                            )
 
                             LeagueDetailUiState.Success(league, updatedRanking, liveDetails)
                         }
