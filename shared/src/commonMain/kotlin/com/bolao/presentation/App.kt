@@ -75,9 +75,12 @@ fun App(
     var appSettings by remember { mutableStateOf<com.bolao.domain.model.AppSettings?>(null) }
     var dismissedSoftUpdate by remember { mutableStateOf(false) }
 
-    androidx.compose.runtime.LaunchedEffect(Unit) {
-        settingsRepository.getSettings().onSuccess { settings ->
-            appSettings = settings
+    val coroutineScope = rememberCoroutineScope()
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+        coroutineScope.launch {
+            settingsRepository.getSettings().onSuccess { settings ->
+                appSettings = settings
+            }
         }
     }
 
