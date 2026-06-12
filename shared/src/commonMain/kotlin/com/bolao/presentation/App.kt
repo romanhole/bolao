@@ -110,6 +110,9 @@ fun App(
                 val authState by authRepository.authState.collectAsState(initial = AuthState.Loading)
             val uiState by authViewModel.uiState.collectAsState()
 
+            val settingsManager = remember { com.russhwolf.settings.Settings() }
+            var hasSeenTutorial by remember { androidx.compose.runtime.mutableStateOf(settingsManager.getBoolean("has_seen_tutorial", false)) }
+
             AnimatedContent(
                 targetState   = authState,
                 transitionSpec = { fadeIn() togetherWith fadeOut() },
@@ -135,6 +138,13 @@ fun App(
                     is AuthState.Authenticated -> {
                         if (uiState.isNewPasswordMode) {
                             ResetPasswordScreen(viewModel = authViewModel, uiState = uiState)
+                        } else if (!hasSeenTutorial) {
+                            com.bolao.presentation.onboarding.OnboardingScreen(
+                                onFinish = { 
+                                    settingsManager.putBoolean("has_seen_tutorial", true)
+                                    hasSeenTutorial = true
+                                }
+                            )
                         } else {
                             AuthenticatedApp(authViewModel = authViewModel)
                         }

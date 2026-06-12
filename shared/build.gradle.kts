@@ -107,6 +107,9 @@ kotlin {
 
             // Kamel Image Loader (Compose Multiplatform)
             implementation(libs.kamel.image)
+
+            // Multiplatform Settings
+            implementation(libs.multiplatform.settings)
         }
 
         // ── androidMain: engine OkHttp para Android ────────────────────────

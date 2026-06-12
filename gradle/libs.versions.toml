@@ -15,6 +15,7 @@ androidx-lifecycle      = "2.8.4"
 androidx-splashscreen   = "1.0.1"
 supabase                = "3.0.3"
 kamel                   = "1.0.0"
+multiplatform-settings  = "1.1.1"
 
 
 [libraries]
@@ -55,6 +56,9 @@ supabase-auth            = { module = "io.github.jan-tennert.supabase:auth-kt", 
 
 # Kamel Image Loading
 kamel-image              = { module = "media.kamel:kamel-image-default", version.ref = "kamel" }
+
+# Multiplatform Settings (SharedPreferences / NSUserDefaults)
+multiplatform-settings   = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "multiplatform-settings" }
 
 
 [plugins]
