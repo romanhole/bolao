@@ -15,6 +15,7 @@ import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -99,10 +100,24 @@ class AuthRepositoryImpl(
     override val isResetPasswordMode: Flow<Boolean> = _isResetPasswordMode.asStateFlow()
 
     override suspend fun handleDeepLink(url: String) {
+        println("handleDeepLink: url = $url")
+        
+        // Espera o Supabase Auth terminar de inicializar/restaurar do armazenamento persistente
         runCatching {
-            val session = supabase.auth.parseSessionFromUrl(url)
-            supabase.auth.importSession(session)
+            supabase.auth.sessionStatus.first { it !is SessionStatus.Initializing }
         }
+        println("handleDeepLink: Supabase Auth initialization finished")
+
+        val result = runCatching {
+            val session = supabase.auth.parseSessionFromUrl(url)
+            println("handleDeepLink: session parsed successfully = ${session.user?.email}")
+            supabase.auth.importSession(session)
+            println("handleDeepLink: session imported successfully")
+        }
+        if (result.isFailure) {
+            println("handleDeepLink ERROR: ${result.exceptionOrNull()?.stackTraceToString()}")
+        }
+        
         if (url.contains("reset-password") || url.contains("type=recovery")) {
             _isResetPasswordMode.value = true
         }
