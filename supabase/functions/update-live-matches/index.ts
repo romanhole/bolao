@@ -26,6 +26,7 @@ serve(async (req) => {
 
       const data = await response.json();
       if (data.events) {
+        console.log("RAW BZZOIRO RESPONSE FOR LEAGUE " + leagueId + ":", JSON.stringify(data.events, null, 2));
         events.push(...data.events);
       }
     }
@@ -47,32 +48,19 @@ serve(async (req) => {
       const apiId = event.id;
       let dbStatus = "scheduled";
 
-      switch (String(event.status).toLowerCase()) {
-        case "notstarted":
-          dbStatus = "scheduled";
-          break;
-        case "inprogress":
-        case "1st_half":
-        case "2nd_half":
-        case "extratime":
-        case "aet":
-        case "penalties":
-          dbStatus = "live";
-          break;
-        case "halftime":
-        case "ht":
-        case "half-time":
-          dbStatus = "halftime";
-          break;
-        case "finished":
-          dbStatus = "finished";
-          break;
-        case "cancelled":
-        case "postponed":
-          dbStatus = "interrupted"; // Ou cancelled, dependendo do mapping
-          break;
-        default:
-          dbStatus = "scheduled";
+      let rawStatus = String(event.status).toLowerCase();
+      let rawPeriod = event.period ? String(event.period).toLowerCase() : "";
+
+      if (rawStatus === "halftime" || rawStatus === "ht" || rawPeriod === "halftime" || rawPeriod === "ht" || rawPeriod === "half-time") {
+        dbStatus = "halftime";
+      } else if (rawStatus === "finished" || rawStatus === "ended" || rawPeriod === "finished") {
+        dbStatus = "finished";
+      } else if (rawStatus === "inprogress" || rawStatus === "live" || rawPeriod === "1st_half" || rawPeriod === "2nd_half" || rawPeriod === "extratime" || rawPeriod === "aet" || rawPeriod === "penalties") {
+        dbStatus = "live";
+      } else if (rawStatus === "cancelled" || rawStatus === "postponed") {
+        dbStatus = "interrupted";
+      } else {
+        dbStatus = "scheduled";
       }
 
       // 4. Update the matches table
