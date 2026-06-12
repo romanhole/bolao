@@ -57,6 +57,7 @@ import com.bolao.domain.model.League
 import com.bolao.domain.model.LeaderboardItem
 import com.bolao.presentation.BackHandlerWrapper
 import com.bolao.presentation.theme.BolaoGold
+import com.bolao.presentation.theme.BolaoGreen
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -167,6 +168,7 @@ fun LeagueDetailScreen(
                                     LeagueRankingCard(
                                         position = index + 1,
                                         item = item,
+                                        isCurrentUser = item.userId == state.currentUserId,
                                         modifier = Modifier
                                             .padding(horizontal = 16.dp)
                                             .animateItem()
@@ -198,15 +200,22 @@ fun LeagueDetailScreen(
 private fun LeagueRankingCard(
     position: Int,
     item: LeaderboardItem,
+    isCurrentUser: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val isPodium = position <= 3
+
+    val baseSurfaceColor = if (isCurrentUser) {
+        BolaoGreen.copy(alpha = 0.15f)
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
 
     val surfaceColor = when (position) {
         1 -> BolaoGold.copy(alpha = 0.15f)
         2 -> Color(0xFFC0C0C0).copy(alpha = 0.15f)
         3 -> Color(0xFFCD7F32).copy(alpha = 0.15f)
-        else -> MaterialTheme.colorScheme.surface
+        else -> baseSurfaceColor
     }
 
     val positionColor = when (position) {
@@ -254,12 +263,30 @@ private fun LeagueRankingCard(
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = item.nickname,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = item.nickname,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    
+                    if (isCurrentUser) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = BolaoGreen.copy(alpha = 0.2f),
+                        ) {
+                            Text(
+                                text = "Você",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = BolaoGreen,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
                 Text(
                     text = "${item.exactMatches} placar exato • ${item.totalPredictionsMade} palpites",
                     style = MaterialTheme.typography.bodySmall,

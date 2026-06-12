@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bolao.domain.model.LeaderboardItem
 import com.bolao.domain.model.League
+import com.bolao.domain.repository.AuthRepository
 import com.bolao.domain.repository.LeaderboardRepository
 import com.bolao.domain.repository.LeagueRepository
 import com.bolao.domain.repository.MatchRepository
@@ -36,6 +37,7 @@ sealed interface LeagueDetailUiState {
     data class Success(
         val league: League,
         val ranking: List<LeaderboardItem>,
+        val currentUserId: String? = null,
         val liveMatchesDetails: List<LiveMatchDetail> = emptyList(),
         val isRefreshing: Boolean = false,
     ) : LeagueDetailUiState
@@ -46,6 +48,7 @@ sealed interface LeagueDetailUiState {
  * ViewModel para a tela de detalhes de uma liga.
  */
 class LeagueDetailViewModel(
+    private val authRepository: AuthRepository,
     private val leagueRepository: LeagueRepository,
     private val leaderboardRepository: LeaderboardRepository,
     private val matchRepository: MatchRepository,
@@ -84,7 +87,12 @@ class LeagueDetailViewModel(
                         .thenByDescending { it.exactMatches }
                 )
                 
-                // Busca todos os palpites dos membros desta liga
+                // Pega o id do usuário atual
+                var currentUserId: String? = null
+                authRepository.currentUser.collect { session ->
+                    currentUserId = session?.userId
+                    
+                    // Busca todos os palpites dos membros desta liga
                 val userIds = baseLeaderboard.map { it.userId }
                 val predictionsResult = predictionRepository.getPredictionsForUsers(userIds)
                 val allPredictions = predictionsResult.getOrNull() ?: emptyList()
@@ -96,7 +104,7 @@ class LeagueDetailViewModel(
                         
                         if (liveMatches.isEmpty()) {
                             // Se não há jogos ao vivo, o ranking base é absoluto
-                            LeagueDetailUiState.Success(league, baseLeaderboard)
+                            LeagueDetailUiState.Success(league, baseLeaderboard, currentUserId)
                         } else {
                             // Existem jogos ao vivo! Recalcula o placar reativo
                             val liveDetails = liveMatches.map { match ->
@@ -135,12 +143,13 @@ class LeagueDetailViewModel(
                                     .thenByDescending { it.exactMatches }
                             )
 
-                            LeagueDetailUiState.Success(league, updatedRanking, liveDetails)
+                            LeagueDetailUiState.Success(league, updatedRanking, currentUserId, liveDetails)
                         }
                     }
                     .collect { newState ->
                         _uiState.value = newState
                     }
+                }
             } else {
                 val error = leagueResult.exceptionOrNull() ?: leaderboardResult.exceptionOrNull()
                 _uiState.value = LeagueDetailUiState.Error(
