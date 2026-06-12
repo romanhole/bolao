@@ -96,8 +96,6 @@ class AuthRepositoryImpl(
         supabase.auth.signOut()
     }
 
-    private val _isResetPasswordMode = MutableStateFlow(false)
-    override val isResetPasswordMode: Flow<Boolean> = _isResetPasswordMode.asStateFlow()
 
     private val _deepLinkError = MutableStateFlow<String?>(null)
     override val deepLinkError: Flow<String?> = _deepLinkError.asStateFlow()
@@ -129,9 +127,6 @@ class AuthRepositoryImpl(
             println("handleDeepLink ERROR: ${result.exceptionOrNull()?.stackTraceToString()}")
         }
         
-        if (url.contains("reset-password") || url.contains("type=recovery")) {
-            _isResetPasswordMode.value = true
-        }
     }
 
     override fun clearDeepLinkError() {
@@ -159,15 +154,17 @@ class AuthRepositoryImpl(
         }
     }
 
-    override fun clearResetPasswordMode() {
-        _isResetPasswordMode.value = false
-    }
-
     override suspend fun sendPasswordResetEmail(email: String): Result<Unit> =
         runCatching {
-            supabase.auth.resetPasswordForEmail(
+            supabase.auth.resetPasswordForEmail(email = email)
+        }
+
+    override suspend fun verifyPasswordResetOtp(email: String, otp: String): Result<Unit> =
+        runCatching {
+            supabase.auth.verifyEmailOtp(
+                type = io.github.jan.supabase.auth.OtpType.Email.RECOVERY,
                 email = email,
-                redirectUrl = getRedirectUrl("reset-password")
+                token = otp
             )
         }
 

@@ -44,7 +44,6 @@ import com.bolao.domain.repository.AuthRepository
 import com.bolao.domain.repository.AuthState
 import com.bolao.presentation.auth.AuthViewModel
 import com.bolao.presentation.auth.LoginScreen
-import com.bolao.presentation.auth.ResetPasswordScreen
 import com.bolao.presentation.leagues.LeagueDetailScreen
 import com.bolao.presentation.leagues.LeaguesScreen
 import com.bolao.presentation.matchlist.MatchListScreen
@@ -58,6 +57,7 @@ import io.kamel.core.config.httpUrlFetcher
 import io.kamel.image.config.LocalKamelConfig
 import io.kamel.image.config.Default
 import io.ktor.client.HttpClient
+import com.bolao.presentation.auth.ResetPasswordScreen
 import androidx.compose.runtime.CompositionLocalProvider
 
 enum class AppTab(val title: String, val icon: ImageVector) {
@@ -106,8 +106,8 @@ fun App(
                     LoginScreen(viewModel = authViewModel)
 
                 is AuthState.Authenticated -> {
-                    if (uiState.isResetPasswordMode) {
-                        ResetPasswordScreen(viewModel = authViewModel)
+                    if (uiState.isNewPasswordMode) {
+                        ResetPasswordScreen(viewModel = authViewModel, uiState = uiState)
                     } else {
                         AuthenticatedApp(authViewModel = authViewModel)
                     }

@@ -30,19 +30,11 @@ class AuthViewModel(
 
     init {
         viewModelScope.launch {
-            authRepository.isResetPasswordMode.collect { isReset ->
-                _uiState.update { it.copy(isResetPasswordMode = isReset) }
-            }
-        }
-        viewModelScope.launch {
             authRepository.deepLinkError.collect { error ->
                 if (error != null) {
                     _uiState.update { it.copy(error = error) }
                 }
             }
-        }
-        if (isRecoveryUrl()) {
-            enterResetPasswordMode()
         }
     }
 
@@ -190,9 +182,13 @@ class AuthViewModel(
             it.copy(
                 isForgotPasswordMode = true,
                 forgotPasswordEmail = "",
-                resetEmailSent = false,
                 forgotPasswordLoading = false,
-                forgotPasswordError = null
+                forgotPasswordError = null,
+                isOtpMode = false,
+                otpCode = "",
+                otpLoading = false,
+                otpError = null,
+                isNewPasswordMode = false
             )
         }
     }
@@ -221,7 +217,7 @@ class AuthViewModel(
             _uiState.update { it.copy(forgotPasswordLoading = true, forgotPasswordError = null) }
             authRepository.sendPasswordResetEmail(email)
                 .onSuccess {
-                    _uiState.update { it.copy(forgotPasswordLoading = false, resetEmailSent = true) }
+                    _uiState.update { it.copy(forgotPasswordLoading = false, isOtpMode = true) }
                 }
                 .onFailure { error ->
                     _uiState.update { 
@@ -234,17 +230,40 @@ class AuthViewModel(
         }
     }
 
-    fun enterResetPasswordMode() {
-        viewModelScope.launch {
-            authRepository.handleDeepLink("")
+    fun onOtpCodeChange(value: String) {
+        _uiState.update { it.copy(otpCode = value, otpError = null) }
+    }
+
+    fun verifyOtp() {
+        val state = _uiState.value
+        val email = state.forgotPasswordEmail.trim()
+        val otp = state.otpCode.trim()
+        
+        if (otp.isBlank()) {
+            _uiState.update { it.copy(otpError = "Informe o código numérico") }
+            return
         }
-        _uiState.update {
-            it.copy(
-                isResetPasswordMode = true,
-                newPassword = "",
-                confirmNewPassword = "",
-                resetPasswordError = null
-            )
+        
+        viewModelScope.launch {
+            _uiState.update { it.copy(otpLoading = true, otpError = null) }
+            authRepository.verifyPasswordResetOtp(email, otp)
+                .onSuccess {
+                    _uiState.update { 
+                        it.copy(
+                            otpLoading = false, 
+                            isOtpMode = false, 
+                            isNewPasswordMode = true 
+                        ) 
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update { 
+                        it.copy(
+                            otpLoading = false, 
+                            otpError = parseAuthError(error.message)
+                        ) 
+                    }
+                }
         }
     }
 
@@ -267,10 +286,11 @@ class AuthViewModel(
     fun cancelResetPassword() {
         viewModelScope.launch {
             authRepository.logout()
-            authRepository.clearResetPasswordMode()
             _uiState.update { 
                 it.copy(
-                    isResetPasswordMode = false,
+                    isForgotPasswordMode = false,
+                    isOtpMode = false,
+                    isNewPasswordMode = false,
                     newPassword = "",
                     confirmNewPassword = "",
                     resetPasswordError = null
@@ -297,11 +317,12 @@ class AuthViewModel(
             _uiState.update { it.copy(resetPasswordLoading = true, resetPasswordError = null) }
             authRepository.updatePassword(state.newPassword)
                 .onSuccess {
-                    authRepository.clearResetPasswordMode()
                     _uiState.update { 
                         it.copy(
                             resetPasswordLoading = false,
-                            isResetPasswordMode = false,
+                            isForgotPasswordMode = false,
+                            isOtpMode = false,
+                            isNewPasswordMode = false,
                             newPassword = "",
                             confirmNewPassword = ""
                         ) 
