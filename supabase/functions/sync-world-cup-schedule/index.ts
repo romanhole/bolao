@@ -261,12 +261,17 @@ serve(async (req) => {
       switch (String(event.status).toLowerCase()) {
         case "notstarted": dbStatus = "scheduled"; break;
         case "inprogress":
+        case "1st_half":
+        case "2nd_half":
+        case "extratime":
+        case "aet":
         case "penalties": dbStatus = "live"; break;
         case "halftime":
         case "ht":
         case "half-time": dbStatus = "halftime"; break;
         case "finished": dbStatus = "finished"; break;
-        case "cancelled": dbStatus = "cancelled"; break;
+        case "cancelled": 
+        case "postponed": dbStatus = "cancelled"; break;
         default: dbStatus = "scheduled";
       }
 

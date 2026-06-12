@@ -52,6 +52,10 @@ serve(async (req) => {
           dbStatus = "scheduled";
           break;
         case "inprogress":
+        case "1st_half":
+        case "2nd_half":
+        case "extratime":
+        case "aet":
         case "penalties":
           dbStatus = "live";
           break;
@@ -62,6 +66,10 @@ serve(async (req) => {
           break;
         case "finished":
           dbStatus = "finished";
+          break;
+        case "cancelled":
+        case "postponed":
+          dbStatus = "interrupted"; // Ou cancelled, dependendo do mapping
           break;
         default:
           dbStatus = "scheduled";
