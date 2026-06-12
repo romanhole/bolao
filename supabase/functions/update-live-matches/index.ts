@@ -47,13 +47,18 @@ serve(async (req) => {
       const apiId = event.id;
       let dbStatus = "scheduled";
 
-      switch (event.status) {
+      switch (String(event.status).toLowerCase()) {
         case "notstarted":
           dbStatus = "scheduled";
           break;
         case "inprogress":
         case "penalties":
           dbStatus = "live";
+          break;
+        case "halftime":
+        case "ht":
+        case "half-time":
+          dbStatus = "halftime";
           break;
         case "finished":
           dbStatus = "finished";
@@ -69,7 +74,7 @@ serve(async (req) => {
           home_score: event.home_score || 0,
           away_score: event.away_score || 0,
           status: dbStatus,
-          minute_played: dbStatus === "live" ? (event.current_minute || null) : null
+          minute_played: (dbStatus === "live" || dbStatus === "halftime") ? (event.current_minute || null) : null
         })
         .eq("api_fixture_id", apiId);
 

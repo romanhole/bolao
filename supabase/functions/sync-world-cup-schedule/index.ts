@@ -258,10 +258,13 @@ serve(async (req) => {
     addLog("Mapping matches...");
     const matchesToUpsert = events.map((event: any) => {
       let dbStatus = "scheduled";
-      switch (event.status) {
+      switch (String(event.status).toLowerCase()) {
         case "notstarted": dbStatus = "scheduled"; break;
         case "inprogress":
         case "penalties": dbStatus = "live"; break;
+        case "halftime":
+        case "ht":
+        case "half-time": dbStatus = "halftime"; break;
         case "finished": dbStatus = "finished"; break;
         case "cancelled": dbStatus = "cancelled"; break;
         default: dbStatus = "scheduled";
@@ -283,7 +286,7 @@ serve(async (req) => {
         home_score: typeof event.home_score === 'number' ? event.home_score : null,
         away_score: typeof event.away_score === 'number' ? event.away_score : null,
         status: dbStatus,
-        minute_played: dbStatus === "live" ? (event.current_minute || null) : null,
+        minute_played: (dbStatus === "live" || dbStatus === "halftime") ? (event.current_minute || null) : null,
         scheduled_at: scheduledDateObj.toISOString(),
         competition_id: compId,
         competition: compName,
