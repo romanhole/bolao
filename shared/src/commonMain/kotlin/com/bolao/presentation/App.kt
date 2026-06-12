@@ -44,7 +44,6 @@ import com.bolao.domain.repository.AuthRepository
 import com.bolao.domain.repository.AuthState
 import com.bolao.presentation.auth.AuthViewModel
 import com.bolao.presentation.auth.LoginScreen
-
 import com.bolao.presentation.leagues.LeagueDetailScreen
 import com.bolao.presentation.leagues.LeaguesScreen
 import com.bolao.presentation.matchlist.MatchListScreen
@@ -58,6 +57,7 @@ import io.kamel.core.config.httpUrlFetcher
 import io.kamel.image.config.LocalKamelConfig
 import io.kamel.image.config.Default
 import io.ktor.client.HttpClient
+import com.bolao.presentation.auth.ResetPasswordScreen
 import androidx.compose.runtime.CompositionLocalProvider
 
 enum class AppTab(val title: String, val icon: ImageVector) {
@@ -68,6 +68,7 @@ enum class AppTab(val title: String, val icon: ImageVector) {
 @Composable
 fun App(
     authRepository: AuthRepository = koinInject(),
+    authViewModel: AuthViewModel = koinViewModel(),
 ) {
     val httpClient: HttpClient = koinInject()
     val kamelConfig = remember(httpClient) {
@@ -80,6 +81,7 @@ fun App(
     CompositionLocalProvider(LocalKamelConfig provides kamelConfig) {
         BolaoTheme {
         val authState by authRepository.authState.collectAsState(initial = AuthState.Loading)
+        val uiState by authViewModel.uiState.collectAsState()
 
         AnimatedContent(
             targetState   = authState,
@@ -101,15 +103,21 @@ fun App(
                     }
 
                 is AuthState.NotAuthenticated ->
-                    LoginScreen()
+                    LoginScreen(viewModel = authViewModel)
 
-                is AuthState.Authenticated ->
-                    AuthenticatedApp()
+                is AuthState.Authenticated -> {
+                    if (uiState.isNewPasswordMode) {
+                        ResetPasswordScreen(viewModel = authViewModel, uiState = uiState)
+                    } else {
+                        AuthenticatedApp(authViewModel = authViewModel)
+                    }
+                }
             }
         }
     }
     }
 }
+
 
 sealed interface AuthRoute {
     data object MainTabs : AuthRoute

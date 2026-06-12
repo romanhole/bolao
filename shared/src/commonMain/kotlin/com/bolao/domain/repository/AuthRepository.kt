@@ -58,4 +58,25 @@ interface AuthRepository {
 
     /** Encerra a sessão do usuário atual. */
     suspend fun logout()
+
+    /** Envia e-mail de recuperação com código OTP de 6 dígitos */
+    suspend fun sendPasswordResetEmail(email: String): Result<Unit>
+
+    /** Verifica o código OTP de recuperação de senha e autentica o usuário */
+    suspend fun verifyPasswordResetOtp(email: String, otp: String): Result<Unit>
+
+    /** Define nova senha (após autenticação via link de reset) */
+    suspend fun updatePassword(newPassword: String): Result<Unit>
+
+    /** Flow que emite erros de redirecionamento de deep links (usado em confirmação de e-mail) */
+    val deepLinkError: Flow<String?>
+
+    /** Processa o deep link recebido, importando a sessão se houver tokens */
+    suspend fun handleDeepLink(url: String)
+
+    /** Limpa os erros de deep link */
+    fun clearDeepLinkError()
 }
+
+
+
