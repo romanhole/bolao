@@ -17,6 +17,6 @@ fun main() {
     }
 
     CanvasBasedWindow(title = "Bolão - Copa 2026", canvasElementId = "ComposeTarget") {
-        App()
+        App(appVersionCode = Int.MAX_VALUE)
     }
 }

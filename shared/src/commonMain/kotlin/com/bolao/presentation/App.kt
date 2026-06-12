@@ -67,9 +67,20 @@ enum class AppTab(val title: String, val icon: ImageVector) {
 
 @Composable
 fun App(
+    appVersionCode: Int,
     authRepository: AuthRepository = koinInject(),
     authViewModel: AuthViewModel = koinViewModel(),
 ) {
+    val settingsRepository: com.bolao.domain.repository.SettingsRepository = koinInject()
+    var appSettings by remember { mutableStateOf<com.bolao.domain.model.AppSettings?>(null) }
+    var dismissedSoftUpdate by remember { mutableStateOf(false) }
+
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        settingsRepository.getSettings().onSuccess { settings ->
+            appSettings = settings
+        }
+    }
+
     val httpClient: HttpClient = koinInject()
     val kamelConfig = remember(httpClient) {
         KamelConfig {
@@ -80,42 +91,103 @@ fun App(
 
     CompositionLocalProvider(LocalKamelConfig provides kamelConfig) {
         BolaoTheme {
-        val authState by authRepository.authState.collectAsState(initial = AuthState.Loading)
-        val uiState by authViewModel.uiState.collectAsState()
+            val settings = appSettings
+            val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
 
-        AnimatedContent(
-            targetState   = authState,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-            label         = "AuthNavigation",
-        ) { state ->
-            when (state) {
-                is AuthState.Loading ->
-                    Box(
-                        modifier         = Modifier
-                            .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.background),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(48.dp),
-                            color    = MaterialTheme.colorScheme.primary,
-                        )
-                    }
+            if (settings != null && appVersionCode < settings.minVersionCode) {
+                UpdateRequiredDialog(onUpdate = { uriHandler.openUri("https://play.google.com/store/apps/details?id=com.bolao.android") })
+            } else {
+                if (settings != null && appVersionCode < settings.latestVersionCode && !dismissedSoftUpdate) {
+                    UpdateSuggestedDialog(
+                        onDismiss = { dismissedSoftUpdate = true },
+                        onUpdate = { uriHandler.openUri("https://play.google.com/store/apps/details?id=com.bolao.android") }
+                    )
+                }
+                
+                val authState by authRepository.authState.collectAsState(initial = AuthState.Loading)
+            val uiState by authViewModel.uiState.collectAsState()
 
-                is AuthState.NotAuthenticated ->
-                    LoginScreen(viewModel = authViewModel)
+            AnimatedContent(
+                targetState   = authState,
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                label         = "AuthNavigation",
+            ) { state ->
+                when (state) {
+                    is AuthState.Loading ->
+                        Box(
+                            modifier         = Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.background),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(48.dp),
+                                color    = MaterialTheme.colorScheme.primary,
+                            )
+                        }
 
-                is AuthState.Authenticated -> {
-                    if (uiState.isNewPasswordMode) {
-                        ResetPasswordScreen(viewModel = authViewModel, uiState = uiState)
-                    } else {
-                        AuthenticatedApp(authViewModel = authViewModel)
+                    is AuthState.NotAuthenticated ->
+                        LoginScreen(viewModel = authViewModel)
+
+                    is AuthState.Authenticated -> {
+                        if (uiState.isNewPasswordMode) {
+                            ResetPasswordScreen(viewModel = authViewModel, uiState = uiState)
+                        } else {
+                            AuthenticatedApp(authViewModel = authViewModel)
+                        }
                     }
                 }
             }
         }
     }
     }
+}
+
+@Composable
+fun UpdateRequiredDialog(onUpdate: () -> Unit) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = { /* Não pode fechar */ },
+        title = {
+            Text("Atualização Necessária", fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Text("Sua versão do Bolão Campeão está muito antiga e deixou de ser suportada. Por favor, atualize o aplicativo na loja para continuar palpitando.")
+        },
+        confirmButton = {
+            androidx.compose.material3.Button(
+                onClick = onUpdate
+            ) {
+                Text("Atualizar Agora")
+            }
+        },
+        properties = androidx.compose.ui.window.DialogProperties(
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false
+        )
+    )
+}
+
+@Composable
+fun UpdateSuggestedDialog(onDismiss: () -> Unit, onUpdate: () -> Unit) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text("Nova Versão Disponível", fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Text("Temos novidades fresquinhas no Bolão Campeão! Atualize agora para aproveitar as melhorias mais recentes.")
+        },
+        confirmButton = {
+            androidx.compose.material3.Button(onClick = onUpdate) {
+                Text("Atualizar")
+            }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) {
+                Text("Agora Não")
+            }
+        }
+    )
 }
 
 

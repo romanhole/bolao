@@ -27,7 +27,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         handleIntent(intent)
         setContent {
-            App()
+            App(appVersionCode = BuildConfig.VERSION_CODE)
         }
     }
 

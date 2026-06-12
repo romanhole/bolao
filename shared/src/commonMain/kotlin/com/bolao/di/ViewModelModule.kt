@@ -37,6 +37,7 @@ val repositoryModule = module {
     single<AuthRepository>       { AuthRepositoryImpl(get()) }
     single<LeaderboardRepository>{ LeaderboardRepositoryImpl(get()) }
     single<com.bolao.domain.repository.LeagueRepository>{ com.bolao.data.repository.LeagueRepositoryImpl(get(), get()) }
+    single<com.bolao.domain.repository.SettingsRepository> { com.bolao.data.repository.SettingsRepositoryImpl(get()) }
 }
 
 /**
