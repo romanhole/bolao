@@ -47,6 +47,12 @@ fun MatchListScreen(
     viewModel: MatchListViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val showPredictionsSheetForMatchId by viewModel.showPredictionsSheetForMatchId.collectAsState()
+    val userLeagues by viewModel.userLeagues.collectAsState()
+    val selectedLeagueId by viewModel.selectedLeagueId.collectAsState()
+    val sheetPredictions by viewModel.sheetPredictions.collectAsState()
+    val sheetIsLoading by viewModel.sheetIsLoading.collectAsState()
+
     val snackbarHost = remember { SnackbarHostState() }
 
     // Observa erros de save e exibe como Snackbar
@@ -119,6 +125,7 @@ fun MatchListScreen(
                             onUpdateHome    = viewModel::updateHomeGoals,
                             onUpdateAway    = viewModel::updateAwayGoals,
                             onSave          = viewModel::savePrediction,
+                            onShowGuesses   = viewModel::openPredictionsSheet,
                             modifier        = Modifier.fillMaxSize().weight(1f),
                             listState       = listState,
                             contentPadding  = PaddingValues(top = 16.dp, bottom = 100.dp),
@@ -133,6 +140,18 @@ fun MatchListScreen(
             hostState = snackbarHost,
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp),
         )
+
+        // Bottom Sheet de palpites
+        if (showPredictionsSheetForMatchId != null) {
+            GroupMatchPredictionsSheet(
+                leagues = userLeagues,
+                selectedLeagueId = selectedLeagueId,
+                predictions = sheetPredictions,
+                isLoading = sheetIsLoading,
+                onSelectLeague = viewModel::selectLeagueForSheet,
+                onDismiss = viewModel::closePredictionsSheet
+            )
+        }
     }
 }
 
@@ -142,6 +161,7 @@ private fun MatchListContent(
     onUpdateHome: (String, Int) -> Unit,
     onUpdateAway: (String, Int) -> Unit,
     onSave: (String) -> Unit,
+    onShowGuesses: (String) -> Unit,
     modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
     contentPadding: PaddingValues = PaddingValues(0.dp),
@@ -163,6 +183,7 @@ private fun MatchListContent(
                 onAwayGoalIncrement = { onUpdateAway(item.match.id, 1) },
                 onAwayGoalDecrement = { onUpdateAway(item.match.id, -1) },
                 onSave              = { onSave(item.match.id) },
+                onShowGuessesClick  = { onShowGuesses(item.match.id) },
                 modifier     = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)

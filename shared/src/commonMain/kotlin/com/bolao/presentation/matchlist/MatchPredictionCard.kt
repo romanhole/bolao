@@ -70,6 +70,7 @@ import com.bolao.presentation.theme.HalfTimeAmber
 import com.bolao.presentation.theme.LiveRed
 import com.bolao.presentation.theme.LiveRedMuted
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.rounded.Group
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import kotlinx.datetime.Instant
@@ -120,6 +121,7 @@ fun MatchPredictionCard(
     onAwayGoalIncrement: () -> Unit,
     onAwayGoalDecrement: () -> Unit,
     onSave: () -> Unit,
+    onShowGuessesClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val isEditable = item.isPredictionAllowed
@@ -283,6 +285,7 @@ fun MatchPredictionCard(
                 item       = item,
                 isEditable = isEditable,
                 onSave     = onSave,
+                onShowGuessesClick = onShowGuessesClick,
                 modifier   = Modifier
                     .fillMaxWidth()
                     .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
@@ -773,6 +776,7 @@ private fun MatchCardFooter(
     item: MatchPredictionItem,
     isEditable: Boolean,
     onSave: () -> Unit,
+    onShowGuessesClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
@@ -789,8 +793,11 @@ private fun MatchCardFooter(
 
         when {
             // 1. Jogo encerrado E palpite com pontuação → badge de pontos
-            item.savedPrediction?.pointsEarned != null ->
+            item.savedPrediction?.pointsEarned != null -> {
                 PointsBadge(points = item.savedPrediction.pointsEarned!!)
+                Spacer(Modifier.height(8.dp))
+                ShowGuessesButton(onClick = onShowGuessesClick)
+            }
 
             // 2. Jogo aberto → botão de salvar
             isEditable -> SaveButton(
@@ -801,15 +808,44 @@ private fun MatchCardFooter(
             )
 
             // 3. Jogo em andamento sem palpite prévio → aviso
-            item.savedPrediction == null ->
+            item.savedPrediction == null -> {
                 Text(
                     text     = "Você não fez um palpite para esta partida",
                     style    = MaterialTheme.typography.bodySmall,
                     color    = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign= TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                 )
+                if (!isEditable) {
+                    ShowGuessesButton(onClick = onShowGuessesClick)
+                }
+            }
+            
+            // 4. Jogo em andamento ou encerrado sem pontuação processada
+            !isEditable && item.savedPrediction != null -> {
+                ShowGuessesButton(onClick = onShowGuessesClick)
+            }
         }
+    }
+}
+
+@Composable
+private fun ShowGuessesButton(onClick: () -> Unit) {
+    androidx.compose.material3.TextButton(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.Group,
+            contentDescription = null,
+            modifier = Modifier.size(18.dp).padding(end = 6.dp),
+            tint = BolaoGold
+        )
+        Text(
+            text = "Ver palpites da galera",
+            style = MaterialTheme.typography.labelLarge,
+            color = BolaoGold
+        )
     }
 }
 

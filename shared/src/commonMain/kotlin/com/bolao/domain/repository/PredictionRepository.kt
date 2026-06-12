@@ -50,4 +50,9 @@ interface PredictionRepository {
      * Ideal para cruzar placares ao vivo com as apostas dos membros da liga.
      */
     suspend fun getPredictionsForUsers(userIds: List<String>): Result<List<Prediction>>
+
+    /**
+     * Retorna os palpites para uma partida específica, apenas para os usuários fornecidos.
+     */
+    suspend fun getMatchPredictionsByUsers(matchId: String, userIds: List<String>): Result<List<Prediction>>
 }

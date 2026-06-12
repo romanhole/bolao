@@ -174,6 +174,26 @@ class PredictionRepositoryImpl(
                 .map { it.toDomain() }
         }
 
+    // ── getMatchPredictionsByUsers ────────────────────────────────────────────
+
+    override suspend fun getMatchPredictionsByUsers(
+        matchId: String,
+        userIds: List<String>
+    ): Result<List<Prediction>> =
+        runCatching {
+            if (userIds.isEmpty()) return@runCatching emptyList()
+            supabase
+                .from(TABLE)
+                .select {
+                    filter {
+                        eq("match_id", matchId)
+                        isIn("user_id", userIds)
+                    }
+                }
+                .decodeList<PredictionDto>()
+                .map { it.toDomain() }
+        }
+
     // ── Helpers privados ──────────────────────────────────────────────────────
 
     private suspend fun fetchPredictionsByUser(userId: String): List<Prediction> =

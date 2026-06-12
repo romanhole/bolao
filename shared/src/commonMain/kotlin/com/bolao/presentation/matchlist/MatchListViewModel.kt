@@ -3,9 +3,14 @@ package com.bolao.presentation.matchlist
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bolao.domain.model.Prediction
+import com.bolao.domain.model.League
 import com.bolao.domain.repository.AuthRepository
+import com.bolao.domain.repository.LeaderboardRepository
+import com.bolao.domain.repository.LeagueRepository
 import com.bolao.domain.repository.MatchRepository
 import com.bolao.domain.repository.PredictionRepository
+import com.bolao.domain.usecase.PredictionCalculator
+import com.bolao.presentation.leagues.LiveMatchUserScore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,6 +42,8 @@ class MatchListViewModel(
     private val matchRepository: MatchRepository,
     private val predictionRepository: PredictionRepository,
     private val authRepository: AuthRepository,
+    private val leagueRepository: LeagueRepository,
+    private val leaderboardRepository: LeaderboardRepository,
 ) : ViewModel() {
 
     companion object {
@@ -84,11 +91,36 @@ class MatchListViewModel(
      */
     private var currentUserId: String = ""
 
+    // ── Estado do Bottom Sheet de Palpites do Grupo ──────────────────────────
+
+    private val _showPredictionsSheetForMatchId = MutableStateFlow<String?>(null)
+    val showPredictionsSheetForMatchId: StateFlow<String?> = _showPredictionsSheetForMatchId.asStateFlow()
+
+    private val _userLeagues = MutableStateFlow<List<League>>(emptyList())
+    val userLeagues: StateFlow<List<League>> = _userLeagues.asStateFlow()
+
+    private val _selectedLeagueId = MutableStateFlow<String?>(null)
+    val selectedLeagueId: StateFlow<String?> = _selectedLeagueId.asStateFlow()
+
+    private val _sheetPredictions = MutableStateFlow<List<LiveMatchUserScore>>(emptyList())
+    val sheetPredictions: StateFlow<List<LiveMatchUserScore>> = _sheetPredictions.asStateFlow()
+
+    private val _sheetIsLoading = MutableStateFlow(false)
+    val sheetIsLoading: StateFlow<Boolean> = _sheetIsLoading.asStateFlow()
+
     init {
         viewModelScope.launch {
             // Aguarda o userId real — App.kt garante que estamos autenticados aqui
             val user = authRepository.currentUser.filterNotNull().first()
             currentUserId = user.userId
+            
+            // Busca as ligas que o usuário participa
+            leagueRepository.getUserLeagues().collect { leagues ->
+                _userLeagues.value = leagues
+            }
+        }
+        viewModelScope.launch {
+            authRepository.currentUser.filterNotNull().first() // apenas para sincronizar
             observeData()
         }
     }
@@ -287,5 +319,78 @@ class MatchListViewModel(
             return Pair(saved?.predictedHome ?: 0, saved?.predictedAway ?: 0)
         }
         return Pair(0, 0)
+    }
+
+    // ── Controle do Bottom Sheet de Palpites do Grupo ─────────────────────────
+
+    fun openPredictionsSheet(matchId: String) {
+        _showPredictionsSheetForMatchId.value = matchId
+        if (_selectedLeagueId.value == null && _userLeagues.value.isNotEmpty()) {
+            _selectedLeagueId.value = _userLeagues.value.first().id
+        }
+        loadSheetPredictions()
+    }
+
+    fun closePredictionsSheet() {
+        _showPredictionsSheetForMatchId.value = null
+        _sheetPredictions.value = emptyList()
+    }
+
+    fun selectLeagueForSheet(leagueId: String) {
+        _selectedLeagueId.value = leagueId
+        loadSheetPredictions()
+    }
+
+    private fun loadSheetPredictions() {
+        val matchId = _showPredictionsSheetForMatchId.value ?: return
+        val leagueId = _selectedLeagueId.value ?: return
+        
+        // Obter o estado atual da partida para usar os placares e odds reativos
+        val currentState = _uiState.value
+        if (currentState !is MatchListUiState.Success) return
+        val match = currentState.items.find { it.match.id == matchId }?.match ?: return
+
+        viewModelScope.launch {
+            _sheetIsLoading.value = true
+            
+            // 1. Busca os membros da liga selecionada
+            val leaderboardResult = leaderboardRepository.getLeaderboard(leagueId)
+            val members = leaderboardResult.getOrNull() ?: emptyList()
+            if (members.isEmpty()) {
+                _sheetPredictions.value = emptyList()
+                _sheetIsLoading.value = false
+                return@launch
+            }
+            
+            // 2. Busca os palpites desta partida apenas para estes membros
+            val userIds = members.map { it.userId }
+            val predictionsResult = predictionRepository.getMatchPredictionsByUsers(matchId, userIds)
+            val predictions = predictionsResult.getOrNull() ?: emptyList()
+            
+            // 3. Calcula os pontos ganhos
+            val scores = members.mapNotNull { member ->
+                val pred = predictions.find { it.userId == member.userId } ?: return@mapNotNull null
+                val pts = PredictionCalculator.calculateEarnedPoints(
+                    predHome = pred.predictedHome,
+                    predAway = pred.predictedAway,
+                    actualHome = match.homeScore ?: 0,
+                    actualAway = match.awayScore ?: 0,
+                    stageMultiplier = match.stageMultiplier,
+                    homeOdd = match.homeOdd,
+                    drawOdd = match.drawOdd,
+                    awayOdd = match.awayOdd
+                )
+                LiveMatchUserScore(
+                    userId = member.userId,
+                    nickname = member.nickname,
+                    predictedHome = pred.predictedHome,
+                    predictedAway = pred.predictedAway,
+                    partialPoints = pts
+                )
+            }.sortedByDescending { it.partialPoints }
+            
+            _sheetPredictions.value = scores
+            _sheetIsLoading.value = false
+        }
     }
 }

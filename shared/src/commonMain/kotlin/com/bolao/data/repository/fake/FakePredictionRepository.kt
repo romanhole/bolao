@@ -70,4 +70,12 @@ class FakePredictionRepository : PredictionRepository {
         val list = _predictions.value.filter { it.userId in userIds }
         return Result.success(list)
     }
+
+    override suspend fun getMatchPredictionsByUsers(
+        matchId: String,
+        userIds: List<String>
+    ): Result<List<Prediction>> {
+        val list = _predictions.value.filter { it.matchId == matchId && it.userId in userIds }
+        return Result.success(list)
+    }
 }
