@@ -90,6 +90,7 @@ kotlin {
 
             // Lifecycle ViewModel (KMP-compatible desde 2.8.0)
             implementation(libs.androidx.lifecycle.viewmodel)
+            implementation(libs.androidx.lifecycle.runtime.compose)
 
             // Material Icons Extended (rounded icons for UI)
             implementation(compose.materialIconsExtended)
