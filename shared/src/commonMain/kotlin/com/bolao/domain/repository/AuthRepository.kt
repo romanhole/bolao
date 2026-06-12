@@ -68,11 +68,18 @@ interface AuthRepository {
     /** Flow que emite se o fluxo de redefinição de senha está ativo */
     val isResetPasswordMode: Flow<Boolean>
 
+    /** Flow que emite erros de redirecionamento de deep links */
+    val deepLinkError: Flow<String?>
+
     /** Processa o deep link recebido, importando a sessão se houver tokens */
     suspend fun handleDeepLink(url: String)
 
     /** Limpa o estado de redefinição de senha */
     fun clearResetPasswordMode()
+
+    /** Limpa os erros de deep link */
+    fun clearDeepLinkError()
 }
+
 
 

@@ -99,9 +99,20 @@ class AuthRepositoryImpl(
     private val _isResetPasswordMode = MutableStateFlow(false)
     override val isResetPasswordMode: Flow<Boolean> = _isResetPasswordMode.asStateFlow()
 
+    private val _deepLinkError = MutableStateFlow<String?>(null)
+    override val deepLinkError: Flow<String?> = _deepLinkError.asStateFlow()
+
     override suspend fun handleDeepLink(url: String) {
         println("handleDeepLink: url = $url")
         
+        // Verifica se a URL contém erro de redirecionamento (ex: otp_expired)
+        if (url.contains("error=")) {
+            val errorDescription = parseErrorDescription(url)
+            println("handleDeepLink detected redirect error: $errorDescription")
+            _deepLinkError.value = errorDescription
+            return
+        }
+
         // Espera o Supabase Auth terminar de inicializar/restaurar do armazenamento persistente
         runCatching {
             supabase.auth.sessionStatus.first { it !is SessionStatus.Initializing }
@@ -120,6 +131,31 @@ class AuthRepositoryImpl(
         
         if (url.contains("reset-password") || url.contains("type=recovery")) {
             _isResetPasswordMode.value = true
+        }
+    }
+
+    override fun clearDeepLinkError() {
+        _deepLinkError.value = null
+    }
+
+    private fun parseErrorDescription(url: String): String {
+        val keyword = "error_description="
+        val index = url.indexOf(keyword)
+        if (index == -1) return "Link de e-mail inválido ou expirado."
+        val start = index + keyword.length
+        val end = url.indexOf('&', start).let { if (it == -1) url.length else it }
+        val rawError = url.substring(start, end)
+        // Decodificação de URL simples para português legível
+        val decoded = rawError
+            .replace("+", " ")
+            .replace("%20", " ")
+            .replace("%27", "'")
+            .replace("%2C", ",")
+        
+        return when {
+            decoded.contains("Email link is invalid or has expired") -> 
+                "O link de e-mail é inválido ou já expirou. Por favor, solicite um novo link de recuperação."
+            else -> decoded
         }
     }
 

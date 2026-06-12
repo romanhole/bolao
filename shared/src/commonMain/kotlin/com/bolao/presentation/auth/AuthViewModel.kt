@@ -34,6 +34,13 @@ class AuthViewModel(
                 _uiState.update { it.copy(isResetPasswordMode = isReset) }
             }
         }
+        viewModelScope.launch {
+            authRepository.deepLinkError.collect { error ->
+                if (error != null) {
+                    _uiState.update { it.copy(error = error) }
+                }
+            }
+        }
         if (isRecoveryUrl()) {
             enterResetPasswordMode()
         }
@@ -43,10 +50,12 @@ class AuthViewModel(
 
     fun onEmailChange(email: String) {
         _uiState.update { it.copy(email = email, error = null) }
+        authRepository.clearDeepLinkError()
     }
 
     fun onPasswordChange(password: String) {
         _uiState.update { it.copy(password = password, error = null) }
+        authRepository.clearDeepLinkError()
     }
 
 
@@ -57,6 +66,7 @@ class AuthViewModel(
 
     fun onConfirmPasswordChange(password: String) {
         _uiState.update { it.copy(confirmPassword = password, error = null) }
+        authRepository.clearDeepLinkError()
     }
 
     fun toggleConfirmPasswordVisibility() {
@@ -175,6 +185,7 @@ class AuthViewModel(
     // ── Fluxo Esqueci minha senha / Reset de senha ─────────────────────────────
 
     fun onForgotPasswordClick() {
+        authRepository.clearDeepLinkError()
         _uiState.update { 
             it.copy(
                 isForgotPasswordMode = true,
@@ -188,6 +199,7 @@ class AuthViewModel(
 
     fun onForgotPasswordEmailChange(value: String) {
         _uiState.update { it.copy(forgotPasswordEmail = value, forgotPasswordError = null) }
+        authRepository.clearDeepLinkError()
     }
 
     fun onBackFromForgotPassword() {
