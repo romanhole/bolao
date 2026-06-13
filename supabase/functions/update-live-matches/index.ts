@@ -59,10 +59,11 @@ serve(async (req) => {
     await Promise.all(fetchPromises);
 
     if (events.length === 0) {
-      return new Response(JSON.stringify({ message: "No live events found from API." }), {
+      return new Response(JSON.stringify({ message: "No live events found from API.", activeMatches }), {
         headers: { "Content-Type": "application/json" },
       });
     }
+
     const updatePromises = events.map(async (event: any) => {
       const apiId = event.id;
       let dbStatus = "scheduled";
@@ -72,9 +73,13 @@ serve(async (req) => {
 
       if (rawStatus === "halftime" || rawStatus === "ht" || rawPeriod === "halftime" || rawPeriod === "ht" || rawPeriod === "half-time") {
         dbStatus = "halftime";
-      } else if (rawStatus === "finished" || rawStatus === "ended" || rawPeriod === "finished") {
+      } else if (rawStatus === "finished" || rawStatus === "ended" || rawPeriod === "finished" || rawStatus === "ft") {
         dbStatus = "finished";
-      } else if (rawStatus === "inprogress" || rawStatus === "live" || rawPeriod === "1st_half" || rawPeriod === "2nd_half" || rawPeriod === "extratime" || rawPeriod === "aet" || rawPeriod === "penalties") {
+      } else if (
+        rawStatus === "inprogress" || rawStatus === "live" || rawStatus === "1st_half" || rawStatus === "2nd_half" ||
+        rawPeriod === "1st_half" || rawPeriod === "2nd_half" || rawPeriod === "1t" || rawPeriod === "2t" ||
+        rawPeriod === "extratime" || rawPeriod === "aet" || rawPeriod === "penalties"
+      ) {
         dbStatus = "live";
       } else if (rawStatus === "cancelled" || rawStatus === "postponed") {
         dbStatus = "interrupted";
