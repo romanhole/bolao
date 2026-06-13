@@ -133,9 +133,15 @@ SELECT
     lm.nickname,
     COALESCE(SUM(p.points_earned), 0) AS total_points,
     COUNT(p.id) AS total_predictions_made,
-    COUNT(CASE WHEN p.points_earned >= 3 THEN 1 END) AS exact_matches
+    COUNT(CASE 
+        WHEN m.status = 'finished' 
+         AND p.predicted_home = m.home_score 
+         AND p.predicted_away = m.away_score 
+        THEN 1 
+    END) AS exact_matches
 FROM public.league_members lm
 LEFT JOIN public.predictions p ON p.user_id = lm.user_id
+LEFT JOIN public.matches m ON m.id = p.match_id
 GROUP BY lm.league_id, lm.user_id, lm.nickname;
 
 ALTER TABLE public.teams          ENABLE ROW LEVEL SECURITY;
