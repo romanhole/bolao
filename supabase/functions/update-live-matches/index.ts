@@ -7,12 +7,39 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "
 
 serve(async (req) => {
   try {
-    // 1. Fetch data from BZZOIRO API for active leagues
-    const ACTIVE_LEAGUES = [27];
-    const events: any[] = [];
+    // 1. Initialize Supabase Client with Admin privileges
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { persistSession: false }
+    });
 
-    for (const leagueId of ACTIVE_LEAGUES) {
-      const response = await fetch(`https://sports.bzzoiro.com/api/v2/events/live/?league_id=${leagueId}`, {
+    // 2. Fetch matches from DB that might be live (4h ago up to 15m in future)
+    const now = new Date();
+    const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000).toISOString();
+    const fifteenMinsFuture = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
+
+    const { data: activeMatches, error: matchError } = await supabase
+      .from("matches")
+      .select("api_fixture_id")
+      .neq("status", "finished")
+      .neq("status", "interrupted")
+      .gte("scheduled_at", fourHoursAgo)
+      .lte("scheduled_at", fifteenMinsFuture);
+
+    if (matchError) {
+      throw matchError;
+    }
+
+    if (!activeMatches || activeMatches.length === 0) {
+      return new Response(JSON.stringify({ message: "No active matches found in DB window." }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // 3. Fetch data from BZZOIRO API for each match individually
+    const events: any[] = [];
+    const fetchPromises = activeMatches.map(async (match) => {
+      const matchId = match.api_fixture_id;
+      const response = await fetch(`https://sports.bzzoiro.com/api/v2/events/${matchId}`, {
         method: "GET",
         headers: {
           "Authorization": `Token ${BZZOIRO_API_KEY}`
@@ -20,30 +47,22 @@ serve(async (req) => {
       });
 
       if (!response.ok) {
-        console.error(`BZZOIRO API responded with status: ${response.status} for league ${leagueId}`);
-        continue; // Skip this league and try the next one
+        console.error(`BZZOIRO API responded with status: ${response.status} for match ${matchId}`);
+        return;
       }
 
       const data = await response.json();
-      if (data.events) {
-        console.log("RAW BZZOIRO RESPONSE FOR LEAGUE " + leagueId + ":", JSON.stringify(data.events, null, 2));
-        events.push(...data.events);
-      }
-    }
+      const matchEvents = data.events ? data.events : (Array.isArray(data) ? data : [data]);
+      events.push(...matchEvents);
+    });
+
+    await Promise.all(fetchPromises);
 
     if (events.length === 0) {
-      return new Response(JSON.stringify({ message: "No live events found." }), {
+      return new Response(JSON.stringify({ message: "No live events found from API." }), {
         headers: { "Content-Type": "application/json" },
       });
     }
-
-    // 2. Initialize Supabase Client with Admin privileges
-    // We use the Service Role Key to bypass Row Level Security (RLS) for background updates
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-      auth: { persistSession: false }
-    });
-
-    // 3. Process and map the events
     const updatePromises = events.map(async (event: any) => {
       const apiId = event.id;
       let dbStatus = "scheduled";
