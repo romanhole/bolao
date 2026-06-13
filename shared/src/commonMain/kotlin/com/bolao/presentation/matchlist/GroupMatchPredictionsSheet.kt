@@ -15,7 +15,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.border
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -129,12 +132,12 @@ private fun PredictionRow(position: Int, score: LiveMatchUserScore, isCurrentUse
     val rowModifier = if (isCurrentUser) {
         Modifier
             .fillMaxWidth()
-            .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(8.dp))
             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
-            .androidx.compose.foundation.border(
+            .border(
                 1.dp,
                 MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                RoundedCornerShape(8.dp)
             )
             .padding(vertical = 8.dp, horizontal = 8.dp)
     } else {
@@ -180,13 +183,13 @@ private fun PredictionRow(position: Int, score: LiveMatchUserScore, isCurrentUse
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = if (isCurrentUser) FontWeight.Bold else FontWeight.Normal,
                 maxLines = 1,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                overflow = TextOverflow.Ellipsis,
             )
             if (isCurrentUser) {
                 Spacer(modifier = Modifier.width(6.dp))
                 Box(
                     modifier = Modifier
-                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
+                        .clip(RoundedCornerShape(4.dp))
                         .background(MaterialTheme.colorScheme.primary)
                         .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
