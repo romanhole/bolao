@@ -273,7 +273,7 @@ class MatchListViewModel(
             val prediction = Prediction(
                 id            = "",             // O backend gera o ID via UUID
                 matchId       = matchId,
-                userId        = currentUserId,  // userId REAL do Supabase Auth
+                userId        = _currentUserId.value,  // userId REAL do Supabase Auth
                 predictedHome = draft.first,
                 predictedAway = draft.second,
             )
