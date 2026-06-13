@@ -89,7 +89,8 @@ class MatchListViewModel(
      * userId do usuário autenticado.
      * Inicializado no [init] antes de observar dados.
      */
-    private var currentUserId: String = ""
+    private val _currentUserId = MutableStateFlow<String>("")
+    val currentUserId: StateFlow<String> = _currentUserId.asStateFlow()
 
     // ── Estado do Bottom Sheet de Palpites do Grupo ──────────────────────────
 
@@ -112,7 +113,7 @@ class MatchListViewModel(
         viewModelScope.launch {
             // Aguarda o userId real — App.kt garante que estamos autenticados aqui
             val user = authRepository.currentUser.filterNotNull().first()
-            currentUserId = user.userId
+            _currentUserId.value = user.userId
             
             // Busca as ligas que o usuário participa
             leagueRepository.getUserLeagues().collect { leagues ->
@@ -146,7 +147,7 @@ class MatchListViewModel(
             val combinedData = combine(
                 matchRepository.observeMatchesByCompetition(COMPETITION_ID),
                 combine(
-                    predictionRepository.observePredictionsByUser(currentUserId, COMPETITION_ID),
+                    predictionRepository.observePredictionsByUser(_currentUserId.value, COMPETITION_ID),
                     _savedPredictionsOverride
                 ) { list, overrides ->
                     val map = list.associateBy { it.matchId }.toMutableMap()
@@ -387,7 +388,14 @@ class MatchListViewModel(
                     predictedAway = pred.predictedAway,
                     partialPoints = pts
                 )
-            }.sortedByDescending { it.partialPoints }
+            }.sortedWith(
+                compareByDescending<LiveMatchUserScore> { it.partialPoints }
+                    .thenBy {
+                        val actualHome = match.homeScore ?: 0
+                        val actualAway = match.awayScore ?: 0
+                        kotlin.math.abs(it.predictedHome - actualHome) + kotlin.math.abs(it.predictedAway - actualAway)
+                    }
+            )
             
             _sheetPredictions.value = scores
             _sheetIsLoading.value = false

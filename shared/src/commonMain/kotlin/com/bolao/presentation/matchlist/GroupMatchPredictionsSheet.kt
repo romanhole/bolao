@@ -42,6 +42,7 @@ fun GroupMatchPredictionsSheet(
     selectedLeagueId: String?,
     predictions: List<LiveMatchUserScore>,
     isLoading: Boolean,
+    currentUserId: String,
     onSelectLeague: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -109,7 +110,11 @@ fun GroupMatchPredictionsSheet(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     itemsIndexed(predictions) { index, score ->
-                        PredictionRow(position = index + 1, score = score)
+                        PredictionRow(
+                            position = index + 1, 
+                            score = score,
+                            isCurrentUser = score.userId == currentUserId
+                        )
                     }
                 }
             }
@@ -118,12 +123,28 @@ fun GroupMatchPredictionsSheet(
 }
 
 @Composable
-private fun PredictionRow(position: Int, score: LiveMatchUserScore) {
+private fun PredictionRow(position: Int, score: LiveMatchUserScore, isCurrentUser: Boolean = false) {
     val initial = score.nickname.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
     val avatarColor = avatarColorFor(score.userId)
+    val rowModifier = if (isCurrentUser) {
+        Modifier
+            .fillMaxWidth()
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
+            .androidx.compose.foundation.border(
+                1.dp,
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+            )
+            .padding(vertical = 8.dp, horizontal = 8.dp)
+    } else {
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp, horizontal = 8.dp)
+    }
 
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        modifier = rowModifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -150,11 +171,35 @@ private fun PredictionRow(position: Int, score: LiveMatchUserScore) {
         }
         Spacer(modifier = Modifier.width(12.dp))
 
-        Text(
-            text = score.nickname,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.weight(1f)
-        )
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = score.nickname,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = if (isCurrentUser) FontWeight.Bold else FontWeight.Normal,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            )
+            if (isCurrentUser) {
+                Spacer(modifier = Modifier.width(6.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
+                        .background(MaterialTheme.colorScheme.primary)
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = "Você",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+        
         Text(
             text = "(${score.predictedHome}-${score.predictedAway})",
             style = MaterialTheme.typography.bodyMedium,

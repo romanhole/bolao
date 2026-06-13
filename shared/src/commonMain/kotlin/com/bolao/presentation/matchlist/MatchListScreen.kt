@@ -53,6 +53,8 @@ fun MatchListScreen(
     val sheetPredictions by viewModel.sheetPredictions.collectAsState()
     val sheetIsLoading by viewModel.sheetIsLoading.collectAsState()
 
+    val currentUserId by viewModel.currentUserId.collectAsState()
+
     val snackbarHost = remember { SnackbarHostState() }
 
     // Observa erros de save e exibe como Snackbar
@@ -148,6 +150,7 @@ fun MatchListScreen(
                 selectedLeagueId = selectedLeagueId,
                 predictions = sheetPredictions,
                 isLoading = sheetIsLoading,
+                currentUserId = currentUserId,
                 onSelectLeague = viewModel::selectLeagueForSheet,
                 onDismiss = viewModel::closePredictionsSheet
             )
