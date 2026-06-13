@@ -100,7 +100,7 @@ class LeagueDetailViewModel(
                 // Observa partidas ao vivo para somar pontos reativos na memória
                 matchRepository.observeMatchesByCompetition("copa_do_mundo_2026")
                     .map { matches ->
-                        val liveMatches = matches.filter { it.status is com.bolao.domain.model.GameStatus.Live }
+                        val liveMatches = matches.filter { it.status is com.bolao.domain.model.GameStatus.Live || it.status is com.bolao.domain.model.GameStatus.HalfTime }
                         
                         if (liveMatches.isEmpty()) {
                             // Se não há jogos ao vivo, o ranking base é absoluto

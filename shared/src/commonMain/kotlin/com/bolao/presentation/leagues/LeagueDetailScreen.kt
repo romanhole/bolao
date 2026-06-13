@@ -373,9 +373,15 @@ private fun LiveMatchCard(detail: LiveMatchDetail, modifier: Modifier = Modifier
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
+                val isHalfTime = detail.match.status is com.bolao.domain.model.GameStatus.HalfTime
                 val min = (detail.match.status as? com.bolao.domain.model.GameStatus.Live)?.minutePlayed
+                val timeText = when {
+                    isHalfTime -> "Intervalo"
+                    min != null -> "$min'"
+                    else -> "Ao Vivo"
+                }
                 Text(
-                    text = if (min != null) "$min'" else "Ao Vivo",
+                    text = timeText,
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color(0xFFFF4B4B),
                     fontWeight = FontWeight.Bold
@@ -455,9 +461,15 @@ fun LiveMatchPredictionsSheet(detail: LiveMatchDetail, onDismiss: () -> Unit) {
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
+                val isHalfTime = detail.match.status is com.bolao.domain.model.GameStatus.HalfTime
                 val min = (detail.match.status as? com.bolao.domain.model.GameStatus.Live)?.minutePlayed
+                val timeText = when {
+                    isHalfTime -> "Intervalo"
+                    min != null -> "$min'"
+                    else -> "Ao Vivo"
+                }
                 Text(
-                    text = if (min != null) "$min'" else "Ao Vivo",
+                    text = timeText,
                     style = MaterialTheme.typography.titleMedium,
                     color = Color(0xFFFF4B4B),
                     fontWeight = FontWeight.Bold
