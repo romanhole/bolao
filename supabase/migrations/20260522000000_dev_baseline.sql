@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS public.matches (
     away_team_id     UUID        NOT NULL REFERENCES public.teams(id) ON DELETE RESTRICT,
     home_score       INT,
     away_score       INT,
-    status           TEXT        NOT NULL DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'live', 'finished', 'cancelled')),
+    status           TEXT        NOT NULL DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'live', 'halftime', 'finished', 'cancelled', 'interrupted')),
     minute_played    INT,
     scheduled_at     TIMESTAMPTZ NOT NULL,
     competition_id   TEXT        NOT NULL,
