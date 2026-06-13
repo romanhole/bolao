@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)       // kotlin.android — NÃO multiplatform aqui
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -66,4 +67,8 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.koin.android)
     implementation(libs.koin.core)
+    
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 }

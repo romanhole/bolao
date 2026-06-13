@@ -16,7 +16,8 @@ androidx-splashscreen   = "1.0.1"
 supabase                = "3.0.3"
 kamel                   = "1.0.0"
 multiplatform-settings  = "1.1.1"
-
+firebase-bom            = "33.7.0"
+google-services         = "4.4.2"
 
 [libraries]
 # Ktor Client
@@ -60,6 +61,10 @@ kamel-image              = { module = "media.kamel:kamel-image-default", version
 # Multiplatform Settings (SharedPreferences / NSUserDefaults)
 multiplatform-settings   = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "multiplatform-settings" }
 
+# Firebase
+firebase-bom             = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
+firebase-messaging       = { module = "com.google.firebase:firebase-messaging-ktx" }
+
 
 [plugins]
 kotlin-multiplatform         = { id = "org.jetbrains.kotlin.multiplatform",       version.ref = "kotlin" }
@@ -69,3 +74,4 @@ compose-multiplatform        = { id = "org.jetbrains.compose",                  
 compose-compiler             = { id = "org.jetbrains.kotlin.plugin.compose",      version.ref = "kotlin" }
 android-application          = { id = "com.android.application",                  version.ref = "agp" }
 android-library              = { id = "com.android.library",                      version.ref = "agp" }
+google-services              = { id = "com.google.gms.google-services",           version.ref = "google-services" }
