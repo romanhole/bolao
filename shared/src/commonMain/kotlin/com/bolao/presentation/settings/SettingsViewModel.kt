@@ -38,11 +38,20 @@ class SettingsViewModel(
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     init {
+        checkPermissionConsistency()
         _uiState.update { 
             it.copy(
                 isNotificationsEnabled = settingsManager.getBoolean("notifications_enabled", true),
                 hoursBeforeMatch = settingsManager.getInt("notification_hours_before", 1)
             )
+        }
+    }
+
+    private fun checkPermissionConsistency() {
+        val savedEnabled = settingsManager.getBoolean("notifications_enabled", true)
+        if (savedEnabled && permissionHelper.isSupported() && !permissionHelper.hasPermission()) {
+            // Falsa impressão: usuário ativou no app, mas revogou no sistema.
+            setNotificationsEnabled(false, null)
         }
     }
 
