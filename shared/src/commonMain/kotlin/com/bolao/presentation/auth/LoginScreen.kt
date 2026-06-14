@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -152,6 +153,7 @@ private fun LoginContent(
 ) {
     Column(
         modifier            = Modifier
+            .widthIn(max = 480.dp)
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 28.dp),
@@ -424,6 +426,7 @@ private fun ForgotPasswordContent(
 ) {
     Column(
         modifier            = Modifier
+            .widthIn(max = 480.dp)
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 28.dp),
@@ -578,6 +581,7 @@ private fun OtpContent(
 ) {
     Column(
         modifier            = Modifier
+            .widthIn(max = 480.dp)
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 28.dp),

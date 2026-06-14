@@ -8,11 +8,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Stars
@@ -318,6 +320,7 @@ fun MainTabsScreen(authViewModel: AuthViewModel, onNavigateToLeague: (String) ->
                         )
                     }
                 }
+                Spacer(modifier = Modifier.width(24.dp))
             }
             
             Box(modifier = Modifier.fillMaxSize().weight(1f)) {
