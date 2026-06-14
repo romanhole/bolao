@@ -14,6 +14,7 @@ import com.bolao.presentation.auth.AuthViewModel
 import com.bolao.presentation.leagues.LeagueDetailViewModel
 import com.bolao.presentation.leagues.LeaguesViewModel
 import com.bolao.presentation.matchlist.MatchListViewModel
+import com.bolao.presentation.settings.SettingsViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
@@ -46,9 +47,13 @@ val repositoryModule = module {
  * [viewModelOf] registra o ViewModel com ciclo de vida KMP-compatible.
  */
 val viewModelModule = module {
+    single { com.russhwolf.settings.Settings() }
+    factory { com.bolao.presentation.utils.NotificationPermissionHelper() }
+
     viewModelOf(::MatchListViewModel)
     viewModelOf(::AuthViewModel)
 
     viewModelOf(::LeaguesViewModel)
     viewModelOf(::LeagueDetailViewModel)
+    viewModelOf(::SettingsViewModel)
 }

@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Stars
 import androidx.compose.material.icons.rounded.Logout
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -217,6 +218,7 @@ fun UpdateSuggestedDialog(onDismiss: () -> Unit, onUpdate: () -> Unit) {
 sealed interface AuthRoute {
     data object MainTabs : AuthRoute
     data class LeagueDetail(val leagueId: String) : AuthRoute
+    data object Settings : AuthRoute
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -235,12 +237,18 @@ fun AuthenticatedApp(
             is AuthRoute.MainTabs -> {
                 MainTabsScreen(
                     authViewModel = authViewModel,
-                    onNavigateToLeague = { currentRoute = AuthRoute.LeagueDetail(it) }
+                    onNavigateToLeague = { currentRoute = AuthRoute.LeagueDetail(it) },
+                    onNavigateToSettings = { currentRoute = AuthRoute.Settings }
                 )
             }
             is AuthRoute.LeagueDetail -> {
                 LeagueDetailScreen(
                     leagueId = route.leagueId,
+                    onBack = { currentRoute = AuthRoute.MainTabs }
+                )
+            }
+            is AuthRoute.Settings -> {
+                com.bolao.presentation.settings.SettingsScreen(
                     onBack = { currentRoute = AuthRoute.MainTabs }
                 )
             }
@@ -250,7 +258,7 @@ fun AuthenticatedApp(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainTabsScreen(authViewModel: AuthViewModel, onNavigateToLeague: (String) -> Unit) {
+fun MainTabsScreen(authViewModel: AuthViewModel, onNavigateToLeague: (String) -> Unit, onNavigateToSettings: () -> Unit) {
     var currentTab by remember { mutableStateOf(AppTab.PREDICTIONS) }
     var showRulesBottomSheet by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -289,8 +297,11 @@ fun MainTabsScreen(authViewModel: AuthViewModel, onNavigateToLeague: (String) ->
                             Icon(Icons.Rounded.Info, contentDescription = "Regras de Pontuação")
                         }
                     }
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(Icons.Rounded.Settings, contentDescription = "Configurações")
+                    }
                     IconButton(onClick = { scope.launch { authViewModel.logout() } }) {
-                        Icon(Icons.Rounded.Logout, contentDescription = "Sair")
+                        Icon(androidx.compose.material.icons.Icons.Rounded.Logout, contentDescription = "Sair")
                     }
                 },
             )

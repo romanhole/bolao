@@ -51,14 +51,40 @@ class BolaoApplication : Application() {
 
         val authRepository: AuthRepository by inject()
         val pushTokenRepository: PushTokenRepository by inject()
+        val settingsManager: com.russhwolf.settings.Settings by inject()
         
         CoroutineScope(Dispatchers.IO).launch {
             authRepository.currentUser.collect { user ->
                 if (user != null) {
-                    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            CoroutineScope(Dispatchers.IO).launch {
-                                pushTokenRepository.saveToken(user.userId, task.result)
+                    // Só registra o token se as notificações estiverem ativadas nas configs
+                    val isEnabled = settingsManager.getBoolean("notifications_enabled", true)
+                    val hoursBefore = settingsManager.getInt("notification_hours_before", 1)
+                    
+                    if (isEnabled) {
+                        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    pushTokenRepository.saveToken(user.userId, task.result, hoursBefore)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        com.bolao.presentation.settings.TokenSyncManager.syncAction = {
+            CoroutineScope(Dispatchers.IO).launch {
+                val user = authRepository.currentUser.firstOrNull()
+                if (user != null) {
+                    val isEnabled = settingsManager.getBoolean("notifications_enabled", true)
+                    val hoursBefore = settingsManager.getInt("notification_hours_before", 1)
+                    if (isEnabled) {
+                        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    pushTokenRepository.saveToken(user.userId, task.result, hoursBefore)
+                                }
                             }
                         }
                     }

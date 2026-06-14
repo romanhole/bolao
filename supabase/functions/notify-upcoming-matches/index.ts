@@ -94,9 +94,9 @@ serve(async (req) => {
     });
 
     const now = new Date();
-    // Janela: jogos que começam entre +1h e +3h
-    const windowStart = new Date(now.getTime() + 1 * 60 * 60 * 1000).toISOString();
-    const windowEnd = new Date(now.getTime() + 3 * 60 * 60 * 1000).toISOString();
+    // Janela máxima configurável é 24 horas. Pegamos até 24.5 horas para dar margem.
+    const windowStart = now.toISOString();
+    const windowEnd = new Date(now.getTime() + 24.5 * 60 * 60 * 1000).toISOString();
 
     // 1. Encontrar partidas nesta janela
     const { data: upcomingMatches, error: matchesError } = await supabase
@@ -109,7 +109,7 @@ serve(async (req) => {
     if (matchesError) throw matchesError;
 
     if (!upcomingMatches || upcomingMatches.length === 0) {
-      return new Response(JSON.stringify({ message: "No upcoming matches in the 1h-3h window." }), {
+      return new Response(JSON.stringify({ message: "No upcoming matches in the 24h window." }), {
         headers: { "Content-Type": "application/json" },
       });
     }
@@ -128,6 +128,8 @@ serve(async (req) => {
       const matchId = match.id;
       const homeTeam = (match as any).home_team_id.short_name;
       const awayTeam = (match as any).away_team_id.short_name;
+      const matchDate = new Date(match.scheduled_at);
+      const hoursUntilMatch = (matchDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
       // 2. Encontrar os membros de QUALQUER liga
       const { data: allLeagueMembers, error: membersError } = await supabase
@@ -175,10 +177,10 @@ serve(async (req) => {
         continue;
       }
 
-      // 6. Pegar os tokens de push desses usuários
+      // 6. Pegar os tokens de push desses usuários com a preferência de horário
       const { data: pushTokens, error: tokensError } = await supabase
         .from("push_tokens")
-        .select("user_id, token")
+        .select("user_id, token, notification_hours_before")
         .in("user_id", targetUserIds);
       
       if (tokensError) {
@@ -190,10 +192,17 @@ serve(async (req) => {
         continue;
       }
 
-      // 7. Enviar notificações via FCM
+      // 7. Enviar notificações via FCM (Apenas se o tempo faltante for menor ou igual à preferência)
       const notificationsToRecord = [];
 
       for (const pt of pushTokens) {
+        const userHoursPreference = pt.notification_hours_before || 1;
+        
+        // Se ainda falta muito tempo em relação à preferência do usuário, pula ele
+        if (hoursUntilMatch > userHoursPreference) {
+          continue;
+        }
+
         const payload = {
           message: {
             token: pt.token,
