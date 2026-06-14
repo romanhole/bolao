@@ -201,8 +201,13 @@ serve(async (req) => {
               title: "Vai esquecer de palpitar?",
               body: `O jogo ${homeTeam} x ${awayTeam} está quase começando! Corra para não perder seus pontos.`,
             },
+            android: {
+              notification: {
+                channel_id: "bolao_alerts"
+              }
+            },
             data: {
-              click_action: "FLUTTER_NOTIFICATION_CLICK", // Opcional, ou qualquer outro deeplink caso implementemos
+              click_action: "FLUTTER_NOTIFICATION_CLICK", // Opcional
               match_id: matchId,
             }
           }

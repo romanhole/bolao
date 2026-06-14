@@ -49,6 +49,10 @@
             </intent-filter>
         </service>
 
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="bolao_alerts" />
+
     </application>
 
 </manifest>

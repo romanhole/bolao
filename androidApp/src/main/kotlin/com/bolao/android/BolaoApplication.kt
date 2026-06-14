@@ -1,6 +1,10 @@
 package com.bolao.android
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
 import com.bolao.di.networkModule
 import com.bolao.di.repositoryModule
 import com.bolao.di.viewModelModule
@@ -33,6 +37,16 @@ class BolaoApplication : Application() {
                 repositoryModule,
                 viewModelModule,
             )
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                "bolao_alerts",
+                "Alertas do Bolão",
+                NotificationManager.IMPORTANCE_HIGH
+            )
+            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannel(channel)
         }
 
         val authRepository: AuthRepository by inject()
