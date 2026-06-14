@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -57,7 +58,6 @@ import com.bolao.presentation.leagues.LeaguesScreen
 import com.bolao.presentation.matchlist.MatchListScreen
 import com.bolao.presentation.theme.BolaoTheme
 import com.bolao.presentation.utils.WindowWidthClass
-import com.bolao.presentation.utils.rememberWindowWidthClass
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -256,13 +256,19 @@ fun MainTabsScreen(authViewModel: AuthViewModel, onNavigateToLeague: (String) ->
     val scope = rememberCoroutineScope()
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-    val windowWidthClass = rememberWindowWidthClass()
-    val isCompact = windowWidthClass == WindowWidthClass.Compact
+    
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val windowWidthClass = when {
+            maxWidth < 600.dp -> WindowWidthClass.Compact
+            maxWidth < 840.dp -> WindowWidthClass.Medium
+            else -> WindowWidthClass.Expanded
+        }
+        val isCompact = windowWidthClass == WindowWidthClass.Compact
 
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            TopAppBar(
+        Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
+                TopAppBar(
                 title = {
                     Column {
                         Text(
@@ -339,6 +345,7 @@ fun MainTabsScreen(authViewModel: AuthViewModel, onNavigateToLeague: (String) ->
                     com.bolao.presentation.matchlist.RulesBottomSheet(onDismissRequest = { showRulesBottomSheet = false })
                 }
             }
+        }
         }
     }
 }
