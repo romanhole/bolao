@@ -38,16 +38,16 @@ class BolaoApplication : Application() {
         val authRepository: AuthRepository by inject()
         val pushTokenRepository: PushTokenRepository by inject()
         
-        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-            if (!task.isSuccessful) {
-                return@addOnCompleteListener
-            }
-
-            val token = task.result
-            CoroutineScope(Dispatchers.IO).launch {
-                val user = authRepository.currentUser.firstOrNull()
+        CoroutineScope(Dispatchers.IO).launch {
+            authRepository.currentUser.collect { user ->
                 if (user != null) {
-                    pushTokenRepository.saveToken(user.userId, token)
+                    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                pushTokenRepository.saveToken(user.userId, task.result)
+                            }
+                        }
+                    }
                 }
             }
         }
