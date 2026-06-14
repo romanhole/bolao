@@ -112,7 +112,8 @@ fun LeagueDetailScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
+            contentAlignment = Alignment.TopCenter
         ) {
             when (val state = uiState) {
                 is LeagueDetailUiState.Loading -> {
@@ -133,7 +134,7 @@ fun LeagueDetailScreen(
                     PullToRefreshBox(
                         isRefreshing = state.isRefreshing,
                         onRefresh = viewModel::refresh,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxHeight().widthIn(max = 680.dp).fillMaxWidth()
                     ) {
                         if (state.ranking.isEmpty()) {
                             Box(

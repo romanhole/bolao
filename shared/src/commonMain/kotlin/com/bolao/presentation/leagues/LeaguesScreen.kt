@@ -81,9 +81,10 @@ fun LeaguesScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.TopCenter
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxHeight().widthIn(max = 680.dp)) {
             
             // Header: Botões de ação
             Row(

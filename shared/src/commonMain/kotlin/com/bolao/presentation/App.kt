@@ -241,17 +241,14 @@ fun AuthenticatedApp(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainTabsScreen(
-    authViewModel: AuthViewModel,
-    onNavigateToLeague: (String) -> Unit
-) {
+fun MainTabsScreen(authViewModel: AuthViewModel, onNavigateToLeague: (String) -> Unit) {
     var currentTab by remember { mutableStateOf(AppTab.PREDICTIONS) }
     var showRulesBottomSheet by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(
-        rememberTopAppBarState()
-    )
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    val windowWidthClass = rememberWindowWidthClass()
+    val isCompact = windowWidthClass == WindowWidthClass.Compact
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -260,80 +257,77 @@ fun MainTabsScreen(
                 title = {
                     Column {
                         Text(
-                            text       = currentTab.title,
-                            style      = MaterialTheme.typography.headlineMedium,
+                            text = currentTab.title,
+                            style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Black,
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor         = MaterialTheme.colorScheme.background,
+                    containerColor = MaterialTheme.colorScheme.background,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface,
                 ),
                 scrollBehavior = scrollBehavior,
                 actions = {
                     if (currentTab == AppTab.PREDICTIONS) {
                         IconButton(onClick = { showRulesBottomSheet = true }) {
-                            Icon(
-                                imageVector        = Icons.Rounded.Info,
-                                contentDescription = "Regras de Pontuação",
-                                tint               = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                            Icon(Icons.Rounded.Info, contentDescription = "Regras de Pontuação")
                         }
                     }
-                    IconButton(
-                        onClick = { scope.launch { authViewModel.logout() } }
-                    ) {
-                        Icon(
-                            imageVector        = Icons.Rounded.Logout,
-                            contentDescription = "Sair",
-                            tint               = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                    IconButton(onClick = { scope.launch { authViewModel.logout() } }) {
+                        Icon(Icons.Rounded.Logout, contentDescription = "Sair")
                     }
                 },
             )
         },
         bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-            ) {
-                AppTab.entries.forEach { tab ->
-                    NavigationBarItem(
-                        selected = currentTab == tab,
-                        onClick = { currentTab = tab },
-                        icon = {
-                            Icon(
-                                imageVector = tab.icon,
-                                contentDescription = tab.title,
-                            )
-                        },
-                        label = { Text(tab.title) },
-                    )
+            if (isCompact) {
+                NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+                    AppTab.entries.forEach { tab ->
+                        NavigationBarItem(
+                            selected = currentTab == tab,
+                            onClick = { currentTab = tab },
+                            icon = { Icon(tab.icon, contentDescription = tab.title) },
+                            label = { Text(tab.title) },
+                        )
+                    }
                 }
             }
         },
         containerColor = MaterialTheme.colorScheme.background,
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-        ) {
-            AnimatedContent(
-                targetState = currentTab,
-                transitionSpec = { fadeIn() togetherWith fadeOut() },
-                label = "TabNavigation"
-            ) { tab ->
-                when (tab) {
-                    AppTab.PREDICTIONS -> MatchListScreen()
-                    AppTab.LEAGUES     -> LeaguesScreen(onLeagueClick = onNavigateToLeague)
+        Row(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            if (!isCompact) {
+                NavigationRail(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.fillMaxHeight()
+                ) {
+                    AppTab.entries.forEach { tab ->
+                        NavigationRailItem(
+                            selected = currentTab == tab,
+                            onClick = { currentTab = tab },
+                            icon = { Icon(tab.icon, contentDescription = tab.title) },
+                            label = { Text(tab.title) },
+                        )
+                    }
                 }
             }
+            
+            Box(modifier = Modifier.fillMaxSize().weight(1f)) {
+                AnimatedContent(
+                    targetState = currentTab,
+                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                    label = "TabNavigation"
+                ) { tab ->
+                    when (tab) {
+                        AppTab.PREDICTIONS -> MatchListScreen()
+                        AppTab.LEAGUES -> LeaguesScreen(onLeagueClick = onNavigateToLeague)
+                    }
+                }
 
-            if (showRulesBottomSheet) {
-                com.bolao.presentation.matchlist.RulesBottomSheet(
-                    onDismissRequest = { showRulesBottomSheet = false }
-                )
+                if (showRulesBottomSheet) {
+                    com.bolao.presentation.matchlist.RulesBottomSheet(onDismissRequest = { showRulesBottomSheet = false })
+                }
             }
         }
     }

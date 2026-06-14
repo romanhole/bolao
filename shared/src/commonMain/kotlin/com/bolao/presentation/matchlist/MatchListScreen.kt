@@ -103,8 +103,8 @@ fun MatchListScreen(
                     }
                 }
 
-                Box(modifier = Modifier.fillMaxSize()) {
-                    Column(modifier = Modifier.fillMaxSize()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+                    Column(modifier = Modifier.fillMaxHeight().widthIn(max = 680.dp)) {
                         if (state.availableRounds.isNotEmpty()) {
                             androidx.compose.material3.ScrollableTabRow(
                                 selectedTabIndex = state.availableRounds.indexOf(state.selectedRound).coerceAtLeast(0),
