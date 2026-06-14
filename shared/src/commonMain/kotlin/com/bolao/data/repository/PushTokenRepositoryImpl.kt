@@ -19,10 +19,9 @@ class PushTokenRepositoryImpl(
     override suspend fun saveToken(userId: String, token: String): Result<Unit> {
         return try {
             val dto = PushTokenDto(user_id = userId, token = token)
-            supabase.postgrest["push_tokens"].upsert(
-                value = dto,
+            supabase.postgrest["push_tokens"].upsert(dto) {
                 onConflict = "user_id, token"
-            )
+            }
             Result.success(Unit)
         } catch (e: Exception) {
             e.printStackTrace()
