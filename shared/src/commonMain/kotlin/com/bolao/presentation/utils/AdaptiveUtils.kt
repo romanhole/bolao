@@ -5,9 +5,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.ExperimentalComposeUiApi
 
 enum class WindowWidthClass { Compact, Medium, Expanded }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun rememberWindowWidthClass(): WindowWidthClass {
     val windowInfo = LocalWindowInfo.current
