@@ -1,0 +1,71 @@
+# Detekt config — Bolão KMP
+# Estratégia: começar permissivo, apertar gradualmente por sprint
+
+build:
+  maxIssues: 0
+
+complexity:
+  active: true
+  LongMethod:
+    active: true
+    threshold: 80
+  CyclomaticComplexMethod:
+    active: true
+    threshold: 20
+  LargeClass:
+    active: true
+    threshold: 500
+  TooManyFunctions:
+    active: false
+
+style:
+  active: true
+  MagicNumber:
+    active: true
+    ignoreNumbers: ['-1', '0', '1', '2', '100']
+    ignoreHashCodeFunction: true
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+    ignoreAnnotated:
+      - 'androidx.compose.ui.tooling.preview.Preview'
+  UnusedImports:
+    active: true
+  UnusedPrivateMember:
+    active: true
+  ForbiddenComment:
+    active: false
+  UseCheckOrError:
+    active: true
+  UseRequire:
+    active: true
+
+potential-bugs:
+  active: true
+  LateinitUsage:
+    active: true
+  UnnecessarySafeCall:
+    active: true
+  UnsafeCallOnNullableType:
+    active: true
+  NullableToStringCall:
+    active: true
+  DontDowncastCollectionTypes:
+    active: true
+
+naming:
+  active: true
+  InvalidPackageDeclaration:
+    active: false
+
+formatting:
+  active: true
+  android: true
+  AnnotationOnSeparateLine:
+    active: false
+  MaximumLineLength:
+    active: true
+    maxLineLength: 160
+  TrailingCommaOnCallSite:
+    active: false
+  TrailingCommaOnDeclarationSite:
+    active: false

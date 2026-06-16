@@ -18,6 +18,7 @@ kamel                   = "1.0.0"
 multiplatform-settings  = "1.1.1"
 firebase-bom            = "33.7.0"
 google-services         = "4.4.2"
+detekt                  = "1.23.7"
 
 [libraries]
 # Ktor Client
@@ -75,3 +76,4 @@ compose-compiler             = { id = "org.jetbrains.kotlin.plugin.compose",    
 android-application          = { id = "com.android.application",                  version.ref = "agp" }
 android-library              = { id = "com.android.library",                      version.ref = "agp" }
 google-services              = { id = "com.google.gms.google-services",           version.ref = "google-services" }
+detekt                       = { id = "io.gitlab.arturbosch.detekt",              version.ref = "detekt" }
