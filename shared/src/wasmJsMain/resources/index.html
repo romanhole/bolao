@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    
+    <!-- Meta Tags Essenciais para PWA no iOS -->
+    <meta name="theme-color" content="#121212">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Bolão">
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    
+    <title>Bolão - Copa 2026</title>
+    
+    <style>
+        body { 
+            margin: 0; 
+            background-color: #121212; 
+            overflow: hidden; /* Evita pull-to-refresh nativo que quebra o Canvas */
+        }
+        canvas { 
+            display: block; 
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="ComposeTarget"></canvas>
+    
+    <!-- O nome shared.js foi definido no block wasmJs no build.gradle.kts -->
+    <script src="shared.js"></script>
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('serviceWorker.js')
+                .then(function() { console.log("Service Worker Registered"); });
+        }
+    </script>
+</body>
+</html>
