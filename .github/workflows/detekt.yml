@@ -25,8 +25,4 @@ jobs:
       - name: Run Detekt
         run: ./gradlew detekt
 
-      - name: Upload SARIF to GitHub Security tab
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: build/reports/detekt/detekt.sarif
+
