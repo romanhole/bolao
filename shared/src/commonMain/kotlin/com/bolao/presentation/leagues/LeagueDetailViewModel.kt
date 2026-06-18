@@ -15,6 +15,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -161,4 +163,41 @@ class LeagueDetailViewModel(
             }
         }
     }
+
+    private val _events = MutableSharedFlow<LeagueDetailEvent>()
+    val events = _events.asSharedFlow()
+
+    fun removeMember(userId: String) {
+        val leagueId = currentLeagueId ?: return
+        viewModelScope.launch {
+            leagueRepository.removeMember(leagueId, userId)
+                .onSuccess {
+                    _events.emit(LeagueDetailEvent.ShowMessage("Membro removido com sucesso."))
+                    _events.emit(LeagueDetailEvent.SuggestRenewCode)
+                    loadLeagueDetail(leagueId, silent = true)
+                }
+                .onFailure {
+                    _events.emit(LeagueDetailEvent.ShowMessage("Erro ao remover membro: ${it.message}"))
+                }
+        }
+    }
+
+    fun renewInviteCode() {
+        val leagueId = currentLeagueId ?: return
+        viewModelScope.launch {
+            leagueRepository.renewInviteCode(leagueId)
+                .onSuccess { newCode ->
+                    _events.emit(LeagueDetailEvent.ShowMessage("Novo código gerado: $newCode"))
+                    loadLeagueDetail(leagueId, silent = true)
+                }
+                .onFailure {
+                    _events.emit(LeagueDetailEvent.ShowMessage("Erro ao renovar código: ${it.message}"))
+                }
+        }
+    }
+}
+
+sealed interface LeagueDetailEvent {
+    data class ShowMessage(val message: String) : LeagueDetailEvent
+    data object SuggestRenewCode : LeagueDetailEvent
 }
