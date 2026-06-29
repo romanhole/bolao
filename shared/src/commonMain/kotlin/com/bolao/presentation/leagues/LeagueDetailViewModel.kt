@@ -25,6 +25,7 @@ data class LiveMatchUserScore(
     val nickname: String,
     val predictedHome: Int,
     val predictedAway: Int,
+    val predictedQualifier: String?,
     val partialPoints: Int
 )
 
@@ -117,18 +118,22 @@ class LeagueDetailViewModel(
                                             val pts = PredictionCalculator.calculateEarnedPoints(
                                                 predHome = pred.predictedHome,
                                                 predAway = pred.predictedAway,
-                                                actualHome = match.homeScore ?: 0,
-                                                actualAway = match.awayScore ?: 0,
+                                                actualHome90 = match.homeScore90 ?: match.homeScore ?: 0,
+                                                actualAway90 = match.awayScore90 ?: match.awayScore ?: 0,
                                                 stageMultiplier = match.stageMultiplier,
                                                 homeOdd = match.homeOdd,
                                                 drawOdd = match.drawOdd,
-                                                awayOdd = match.awayOdd
+                                                awayOdd = match.awayOdd,
+                                                isKnockout = match.isKnockout,
+                                                predictedQualifier = pred.predictedQualifier,
+                                                actualQualifier = match.penaltyWinner,
                                             )
                                             LiveMatchUserScore(
                                                 userId = item.userId,
                                                 nickname = item.nickname,
                                                 predictedHome = pred.predictedHome,
                                                 predictedAway = pred.predictedAway,
+                                                predictedQualifier = pred.predictedQualifier,
                                                 partialPoints = pts
                                             )
                                         } else {

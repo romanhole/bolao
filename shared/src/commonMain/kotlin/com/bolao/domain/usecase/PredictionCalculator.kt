@@ -61,15 +61,18 @@ object PredictionCalculator {
     fun calculateEarnedPoints(
         predHome: Int,
         predAway: Int,
-        actualHome: Int,
-        actualAway: Int,
+        actualHome90: Int,
+        actualAway90: Int,
         stageMultiplier: Float,
         homeOdd: Double?,
         drawOdd: Double?,
-        awayOdd: Double?
+        awayOdd: Double?,
+        isKnockout: Boolean = false,
+        predictedQualifier: String? = null,
+        actualQualifier: String? = null,
     ): Int {
         val predDiff = predHome - predAway
-        val actualDiff = actualHome - actualAway
+        val actualDiff = actualHome90 - actualAway90
 
         val predSign = if (predDiff > 0) 1 else if (predDiff < 0) -1 else 0
         val actualSign = if (actualDiff > 0) 1 else if (actualDiff < 0) -1 else 0
@@ -77,8 +80,8 @@ object PredictionCalculator {
         var basePoints = 0
         if (predSign == actualSign) {
             basePoints = 1 // Tendência (Vencedor ou Empate)
-            if (predHome == actualHome) basePoints += 2 // Saldo exato do Mandante
-            if (predAway == actualAway) basePoints += 2 // Saldo exato do Visitante
+            if (predHome == actualHome90) basePoints += 2 // Saldo exato do Mandante
+            if (predAway == actualAway90) basePoints += 2 // Saldo exato do Visitante
         }
 
         var zebraBonus = 0
@@ -94,6 +97,13 @@ object PredictionCalculator {
             }
         }
 
-        return (basePoints * stageMultiplier).roundToInt() + zebraBonus
+        var qualifierBonus = 0
+        if (actualHome90 == actualAway90 && isKnockout && predictedQualifier != null && actualQualifier != null) {
+            if (predictedQualifier == actualQualifier) {
+                qualifierBonus = 2
+            }
+        }
+
+        return (basePoints * stageMultiplier).roundToInt() + zebraBonus + qualifierBonus
     }
 }

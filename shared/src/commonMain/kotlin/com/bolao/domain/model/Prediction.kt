@@ -17,6 +17,7 @@ data class Prediction(
     val userId: String,
     val predictedHome: Int,
     val predictedAway: Int,
+    val predictedQualifier: String? = null,
     val pointsEarned: Int? = null,
 ) {
     /**

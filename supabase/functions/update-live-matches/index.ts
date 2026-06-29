@@ -19,7 +19,7 @@ serve(async (req) => {
 
     const { data: activeMatches, error: matchError } = await supabase
       .from("matches")
-      .select("api_fixture_id")
+      .select("api_fixture_id, home_score, away_score, home_score_90, away_score_90, status")
       .neq("status", "finished")
       .neq("status", "interrupted")
       .gte("scheduled_at", fourHoursAgo)
@@ -34,6 +34,8 @@ serve(async (req) => {
         headers: { "Content-Type": "application/json" },
       });
     }
+
+    const matchesMap = new Map(activeMatches.map(m => [m.api_fixture_id, m]));
 
     // 3. Fetch data from BZZOIRO API for each match individually
     const events: any[] = [];
@@ -66,6 +68,9 @@ serve(async (req) => {
 
     const updatePromises = events.map(async (event: any) => {
       const apiId = event.id;
+      const matchInDb = matchesMap.get(apiId);
+      if (!matchInDb) return;
+
       let dbStatus = "scheduled";
 
       let rawStatus = String(event.status).toLowerCase();
@@ -75,10 +80,15 @@ serve(async (req) => {
         dbStatus = "halftime";
       } else if (rawStatus === "finished" || rawStatus === "ended" || rawPeriod === "finished" || rawStatus === "ft") {
         dbStatus = "finished";
+      } else if (rawPeriod === "extratime" || rawPeriod === "aet") {
+        dbStatus = "extratime";
+      } else if (rawPeriod === "et_halftime") {
+        dbStatus = "et_halftime";
+      } else if (rawPeriod === "penalties") {
+        dbStatus = "penalties";
       } else if (
         rawStatus === "inprogress" || rawStatus === "live" || rawStatus === "1st_half" || rawStatus === "2nd_half" ||
-        rawPeriod === "1st_half" || rawPeriod === "2nd_half" || rawPeriod === "1t" || rawPeriod === "2t" ||
-        rawPeriod === "extratime" || rawPeriod === "aet" || rawPeriod === "penalties"
+        rawPeriod === "1st_half" || rawPeriod === "2nd_half" || rawPeriod === "1t" || rawPeriod === "2t"
       ) {
         dbStatus = "live";
       } else if (rawStatus === "cancelled" || rawStatus === "postponed") {
@@ -87,15 +97,32 @@ serve(async (req) => {
         dbStatus = "scheduled";
       }
 
+      let updateData: any = {
+        status: dbStatus,
+        minute_played: ["live", "halftime", "extratime", "et_halftime", "penalties"].includes(dbStatus) ? (event.current_minute || null) : null
+      };
+
+      if (["extratime", "et_halftime", "penalties"].includes(dbStatus)) {
+        updateData.home_score_et = event.home_score || 0;
+        updateData.away_score_et = event.away_score || 0;
+        
+        if (matchInDb.home_score_90 === null) {
+          // Congela o placar usando o valor que já tínhamos no DB (o placar antes da prorrogação)
+          updateData.home_score_90 = matchInDb.home_score || 0;
+          updateData.away_score_90 = matchInDb.away_score || 0;
+        }
+      } else if (dbStatus === "finished") {
+        updateData.home_score = event.home_score || 0;
+        updateData.away_score = event.away_score || 0;
+      } else {
+        updateData.home_score = event.home_score || 0;
+        updateData.away_score = event.away_score || 0;
+      }
+
       // 4. Update the matches table
       const { error } = await supabase
         .from("matches")
-        .update({
-          home_score: event.home_score || 0,
-          away_score: event.away_score || 0,
-          status: dbStatus,
-          minute_played: (dbStatus === "live" || dbStatus === "halftime") ? (event.current_minute || null) : null
-        })
+        .update(updateData)
         .eq("api_fixture_id", apiId);
 
       if (error) {

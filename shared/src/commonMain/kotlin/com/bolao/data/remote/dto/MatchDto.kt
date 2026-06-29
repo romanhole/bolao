@@ -46,6 +46,14 @@ data class MatchDto(
     @SerialName("home_score") val homeScore: Int? = null,
     @SerialName("away_score") val awayScore: Int? = null,
 
+    // Placar congelado aos 90 min, prorrogação e pênaltis
+    @SerialName("home_score_90") val homeScore90: Int? = null,
+    @SerialName("away_score_90") val awayScore90: Int? = null,
+    @SerialName("home_score_et") val homeScoreEt: Int? = null,
+    @SerialName("away_score_et") val awayScoreEt: Int? = null,
+    @SerialName("penalty_winner") val penaltyWinner: String? = null,
+    @SerialName("is_knockout") val isKnockout: Boolean = false,
+
     // Odds e Multiplicador (Nullable pois podem não estar disponíveis ainda)
     @SerialName("home_odd") val homeOdd: Double? = null,
     @SerialName("draw_odd") val drawOdd: Double? = null,

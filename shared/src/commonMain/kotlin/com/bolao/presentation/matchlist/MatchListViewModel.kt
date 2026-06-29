@@ -58,9 +58,10 @@ class MatchListViewModel(
 
     /**
      * Edições locais ainda não salvas no backend.
-     * matchId → Pair(homeGoals, awayGoals)
      */
-    private val _draftEdits = MutableStateFlow<Map<String, Pair<Int, Int>>>(emptyMap())
+    private data class DraftEdit(val home: Int, val away: Int, val qualifier: String? = null)
+    
+    private val _draftEdits = MutableStateFlow<Map<String, DraftEdit>>(emptyMap())
 
     /** Override local para atualizar a UI imediatamente enquanto o realtime não chega. */
     private val _savedPredictionsOverride = MutableStateFlow<Map<String, Prediction>>(emptyMap())
@@ -80,7 +81,7 @@ class MatchListViewModel(
     private data class StateData(
         val matches: List<com.bolao.domain.model.Match>,
         val savedPredictions: List<Prediction>,
-        val drafts: Map<String, Pair<Int, Int>>,
+        val drafts: Map<String, DraftEdit>,
         val meta: Map<String, PerMatchMeta>,
         val currentRound: String?
     )
@@ -208,11 +209,12 @@ class MatchListViewModel(
                     MatchPredictionItem(
                         match = match,
                         savedPrediction = saved,
-                        currentHomeGoals = draft?.first ?: savedHome,
-                        currentAwayGoals = draft?.second ?: savedAway,
+                        currentHomeGoals = draft?.home ?: savedHome,
+                        currentAwayGoals = draft?.away ?: savedAway,
+                        currentQualifier = draft?.qualifier ?: saved?.predictedQualifier,
                         hasUnsavedChanges = saved == null || (
                             draft != null &&
-                                (draft.first != savedHome || draft.second != savedAway)
+                                (draft.home != savedHome || draft.away != savedAway || draft.qualifier != saved.predictedQualifier)
                             ),
                         isSaving = matchMeta.isSaving,
                         saveError = matchMeta.saveError,
@@ -246,8 +248,8 @@ class MatchListViewModel(
      */
     fun updateHomeGoals(matchId: String, delta: Int) {
         val current = getOrInitDraft(matchId)
-        val newHome = (current.first + delta).coerceAtLeast(0)
-        _draftEdits.update { it + (matchId to Pair(newHome, current.second)) }
+        val newHome = (current.home + delta).coerceAtLeast(0)
+        _draftEdits.update { it + (matchId to current.copy(home = newHome)) }
     }
 
     /**
@@ -256,8 +258,16 @@ class MatchListViewModel(
      */
     fun updateAwayGoals(matchId: String, delta: Int) {
         val current = getOrInitDraft(matchId)
-        val newAway = (current.second + delta).coerceAtLeast(0)
-        _draftEdits.update { it + (matchId to Pair(current.first, newAway)) }
+        val newAway = (current.away + delta).coerceAtLeast(0)
+        _draftEdits.update { it + (matchId to current.copy(away = newAway)) }
+    }
+
+    /**
+     * Atualiza o palpite de qual time se classifica.
+     */
+    fun updateQualifier(matchId: String, qualifier: String) {
+        val current = getOrInitDraft(matchId)
+        _draftEdits.update { it + (matchId to current.copy(qualifier = qualifier)) }
     }
 
     /**
@@ -266,7 +276,7 @@ class MatchListViewModel(
      */
     fun savePrediction(matchId: String) {
         // Se o usuário não mexeu nos contadores, o draft será nulo. Assumimos o 0x0 inicial da tela.
-        val draft = _draftEdits.value[matchId] ?: Pair(0, 0)
+        val draft = _draftEdits.value[matchId] ?: DraftEdit(0, 0)
 
         viewModelScope.launch {
             // Sinaliza "salvando" para desabilitar o botão e mostrar spinner
@@ -276,8 +286,9 @@ class MatchListViewModel(
                 id = "", // O backend gera o ID via UUID
                 matchId = matchId,
                 userId = _currentUserId.value, // userId REAL do Supabase Auth
-                predictedHome = draft.first,
-                predictedAway = draft.second,
+                predictedHome = draft.home,
+                predictedAway = draft.away,
+                predictedQualifier = draft.qualifier,
             )
 
             predictionRepository.savePrediction(prediction)
@@ -314,16 +325,16 @@ class MatchListViewModel(
      * Retorna o draft existente para [matchId], ou inicializa a partir
      * do palpite já salvo (para que o usuário parta do valor que já confirmou).
      */
-    private fun getOrInitDraft(matchId: String): Pair<Int, Int> {
+    private fun getOrInitDraft(matchId: String): DraftEdit {
         _draftEdits.value[matchId]?.let { return it }
 
         val currentState = _uiState.value
         if (currentState is MatchListUiState.Success) {
             val item = currentState.items.find { it.match.id == matchId }
             val saved = item?.savedPrediction
-            return Pair(saved?.predictedHome ?: 0, saved?.predictedAway ?: 0)
+            return DraftEdit(saved?.predictedHome ?: 0, saved?.predictedAway ?: 0, saved?.predictedQualifier)
         }
-        return Pair(0, 0)
+        return DraftEdit(0, 0)
     }
 
     // ── Controle do Bottom Sheet de Palpites do Grupo ─────────────────────────
@@ -378,18 +389,22 @@ class MatchListViewModel(
                 val pts = PredictionCalculator.calculateEarnedPoints(
                     predHome = pred.predictedHome,
                     predAway = pred.predictedAway,
-                    actualHome = match.homeScore ?: 0,
-                    actualAway = match.awayScore ?: 0,
+                    actualHome90 = match.homeScore90 ?: match.homeScore ?: 0,
+                    actualAway90 = match.awayScore90 ?: match.awayScore ?: 0,
                     stageMultiplier = match.stageMultiplier,
                     homeOdd = match.homeOdd,
                     drawOdd = match.drawOdd,
-                    awayOdd = match.awayOdd
+                    awayOdd = match.awayOdd,
+                    isKnockout = match.isKnockout,
+                    predictedQualifier = pred.predictedQualifier,
+                    actualQualifier = match.penaltyWinner,
                 )
                 LiveMatchUserScore(
                     userId = member.userId,
                     nickname = member.nickname,
                     predictedHome = pred.predictedHome,
                     predictedAway = pred.predictedAway,
+                    predictedQualifier = pred.predictedQualifier,
                     partialPoints = pts
                 )
             }.sortedWith(

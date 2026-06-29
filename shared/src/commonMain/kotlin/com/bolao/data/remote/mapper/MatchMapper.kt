@@ -28,6 +28,12 @@ fun MatchDto.toDomain(): Match = Match(
     awayTeam = awayTeam.toDomain(),
     homeScore = homeScore,
     awayScore = awayScore,
+    homeScore90 = homeScore90,
+    awayScore90 = awayScore90,
+    homeScoreEt = homeScoreEt,
+    awayScoreEt = awayScoreEt,
+    penaltyWinner = penaltyWinner,
+    isKnockout = isKnockout,
     status = toGameStatus(),
     scheduledAt = Instant.parse(scheduledAt),
     competition = competition,
@@ -51,6 +57,9 @@ fun MatchDto.toDomain(): Match = Match(
 private fun MatchDto.toGameStatus(): GameStatus = when (status) {
     "live" -> GameStatus.Live(minutePlayed = minutePlayed ?: 0)
     "halftime" -> GameStatus.HalfTime
+    "extratime" -> GameStatus.ExtraTime(minutePlayed = minutePlayed ?: 90)
+    "et_halftime" -> GameStatus.ExtraTimeHalfTime
+    "penalties" -> GameStatus.Penalties
     "finished" -> GameStatus.Finished
     "interrupted" -> GameStatus.Interrupted(reason = interruptedReason ?: "Suspenso")
     else -> GameStatus.Scheduled

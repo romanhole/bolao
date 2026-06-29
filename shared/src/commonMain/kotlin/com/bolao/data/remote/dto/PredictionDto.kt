@@ -23,6 +23,7 @@ data class PredictionDto(
     @SerialName("user_id") val userId: String,
     @SerialName("predicted_home") val predictedHome: Int,
     @SerialName("predicted_away") val predictedAway: Int,
+    @SerialName("predicted_qualifier") val predictedQualifier: String? = null,
     // null → jogo ainda não encerrou; calculado pelo backend
     @SerialName("points_earned") val pointsEarned: Int? = null,
 )

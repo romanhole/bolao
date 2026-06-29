@@ -22,6 +22,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -41,6 +42,7 @@ import com.bolao.presentation.theme.BolaoGold
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupMatchPredictionsSheet(
+    match: com.bolao.domain.model.Match?,
     leagues: List<League>,
     selectedLeagueId: String?,
     predictions: List<LiveMatchUserScore>,
@@ -114,6 +116,7 @@ fun GroupMatchPredictionsSheet(
                 ) {
                     itemsIndexed(predictions) { index, score ->
                         PredictionRow(
+                            match = match,
                             position = index + 1,
                             score = score,
                             isCurrentUser = score.userId == currentUserId
@@ -126,7 +129,12 @@ fun GroupMatchPredictionsSheet(
 }
 
 @Composable
-private fun PredictionRow(position: Int, score: LiveMatchUserScore, isCurrentUser: Boolean = false) {
+private fun PredictionRow(
+    match: com.bolao.domain.model.Match?,
+    position: Int,
+    score: LiveMatchUserScore,
+    isCurrentUser: Boolean = false
+) {
     val initial = score.nickname.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
     val avatarColor = avatarColorFor(score.userId)
     val rowModifier = if (isCurrentUser) {
@@ -174,49 +182,72 @@ private fun PredictionRow(position: Int, score: LiveMatchUserScore, isCurrentUse
         }
         Spacer(modifier = Modifier.width(12.dp))
 
-        Row(
+        Column(
             modifier = Modifier.weight(1f),
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = score.nickname,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = if (isCurrentUser) FontWeight.Bold else FontWeight.Normal,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (isCurrentUser) {
-                Spacer(modifier = Modifier.width(6.dp))
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(MaterialTheme.colorScheme.primary)
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = score.nickname,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = if (isCurrentUser) FontWeight.Bold else FontWeight.Normal,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (isCurrentUser) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(MaterialTheme.colorScheme.primary)
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "Você",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+            if (score.predictedQualifier != null && match != null) {
+                val qualifierName = if (score.predictedQualifier == "home") match.homeTeam.shortName else match.awayTeam.shortName
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    modifier = Modifier.padding(top = 2.dp)
                 ) {
                     Text(
-                        text = "Você",
+                        text = "Avança: $qualifierName",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        fontWeight = FontWeight.Bold
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
                     )
                 }
             }
         }
 
-        Text(
-            text = "(${score.predictedHome}-${score.predictedAway})",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 8.dp)
-        )
-        Text(
-            text = "+${score.partialPoints} pts",
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Bold,
-            color = if (score.partialPoints > 0) BolaoGold else MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(64.dp),
-            textAlign = TextAlign.End
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(start = 8.dp)
+        ) {
+            Text(
+                text = "(${score.predictedHome}-${score.predictedAway})",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+            Text(
+                text = "+${score.partialPoints} pts",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                color = if (score.partialPoints > 0) BolaoGold else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.width(64.dp),
+                textAlign = TextAlign.End
+            )
+        }
     }
 }
 

@@ -21,6 +21,7 @@ fun PredictionDto.toDomain(): Prediction = Prediction(
     userId = userId,
     predictedHome = predictedHome,
     predictedAway = predictedAway,
+    predictedQualifier = predictedQualifier,
     pointsEarned = pointsEarned,
 )
 
@@ -39,5 +40,6 @@ fun Prediction.toDto(): PredictionDto = PredictionDto(
     userId = userId,
     predictedHome = predictedHome,
     predictedAway = predictedAway,
+    predictedQualifier = predictedQualifier,
     pointsEarned = pointsEarned,
 )

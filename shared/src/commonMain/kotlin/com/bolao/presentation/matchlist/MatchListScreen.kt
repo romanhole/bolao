@@ -122,6 +122,7 @@ fun MatchListScreen(
                             items = state.items,
                             onUpdateHome = viewModel::updateHomeGoals,
                             onUpdateAway = viewModel::updateAwayGoals,
+                            onUpdateQualifier = viewModel::updateQualifier,
                             onSave = viewModel::savePrediction,
                             onShowGuesses = viewModel::openPredictionsSheet,
                             modifier = Modifier.fillMaxSize().weight(1f),
@@ -141,7 +142,9 @@ fun MatchListScreen(
 
         // Bottom Sheet de palpites
         if (showPredictionsSheetForMatchId != null) {
+            val matchObj = successState?.items?.find { it.match.id == showPredictionsSheetForMatchId }?.match
             GroupMatchPredictionsSheet(
+                match = matchObj,
                 leagues = userLeagues,
                 selectedLeagueId = selectedLeagueId,
                 predictions = sheetPredictions,
@@ -159,6 +162,7 @@ private fun MatchListContent(
     items: List<MatchPredictionItem>,
     onUpdateHome: (String, Int) -> Unit,
     onUpdateAway: (String, Int) -> Unit,
+    onUpdateQualifier: (String, String) -> Unit,
     onSave: (String) -> Unit,
     onShowGuesses: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -181,6 +185,7 @@ private fun MatchListContent(
                 onHomeGoalDecrement = { onUpdateHome(item.match.id, -1) },
                 onAwayGoalIncrement = { onUpdateAway(item.match.id, 1) },
                 onAwayGoalDecrement = { onUpdateAway(item.match.id, -1) },
+                onQualifierChange = { qualifier -> onUpdateQualifier(item.match.id, qualifier) },
                 onSave = { onSave(item.match.id) },
                 onShowGuessesClick = { onShowGuesses(item.match.id) },
                 modifier = Modifier

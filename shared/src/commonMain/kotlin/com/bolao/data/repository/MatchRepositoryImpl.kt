@@ -70,6 +70,9 @@ class MatchRepositoryImpl(
             """
             id,
             home_score, away_score,
+            home_score_90, away_score_90,
+            home_score_et, away_score_et,
+            penalty_winner, is_knockout,
             home_odd, draw_odd, away_odd, stage_multiplier,
             status, minute_played, interrupted_reason,
             scheduled_at, competition_id, competition, round,
