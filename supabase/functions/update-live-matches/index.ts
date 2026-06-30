@@ -12,9 +12,9 @@ serve(async (req) => {
       auth: { persistSession: false }
     });
 
-    // 2. Fetch matches from DB that might be live (4h ago up to 15m in future)
+    // 2. Fetch matches from DB that might be live (6h ago up to 15m in future)
     const now = new Date();
-    const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000).toISOString();
+    const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString();
     const fifteenMinsFuture = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
 
     const { data: activeMatches, error: matchError } = await supabase
@@ -22,7 +22,7 @@ serve(async (req) => {
       .select("api_fixture_id, home_score, away_score, home_score_90, away_score_90, status")
       .neq("status", "finished")
       .neq("status", "interrupted")
-      .gte("scheduled_at", fourHoursAgo)
+      .gte("scheduled_at", sixHoursAgo)
       .lte("scheduled_at", fifteenMinsFuture);
 
     if (matchError) {
@@ -58,6 +58,8 @@ serve(async (req) => {
       events.push(...matchEvents);
     });
 
+    const debugLogs: any[] = [];
+
     await Promise.all(fetchPromises);
 
     if (events.length === 0) {
@@ -67,7 +69,7 @@ serve(async (req) => {
     }
 
     const updatePromises = events.map(async (event: any) => {
-      const apiId = event.id;
+      const apiId = String(event.id);
       const matchInDb = matchesMap.get(apiId);
       if (!matchInDb) return;
 
@@ -120,10 +122,20 @@ serve(async (req) => {
       }
 
       // 4. Update the matches table
-      const { error } = await supabase
+      const { data, error, count } = await supabase
         .from("matches")
         .update(updateData)
-        .eq("api_fixture_id", apiId);
+        .eq("api_fixture_id", apiId)
+        .select("id");
+
+      debugLogs.push({
+        match: apiId,
+        updateData,
+        db_updated: data?.length || 0,
+        error: error ? error.message : null
+      });
+
+      console.log(`Match ${apiId}: updated=${data?.length || 0}, error=${JSON.stringify(error)}`);
 
       if (error) {
         console.error(`Error updating match ${apiId}:`, error);
@@ -132,7 +144,10 @@ serve(async (req) => {
 
     await Promise.all(updatePromises);
 
-    return new Response(JSON.stringify({ message: `Successfully processed ${events.length} events.` }), {
+    return new Response(JSON.stringify({ 
+      message: `Successfully processed ${events.length} events.`,
+      debug: debugLogs 
+    }), {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
