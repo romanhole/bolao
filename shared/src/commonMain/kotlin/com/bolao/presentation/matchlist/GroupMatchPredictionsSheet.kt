@@ -214,7 +214,7 @@ private fun PredictionRow(
                 }
             }
             if (score.predictedQualifier != null && match != null) {
-                val qualifierName = if (score.predictedQualifier == "home") {
+                val qualifierName = if (score.predictedQualifier == match.homeTeam.id) {
                     match.homeTeam.shortName
                 } else {
                     match.awayTeam.shortName

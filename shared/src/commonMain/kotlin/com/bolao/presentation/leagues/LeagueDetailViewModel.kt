@@ -95,10 +95,7 @@ class LeagueDetailViewModel(
                 authRepository.currentUser.collect { session ->
                     currentUserId = session?.userId
 
-                    // Busca todos os palpites dos membros desta liga
                     val userIds = baseLeaderboard.map { it.userId }
-                    val predictionsResult = predictionRepository.getPredictionsForUsers(userIds)
-                    val allPredictions = predictionsResult.getOrNull() ?: emptyList()
 
                     // Observa partidas ao vivo para somar pontos reativos na memória
                     matchRepository.observeMatchesByCompetition("copa_do_mundo_2026")
@@ -113,8 +110,15 @@ class LeagueDetailViewModel(
                             } else {
                                 // Existem jogos ao vivo! Recalcula o placar reativo
                                 val liveDetails = liveMatches.map { match ->
+                                    // Busca os palpites ESPECÍFICOS para esta partida
+                                    val matchPredictionsResult = predictionRepository.getMatchPredictionsByUsers(
+                                        matchId = match.id,
+                                        userIds = userIds
+                                    )
+                                    val matchPredictions = matchPredictionsResult.getOrNull() ?: emptyList()
+
                                     val partials = baseLeaderboard.mapNotNull { item ->
-                                        val pred = allPredictions.find { it.userId == item.userId && it.matchId == match.id }
+                                        val pred = matchPredictions.find { it.userId == item.userId }
                                         if (pred != null) {
                                             val pts = PredictionCalculator.calculateEarnedPoints(
                                                 predHome = pred.predictedHome,
@@ -128,6 +132,8 @@ class LeagueDetailViewModel(
                                                 isKnockout = match.isKnockout,
                                                 predictedQualifier = pred.predictedQualifier,
                                                 actualQualifier = match.penaltyWinner,
+                                                homeTeamId = match.homeTeam.id,
+                                                awayTeamId = match.awayTeam.id,
                                             )
                                             LiveMatchUserScore(
                                                 userId = item.userId,
