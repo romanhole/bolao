@@ -18,11 +18,12 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class PredictionDto(
-    @SerialName("id")             val id: String? = null,
-    @SerialName("match_id")       val matchId: String,
-    @SerialName("user_id")        val userId: String,
+    @SerialName("id") val id: String? = null,
+    @SerialName("match_id") val matchId: String,
+    @SerialName("user_id") val userId: String,
     @SerialName("predicted_home") val predictedHome: Int,
     @SerialName("predicted_away") val predictedAway: Int,
+    @SerialName("predicted_qualifier") val predictedQualifier: String? = null,
     // null → jogo ainda não encerrou; calculado pelo backend
-    @SerialName("points_earned")  val pointsEarned: Int? = null,
+    @SerialName("points_earned") val pointsEarned: Int? = null,
 )

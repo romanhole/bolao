@@ -1,24 +1,19 @@
 package com.bolao.data.repository
 
-
 import com.bolao.domain.model.UserSession
 import com.bolao.domain.repository.AuthRepository
 import com.bolao.domain.repository.AuthState
+import com.bolao.presentation.auth.getRedirectUrl
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.parseSessionFromUrl
-import com.bolao.presentation.auth.getRedirectUrl
-
-
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
-import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 
 /**
  * Implementação real de [AuthRepository] usando o Supabase Auth SDK (auth-kt v3.x).
@@ -55,7 +50,7 @@ class AuthRepositoryImpl(
                         AuthState.Authenticated(
                             UserSession(
                                 userId = sdkUser.id,
-                                email  = sdkUser.email ?: "",
+                                email = sdkUser.email ?: "",
                             )
                         )
                     } else {
@@ -74,7 +69,7 @@ class AuthRepositoryImpl(
     override suspend fun login(email: String, password: String): Result<Unit> =
         runCatching {
             supabase.auth.signInWith(Email) {
-                this.email    = email
+                this.email = email
                 this.password = password
             }
         }
@@ -82,7 +77,7 @@ class AuthRepositoryImpl(
     override suspend fun signUp(email: String, password: String): Result<Unit> =
         runCatching {
             supabase.auth.signUpWith(Email, redirectUrl = getRedirectUrl("confirm-email")) {
-                this.email    = email
+                this.email = email
                 this.password = password
             }
         }
@@ -96,13 +91,12 @@ class AuthRepositoryImpl(
         supabase.auth.signOut()
     }
 
-
     private val _deepLinkError = MutableStateFlow<String?>(null)
     override val deepLinkError: Flow<String?> = _deepLinkError.asStateFlow()
 
     override suspend fun handleDeepLink(url: String) {
         println("handleDeepLink: url = $url")
-        
+
         // Verifica se a URL contém erro de redirecionamento (ex: otp_expired)
         if (url.contains("error=")) {
             val errorDescription = parseErrorDescription(url)
@@ -126,7 +120,6 @@ class AuthRepositoryImpl(
         if (result.isFailure) {
             println("handleDeepLink ERROR: ${result.exceptionOrNull()?.stackTraceToString()}")
         }
-        
     }
 
     override fun clearDeepLinkError() {
@@ -146,9 +139,9 @@ class AuthRepositoryImpl(
             .replace("%20", " ")
             .replace("%27", "'")
             .replace("%2C", ",")
-        
+
         return when {
-            decoded.contains("Email link is invalid or has expired") -> 
+            decoded.contains("Email link is invalid or has expired") ->
                 "O link de e-mail é inválido ou já expirou. Por favor, solicite um novo link de recuperação."
             else -> decoded
         }
@@ -175,5 +168,3 @@ class AuthRepositoryImpl(
             }
         }
 }
-
-

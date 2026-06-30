@@ -82,16 +82,16 @@ fun SettingsScreen(
 
                 if (uiState.isNotificationsEnabled) {
                     Divider()
-                    
+
                     Text("Antecedência do alerta", style = MaterialTheme.typography.bodyLarge)
                     Text(
                         "Quanto tempo antes da partida você quer ser avisado?",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    
+
                     val options = listOf(1, 2, 3, 6, 12, 24)
-                    
+
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -115,7 +115,11 @@ fun SettingsScreen(
         AlertDialog(
             onDismissRequest = { viewModel.dismissPermissionDialog() },
             title = { Text("Permissão Necessária") },
-            text = { Text("Para receber alertas sobre os jogos, você precisa habilitar as notificações do Bolão nas configurações do seu celular.") },
+            text = {
+                Text(
+                    "Para receber alertas sobre os jogos, você precisa habilitar as notificações do Bolão nas configurações do seu celular."
+                )
+            },
             confirmButton = {
                 TextButton(onClick = { viewModel.openSystemSettings() }) {
                     Text("Abrir Configurações")

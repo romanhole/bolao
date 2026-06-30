@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bolao.domain.model.LeaderboardItem
 import com.bolao.domain.model.League
+import com.bolao.domain.model.Match
 import com.bolao.domain.repository.AuthRepository
 import com.bolao.domain.repository.LeaderboardRepository
 import com.bolao.domain.repository.LeagueRepository
@@ -11,19 +12,20 @@ import com.bolao.domain.repository.MatchRepository
 import com.bolao.domain.repository.PredictionRepository
 import com.bolao.domain.usecase.PredictionCalculator
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-
-import com.bolao.domain.model.Match
 
 data class LiveMatchUserScore(
     val userId: String,
     val nickname: String,
     val predictedHome: Int,
     val predictedAway: Int,
+    val predictedQualifier: String?,
     val partialPoints: Int
 )
 
@@ -70,6 +72,7 @@ class LeagueDetailViewModel(
         loadLeagueDetail(id, silent = true)
     }
 
+    @Suppress("LongMethod")
     fun loadLeagueDetail(leagueId: String, silent: Boolean = false) {
         currentLeagueId = leagueId
         if (!silent) _uiState.value = LeagueDetailUiState.Loading
@@ -86,69 +89,77 @@ class LeagueDetailViewModel(
                     compareByDescending<LeaderboardItem> { it.totalPoints }
                         .thenByDescending { it.exactMatches }
                 )
-                
+
                 // Pega o id do usuário atual
                 var currentUserId: String? = null
                 authRepository.currentUser.collect { session ->
                     currentUserId = session?.userId
-                    
-                    // Busca todos os palpites dos membros desta liga
-                val userIds = baseLeaderboard.map { it.userId }
-                val predictionsResult = predictionRepository.getPredictionsForUsers(userIds)
-                val allPredictions = predictionsResult.getOrNull() ?: emptyList()
 
-                // Observa partidas ao vivo para somar pontos reativos na memória
-                matchRepository.observeMatchesByCompetition("copa_do_mundo_2026")
-                    .map { matches ->
-                        val liveMatches = matches.filter { it.status is com.bolao.domain.model.GameStatus.Live || it.status is com.bolao.domain.model.GameStatus.HalfTime }
-                        
-                        if (liveMatches.isEmpty()) {
-                            // Se não há jogos ao vivo, o ranking base é absoluto
-                            LeagueDetailUiState.Success(league, baseLeaderboard, currentUserId)
-                        } else {
-                            // Existem jogos ao vivo! Recalcula o placar reativo
-                            val liveDetails = liveMatches.map { match ->
-                                val partials = baseLeaderboard.mapNotNull { item ->
-                                    val pred = allPredictions.find { it.userId == item.userId && it.matchId == match.id }
-                                    if (pred != null) {
-                                        val pts = PredictionCalculator.calculateEarnedPoints(
-                                            predHome = pred.predictedHome,
-                                            predAway = pred.predictedAway,
-                                            actualHome = match.homeScore ?: 0,
-                                            actualAway = match.awayScore ?: 0,
-                                            stageMultiplier = match.stageMultiplier,
-                                            homeOdd = match.homeOdd,
-                                            drawOdd = match.drawOdd,
-                                            awayOdd = match.awayOdd
-                                        )
-                                        LiveMatchUserScore(
-                                            userId = item.userId,
-                                            nickname = item.nickname,
-                                            predictedHome = pred.predictedHome,
-                                            predictedAway = pred.predictedAway,
-                                            partialPoints = pts
-                                        )
-                                    } else null
-                                }.sortedByDescending { it.partialPoints }
-                                LiveMatchDetail(match, partials)
+                    // Busca todos os palpites dos membros desta liga
+                    val userIds = baseLeaderboard.map { it.userId }
+                    val predictionsResult = predictionRepository.getPredictionsForUsers(userIds)
+                    val allPredictions = predictionsResult.getOrNull() ?: emptyList()
+
+                    // Observa partidas ao vivo para somar pontos reativos na memória
+                    matchRepository.observeMatchesByCompetition("copa_do_mundo_2026")
+                        .map { matches ->
+                            val liveMatches = matches.filter {
+                                it.status is com.bolao.domain.model.GameStatus.Live || it.status is com.bolao.domain.model.GameStatus.HalfTime
                             }
 
-                            val updatedRanking = baseLeaderboard.map { item ->
-                                val livePoints = liveDetails.sumOf { detail ->
-                                    detail.partialRanking.find { it.userId == item.userId }?.partialPoints ?: 0
+                            if (liveMatches.isEmpty()) {
+                                // Se não há jogos ao vivo, o ranking base é absoluto
+                                LeagueDetailUiState.Success(league, baseLeaderboard, currentUserId)
+                            } else {
+                                // Existem jogos ao vivo! Recalcula o placar reativo
+                                val liveDetails = liveMatches.map { match ->
+                                    val partials = baseLeaderboard.mapNotNull { item ->
+                                        val pred = allPredictions.find { it.userId == item.userId && it.matchId == match.id }
+                                        if (pred != null) {
+                                            val pts = PredictionCalculator.calculateEarnedPoints(
+                                                predHome = pred.predictedHome,
+                                                predAway = pred.predictedAway,
+                                                actualHome90 = match.homeScore90 ?: match.homeScore ?: 0,
+                                                actualAway90 = match.awayScore90 ?: match.awayScore ?: 0,
+                                                stageMultiplier = match.stageMultiplier,
+                                                homeOdd = match.homeOdd,
+                                                drawOdd = match.drawOdd,
+                                                awayOdd = match.awayOdd,
+                                                isKnockout = match.isKnockout,
+                                                predictedQualifier = pred.predictedQualifier,
+                                                actualQualifier = match.penaltyWinner,
+                                            )
+                                            LiveMatchUserScore(
+                                                userId = item.userId,
+                                                nickname = item.nickname,
+                                                predictedHome = pred.predictedHome,
+                                                predictedAway = pred.predictedAway,
+                                                predictedQualifier = pred.predictedQualifier,
+                                                partialPoints = pts
+                                            )
+                                        } else {
+                                            null
+                                        }
+                                    }.sortedByDescending { it.partialPoints }
+                                    LiveMatchDetail(match, partials)
                                 }
-                                item.copy(totalPoints = item.totalPoints + livePoints)
-                            }.sortedWith(
-                                compareByDescending<LeaderboardItem> { it.totalPoints }
-                                    .thenByDescending { it.exactMatches }
-                            )
 
-                            LeagueDetailUiState.Success(league, updatedRanking, currentUserId, liveDetails)
+                                val updatedRanking = baseLeaderboard.map { item ->
+                                    val livePoints = liveDetails.sumOf { detail ->
+                                        detail.partialRanking.find { it.userId == item.userId }?.partialPoints ?: 0
+                                    }
+                                    item.copy(totalPoints = item.totalPoints + livePoints)
+                                }.sortedWith(
+                                    compareByDescending<LeaderboardItem> { it.totalPoints }
+                                        .thenByDescending { it.exactMatches }
+                                )
+
+                                LeagueDetailUiState.Success(league, updatedRanking, currentUserId, liveDetails)
+                            }
                         }
-                    }
-                    .collect { newState ->
-                        _uiState.value = newState
-                    }
+                        .collect { newState ->
+                            _uiState.value = newState
+                        }
                 }
             } else {
                 val error = leagueResult.exceptionOrNull() ?: leaderboardResult.exceptionOrNull()
@@ -158,4 +169,41 @@ class LeagueDetailViewModel(
             }
         }
     }
+
+    private val _events = MutableSharedFlow<LeagueDetailEvent>()
+    val events = _events.asSharedFlow()
+
+    fun removeMember(userId: String) {
+        val leagueId = currentLeagueId ?: return
+        viewModelScope.launch {
+            leagueRepository.removeMember(leagueId, userId)
+                .onSuccess {
+                    _events.emit(LeagueDetailEvent.ShowMessage("Membro removido com sucesso."))
+                    _events.emit(LeagueDetailEvent.SuggestRenewCode)
+                    loadLeagueDetail(leagueId, silent = true)
+                }
+                .onFailure {
+                    _events.emit(LeagueDetailEvent.ShowMessage("Erro ao remover membro: ${it.message}"))
+                }
+        }
+    }
+
+    fun renewInviteCode() {
+        val leagueId = currentLeagueId ?: return
+        viewModelScope.launch {
+            leagueRepository.renewInviteCode(leagueId)
+                .onSuccess { newCode ->
+                    _events.emit(LeagueDetailEvent.ShowMessage("Novo código gerado: $newCode"))
+                    loadLeagueDetail(leagueId, silent = true)
+                }
+                .onFailure {
+                    _events.emit(LeagueDetailEvent.ShowMessage("Erro ao renovar código: ${it.message}"))
+                }
+        }
+    }
+}
+
+sealed interface LeagueDetailEvent {
+    data class ShowMessage(val message: String) : LeagueDetailEvent
+    data object SuggestRenewCode : LeagueDetailEvent
 }

@@ -77,6 +77,3 @@ interface AuthRepository {
     /** Limpa os erros de deep link */
     fun clearDeepLinkError()
 }
-
-
-

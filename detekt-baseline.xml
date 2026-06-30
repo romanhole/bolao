@@ -1,0 +1,192 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>ConstructorParameterNaming:PushTokenRepositoryImpl.kt$PushTokenDto$val notification_hours_before: Int = 1</ID>
+    <ID>ConstructorParameterNaming:PushTokenRepositoryImpl.kt$PushTokenDto$val user_id: String</ID>
+    <ID>Filename:AdaptiveUtils.kt$com.bolao.presentation.utils.AdaptiveUtils.kt</ID>
+    <ID>FunctionNaming:App.kt$@Composable fun App( appVersionCode: Int, authRepository: AuthRepository = koinInject(), authViewModel: AuthViewModel = koinViewModel(), )</ID>
+    <ID>FunctionNaming:App.kt$@Composable fun UpdateRequiredDialog(onUpdate: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:App.kt$@Composable fun UpdateSuggestedDialog(onDismiss: () -&gt; Unit, onUpdate: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:App.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun AuthenticatedApp( authViewModel: AuthViewModel = koinViewModel(), )</ID>
+    <ID>FunctionNaming:App.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun MainTabsScreen( authViewModel: AuthViewModel, onNavigateToLeague: (String) -&gt; Unit, onNavigateToSettings: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:BackHandlerWrapper.android.kt$@Composable actual fun BackHandlerWrapper(enabled: Boolean, onBack: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:BackHandlerWrapper.kt$@Composable expect fun BackHandlerWrapper(enabled: Boolean = true, onBack: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:BolaoTheme.kt$@Composable fun BolaoTheme(content: @Composable () -&gt; Unit)</ID>
+    <ID>FunctionNaming:GroupMatchPredictionsSheet.kt$@Composable private fun PredictionRow(position: Int, score: LiveMatchUserScore, isCurrentUser: Boolean = false)</ID>
+    <ID>FunctionNaming:GroupMatchPredictionsSheet.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun GroupMatchPredictionsSheet( leagues: List&lt;League&gt;, selectedLeagueId: String?, predictions: List&lt;LiveMatchUserScore&gt;, isLoading: Boolean, currentUserId: String, onSelectLeague: (String) -&gt; Unit, onDismiss: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:LeagueDetailScreen.kt$@Composable private fun LeagueRankingCard( position: Int, item: LeaderboardItem, isCurrentUser: Boolean = false, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:LeagueDetailScreen.kt$@Composable private fun LiveMatchCard(detail: LiveMatchDetail, modifier: Modifier = Modifier, onShowAll: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:LeagueDetailScreen.kt$@Composable private fun LiveMatchesCarousel(liveMatchesDetails: List&lt;LiveMatchDetail&gt;, onShowAll: (LiveMatchDetail) -&gt; Unit)</ID>
+    <ID>FunctionNaming:LeagueDetailScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun LeagueDetailScreen( leagueId: String, onBack: () -&gt; Unit, viewModel: LeagueDetailViewModel = koinViewModel() )</ID>
+    <ID>FunctionNaming:LeagueDetailScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun LiveMatchPredictionsSheet(detail: LiveMatchDetail, onDismiss: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:LeaguesScreen.kt$@Composable fun LeaguesScreen( modifier: Modifier = Modifier, onLeagueClick: (String) -&gt; Unit, viewModel: LeaguesViewModel = koinViewModel() )</ID>
+    <ID>FunctionNaming:LeaguesScreen.kt$@Composable private fun LeagueCard( league: League, onClick: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:LoginScreen.kt$@Composable fun LoginScreen( viewModel: AuthViewModel = koinViewModel(), )</ID>
+    <ID>FunctionNaming:LoginScreen.kt$@Composable fun ResetPasswordScreen( viewModel: AuthViewModel, uiState: AuthUiState, )</ID>
+    <ID>FunctionNaming:LoginScreen.kt$@Composable private fun ForgotPasswordContent( viewModel: AuthViewModel, uiState: AuthUiState, )</ID>
+    <ID>FunctionNaming:LoginScreen.kt$@Composable private fun LoginContent( viewModel: AuthViewModel, uiState: AuthUiState, )</ID>
+    <ID>FunctionNaming:LoginScreen.kt$@Composable private fun OtpContent( viewModel: AuthViewModel, uiState: AuthUiState, )</ID>
+    <ID>FunctionNaming:MatchListScreen.kt$@Composable fun MatchListScreen( modifier: Modifier = Modifier, viewModel: MatchListViewModel = koinViewModel(), )</ID>
+    <ID>FunctionNaming:MatchListScreen.kt$@Composable private fun ErrorContent( message: String, onRetry: () -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:MatchListScreen.kt$@Composable private fun MatchListContent( items: List&lt;MatchPredictionItem&gt;, onUpdateHome: (String, Int) -&gt; Unit, onUpdateAway: (String, Int) -&gt; Unit, onSave: (String) -&gt; Unit, onShowGuesses: (String) -&gt; Unit, modifier: Modifier = Modifier, listState: LazyListState = rememberLazyListState(), contentPadding: PaddingValues = PaddingValues(0.dp), )</ID>
+    <ID>FunctionNaming:MatchPredictionCard.kt$@Composable fun MatchPredictionCard( item: MatchPredictionItem, onHomeGoalIncrement: () -&gt; Unit, onHomeGoalDecrement: () -&gt; Unit, onAwayGoalIncrement: () -&gt; Unit, onAwayGoalDecrement: () -&gt; Unit, onSave: () -&gt; Unit, onShowGuessesClick: () -&gt; Unit = {}, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:MatchPredictionCard.kt$@Composable private fun GoalCounter( count: Int, isEditable: Boolean, onIncrement: () -&gt; Unit, onDecrement: () -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:MatchPredictionCard.kt$@Composable private fun LiveBadge(minute: Int)</ID>
+    <ID>FunctionNaming:MatchPredictionCard.kt$@Composable private fun MatchCardFooter( item: MatchPredictionItem, isEditable: Boolean, onSave: () -&gt; Unit, onShowGuessesClick: () -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:MatchPredictionCard.kt$@Composable private fun MatchCardHeader( competition: String, round: String, scheduledAt: Instant, status: GameStatus, stageMultiplier: Float = 1.0f, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:MatchPredictionCard.kt$@Composable private fun PointsBadge(points: Int)</ID>
+    <ID>FunctionNaming:MatchPredictionCard.kt$@Composable private fun RealScoreLabel( homeScore: Int, awayScore: Int, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:MatchPredictionCard.kt$@Composable private fun SaveButton( hasChanges: Boolean, isSaving: Boolean, isUpdate: Boolean, onSave: () -&gt; Unit, )</ID>
+    <ID>FunctionNaming:MatchPredictionCard.kt$@Composable private fun ShimmerPlaceholder( modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:MatchPredictionCard.kt$@Composable private fun ShowGuessesButton(onClick: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:MatchPredictionCard.kt$@Composable private fun StageMultiplierBadge(multiplier: Float)</ID>
+    <ID>FunctionNaming:MatchPredictionCard.kt$@Composable private fun StatusBadge(status: GameStatus)</ID>
+    <ID>FunctionNaming:MatchPredictionCard.kt$@Composable private fun StatusPill(text: String, color: Color)</ID>
+    <ID>FunctionNaming:MatchPredictionCard.kt$@Composable private fun TeamColumn( team: Team, goalCount: Int, isEditable: Boolean, onIncrement: () -&gt; Unit, onDecrement: () -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:MatchPredictionCard.kt$@Composable private fun TeamLogoImage( team: Team, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:MatchPredictionCard.kt$@Composable private fun TeamLogoPlaceholder( team: Team, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:OnboardingScreen.kt$@OptIn(ExperimentalFoundationApi::class) @Composable fun OnboardingScreen( onFinish: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:RulesBottomSheet.kt$@Composable private fun RuleRow( title: String, value: String, desc: String )</ID>
+    <ID>FunctionNaming:RulesBottomSheet.kt$@Composable private fun ZebraRow( oddRange: String, bonus: String )</ID>
+    <ID>FunctionNaming:RulesBottomSheet.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun RulesBottomSheet( onDismissRequest: () -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:SettingsScreen.kt$@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class) @Composable fun SettingsScreen( onBack: () -&gt; Unit, viewModel: SettingsViewModel = koinViewModel() )</ID>
+    <ID>LateinitUsage:AppContext.kt$AppContext$private lateinit var appContext: Context</ID>
+    <ID>LongMethod:App.kt$@Composable fun App( appVersionCode: Int, authRepository: AuthRepository = koinInject(), authViewModel: AuthViewModel = koinViewModel(), )</ID>
+    <ID>LongMethod:App.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun MainTabsScreen( authViewModel: AuthViewModel, onNavigateToLeague: (String) -&gt; Unit, onNavigateToSettings: () -&gt; Unit )</ID>
+    <ID>LongMethod:GroupMatchPredictionsSheet.kt$@Composable private fun PredictionRow(position: Int, score: LiveMatchUserScore, isCurrentUser: Boolean = false)</ID>
+    <ID>LongMethod:LeagueDetailScreen.kt$@Composable private fun LeagueRankingCard( position: Int, item: LeaderboardItem, isCurrentUser: Boolean = false, modifier: Modifier = Modifier, )</ID>
+    <ID>LongMethod:LeagueDetailScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun LeagueDetailScreen( leagueId: String, onBack: () -&gt; Unit, viewModel: LeagueDetailViewModel = koinViewModel() )</ID>
+    <ID>LongMethod:LeagueDetailScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun LiveMatchPredictionsSheet(detail: LiveMatchDetail, onDismiss: () -&gt; Unit)</ID>
+    <ID>LongMethod:LeaguesScreen.kt$@Composable fun LeaguesScreen( modifier: Modifier = Modifier, onLeagueClick: (String) -&gt; Unit, viewModel: LeaguesViewModel = koinViewModel() )</ID>
+    <ID>LongMethod:LoginScreen.kt$@Composable fun ResetPasswordScreen( viewModel: AuthViewModel, uiState: AuthUiState, )</ID>
+    <ID>LongMethod:LoginScreen.kt$@Composable private fun ForgotPasswordContent( viewModel: AuthViewModel, uiState: AuthUiState, )</ID>
+    <ID>LongMethod:LoginScreen.kt$@Composable private fun LoginContent( viewModel: AuthViewModel, uiState: AuthUiState, )</ID>
+    <ID>LongMethod:LoginScreen.kt$@Composable private fun OtpContent( viewModel: AuthViewModel, uiState: AuthUiState, )</ID>
+    <ID>LongMethod:MatchListScreen.kt$@Composable fun MatchListScreen( modifier: Modifier = Modifier, viewModel: MatchListViewModel = koinViewModel(), )</ID>
+    <ID>LongMethod:MatchListViewModel.kt$MatchListViewModel$private fun observeData()</ID>
+    <ID>LongMethod:MatchPredictionCard.kt$@Composable fun MatchPredictionCard( item: MatchPredictionItem, onHomeGoalIncrement: () -&gt; Unit, onHomeGoalDecrement: () -&gt; Unit, onAwayGoalIncrement: () -&gt; Unit, onAwayGoalDecrement: () -&gt; Unit, onSave: () -&gt; Unit, onShowGuessesClick: () -&gt; Unit = {}, modifier: Modifier = Modifier, )</ID>
+    <ID>LongMethod:OnboardingScreen.kt$@OptIn(ExperimentalFoundationApi::class) @Composable fun OnboardingScreen( onFinish: () -&gt; Unit )</ID>
+    <ID>LongMethod:RulesBottomSheet.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun RulesBottomSheet( onDismissRequest: () -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>LongMethod:SettingsScreen.kt$@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class) @Composable fun SettingsScreen( onBack: () -&gt; Unit, viewModel: SettingsViewModel = koinViewModel() )</ID>
+    <ID>LongParameterList:GroupMatchPredictionsSheet.kt$( leagues: List&lt;League&gt;, selectedLeagueId: String?, predictions: List&lt;LiveMatchUserScore&gt;, isLoading: Boolean, currentUserId: String, onSelectLeague: (String) -&gt; Unit, onDismiss: () -&gt; Unit )</ID>
+    <ID>LongParameterList:MatchListScreen.kt$( items: List&lt;MatchPredictionItem&gt;, onUpdateHome: (String, Int) -&gt; Unit, onUpdateAway: (String, Int) -&gt; Unit, onSave: (String) -&gt; Unit, onShowGuesses: (String) -&gt; Unit, modifier: Modifier = Modifier, listState: LazyListState = rememberLazyListState(), contentPadding: PaddingValues = PaddingValues(0.dp), )</ID>
+    <ID>LongParameterList:MatchPredictionCard.kt$( competition: String, round: String, scheduledAt: Instant, status: GameStatus, stageMultiplier: Float = 1.0f, modifier: Modifier = Modifier, )</ID>
+    <ID>LongParameterList:MatchPredictionCard.kt$( item: MatchPredictionItem, onHomeGoalIncrement: () -&gt; Unit, onHomeGoalDecrement: () -&gt; Unit, onAwayGoalIncrement: () -&gt; Unit, onAwayGoalDecrement: () -&gt; Unit, onSave: () -&gt; Unit, onShowGuessesClick: () -&gt; Unit = {}, modifier: Modifier = Modifier, )</ID>
+    <ID>LongParameterList:MatchPredictionCard.kt$( team: Team, goalCount: Int, isEditable: Boolean, onIncrement: () -&gt; Unit, onDecrement: () -&gt; Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>LongParameterList:PredictionCalculator.kt$PredictionCalculator$( predHome: Int, predAway: Int, actualHome: Int, actualAway: Int, stageMultiplier: Float, homeOdd: Double?, drawOdd: Double?, awayOdd: Double? )</ID>
+    <ID>LongParameterList:PredictionCalculator.kt$PredictionCalculator$( predHomeGoals: Int, predAwayGoals: Int, stageMultiplier: Float, homeOdd: Double?, drawOdd: Double?, awayOdd: Double? )</ID>
+    <ID>MagicNumber:AuthViewModel.kt$AuthViewModel$1000</ID>
+    <ID>MagicNumber:AuthViewModel.kt$AuthViewModel$6</ID>
+    <ID>MagicNumber:GroupMatchPredictionsSheet.kt$0x7fffffff</ID>
+    <ID>MagicNumber:GroupMatchPredictionsSheet.kt$0xFF00C896</ID>
+    <ID>MagicNumber:GroupMatchPredictionsSheet.kt$0xFF4FC3F7</ID>
+    <ID>MagicNumber:GroupMatchPredictionsSheet.kt$0xFF6C63FF</ID>
+    <ID>MagicNumber:GroupMatchPredictionsSheet.kt$0xFFBA68C8</ID>
+    <ID>MagicNumber:GroupMatchPredictionsSheet.kt$0xFFFF6B6B</ID>
+    <ID>MagicNumber:GroupMatchPredictionsSheet.kt$0xFFFFB347</ID>
+    <ID>MagicNumber:HttpClientFactory.android.kt$15</ID>
+    <ID>MagicNumber:HttpClientFactory.android.kt$30</ID>
+    <ID>MagicNumber:LeagueDetailScreen.kt$0x7fffffff</ID>
+    <ID>MagicNumber:LeagueDetailScreen.kt$0xFF00C896</ID>
+    <ID>MagicNumber:LeagueDetailScreen.kt$0xFF4FC3F7</ID>
+    <ID>MagicNumber:LeagueDetailScreen.kt$0xFF6C63FF</ID>
+    <ID>MagicNumber:LeagueDetailScreen.kt$0xFFBA68C8</ID>
+    <ID>MagicNumber:LeagueDetailScreen.kt$0xFFC0C0C0</ID>
+    <ID>MagicNumber:LeagueDetailScreen.kt$0xFFCD7F32</ID>
+    <ID>MagicNumber:LeagueDetailScreen.kt$0xFFFF4B4B</ID>
+    <ID>MagicNumber:LeagueDetailScreen.kt$0xFFFF6B6B</ID>
+    <ID>MagicNumber:LeagueDetailScreen.kt$0xFFFFB347</ID>
+    <ID>MagicNumber:LeagueDetailScreen.kt$3</ID>
+    <ID>MagicNumber:LeagueDetailScreen.kt$5</ID>
+    <ID>MagicNumber:LeagueRepositoryImpl.kt$LeagueRepositoryImpl$6</ID>
+    <ID>MagicNumber:MainActivity.kt$MainActivity$101</ID>
+    <ID>MagicNumber:MatchListViewModel.kt$MatchListViewModel$10</ID>
+    <ID>MagicNumber:MatchListViewModel.kt$MatchListViewModel$3</ID>
+    <ID>MagicNumber:MatchListViewModel.kt$MatchListViewModel$4</ID>
+    <ID>MagicNumber:MatchListViewModel.kt$MatchListViewModel$5</ID>
+    <ID>MagicNumber:MatchListViewModel.kt$MatchListViewModel$5000</ID>
+    <ID>MagicNumber:MatchListViewModel.kt$MatchListViewModel$6</ID>
+    <ID>MagicNumber:MatchListViewModel.kt$MatchListViewModel$7</ID>
+    <ID>MagicNumber:MatchListViewModel.kt$MatchListViewModel$8</ID>
+    <ID>MagicNumber:MatchListViewModel.kt$MatchListViewModel$9</ID>
+    <ID>MagicNumber:MatchListViewModel.kt$MatchListViewModel$99</ID>
+    <ID>MagicNumber:MatchPredictionCard.kt$1.5f</ID>
+    <ID>MagicNumber:MatchPredictionCard.kt$1000</ID>
+    <ID>MagicNumber:MatchPredictionCard.kt$2.5f</ID>
+    <ID>MagicNumber:MatchPredictionCard.kt$200</ID>
+    <ID>MagicNumber:MatchPredictionCard.kt$3</ID>
+    <ID>MagicNumber:MatchPredictionCard.kt$4</ID>
+    <ID>MagicNumber:MatchPredictionCard.kt$5</ID>
+    <ID>MagicNumber:MatchPredictionCard.kt$50</ID>
+    <ID>MagicNumber:MatchPredictionCard.kt$750</ID>
+    <ID>MagicNumber:PredictionCalculator.kt$PredictionCalculator$3.0</ID>
+    <ID>MagicNumber:PredictionCalculator.kt$PredictionCalculator$4</ID>
+    <ID>MagicNumber:PredictionCalculator.kt$PredictionCalculator$5</ID>
+    <ID>MagicNumber:PredictionCalculator.kt$PredictionCalculator$5.0</ID>
+    <ID>MagicNumber:PredictionCalculator.kt$PredictionCalculator$7</ID>
+    <ID>MagicNumber:PredictionCalculator.kt$PredictionCalculator$9.0</ID>
+    <ID>MagicNumber:SettingsScreen.kt$12</ID>
+    <ID>MagicNumber:SettingsScreen.kt$24</ID>
+    <ID>MagicNumber:SettingsScreen.kt$3</ID>
+    <ID>MagicNumber:SettingsScreen.kt$6</ID>
+    <ID>MatchingDeclarationName:AdaptiveUtils.kt$WindowWidthClass</ID>
+    <ID>MatchingDeclarationName:OnboardingScreen.kt$OnboardingPage</ID>
+    <ID>MaxLineLength:App.kt$"Sua versão do Bolão Campeão está muito antiga e deixou de ser suportada. Por favor, atualize o aplicativo na loja para continuar palpitando."</ID>
+    <ID>MaxLineLength:App.kt$"Temos novidades fresquinhas no Bolão Campeão! Atualize agora para aproveitar as melhorias mais recentes."</ID>
+    <ID>MaxLineLength:LeagueDetailScreen.kt$color = if (score.partialPoints &gt; 0) BolaoGold else MaterialTheme.colorScheme.onSurfaceVariant</ID>
+    <ID>MaxLineLength:LeagueDetailScreen.kt$text = "${detail.match.homeTeam.shortName} ${detail.match.homeScore ?: 0} x ${detail.match.awayScore ?: 0} ${detail.match.awayTeam.shortName}"</ID>
+    <ID>MaxLineLength:LeagueDetailViewModel.kt$LeagueDetailViewModel$it.status is com.bolao.domain.model.GameStatus.Live || it.status is com.bolao.domain.model.GameStatus.HalfTime</ID>
+    <ID>MaxLineLength:LeagueDetailViewModel.kt$LeagueDetailViewModel$val pred = allPredictions.find { it.userId == item.userId &amp;&amp; it.matchId == match.id }</ID>
+    <ID>MaxLineLength:LeagueRepositoryImpl.kt$LeagueRepositoryImpl$// "leagues!inner(league_members!inner(user_id=eq.$userId))" não é trivial sem definir as relações corretas no banco</ID>
+    <ID>MaxLineLength:LeaguesScreen.kt$"Você não participa de nenhuma liga privada. Crie uma ou entre com um código de convite!"</ID>
+    <ID>MaxLineLength:LoginScreen.kt$imageVector = if (uiState.isConfirmNewPasswordVisible) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility</ID>
+    <ID>MaxLineLength:LoginScreen.kt$imageVector = if (uiState.isNewPasswordVisible) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility</ID>
+    <ID>MaxLineLength:LoginScreen.kt$text = "Enviamos um link de confirmação para ${uiState.email}. Você precisa clicar no link para ativar sua conta antes de fazer o login."</ID>
+    <ID>MaxLineLength:LoginScreen.kt$visualTransformation = if (uiState.isConfirmNewPasswordVisible) VisualTransformation.None else PasswordVisualTransformation()</ID>
+    <ID>MaxLineLength:LoginScreen.kt$visualTransformation = if (uiState.isNewPasswordVisible) VisualTransformation.None else PasswordVisualTransformation()</ID>
+    <ID>MaxLineLength:MainActivity.kt$MainActivity$if</ID>
+    <ID>MaxLineLength:OnboardingScreen.kt$description = "Acompanhe o ranking nas suas Ligas e veja, em tempo real, os palpites e pontuações dos seus amigos durante a partida."</ID>
+    <ID>MaxLineLength:OnboardingScreen.kt$description = "Adivinhe o placar exato para ganhar a pontuação máxima. Passou perto? Acertou só quem ganhou? Fique tranquilo, você também pontua!"</ID>
+    <ID>MaxLineLength:OnboardingScreen.kt$description = "Aqui você vai testar seus conhecimentos e dar seus palpites para os jogos mais disputados do campeonato."</ID>
+    <ID>MaxLineLength:OnboardingScreen.kt$description = "Os times azarões valem mais pontos! Se uma zebra vencer, a pontuação do jogo é multiplicada e você pode disparar no ranking."</ID>
+    <ID>MaxLineLength:OnboardingScreen.kt$tint = if (pageIndex == 2) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary</ID>
+    <ID>MaxLineLength:RulesBottomSheet.kt$text = "As odds são atualizadas diariamente e congeladas 48h antes do jogo. Palpites feitos após esse prazo usarão os multiplicadores congelados."</ID>
+    <ID>MaxLineLength:RulesBottomSheet.kt$text = "Jogos de fases eliminatórias valem mais pontos. O multiplicador aparece em dourado nos cards das partidas."</ID>
+    <ID>MaxLineLength:RulesBottomSheet.kt$text = "Se você acertar a tendência (Vitória ou Empate), ganha um bônus se o resultado for improvável (Zebra), de acordo com a odd correspondente:"</ID>
+    <ID>MaxLineLength:SettingsScreen.kt$"Para receber alertas sobre os jogos, você precisa habilitar as notificações do Bolão nas configurações do seu celular."</ID>
+    <ID>MaxLineLength:SettingsScreen.kt$text = "As notificações push estão disponíveis apenas no aplicativo Android. Em breve teremos novidades para a versão web!"</ID>
+    <ID>MaxLineLength:SupabaseConfig.kt$SupabaseConfig$const</ID>
+    <ID>MaximumLineLength:LeagueDetailScreen.kt$ </ID>
+    <ID>MaximumLineLength:LoginScreen.kt$ </ID>
+    <ID>MaximumLineLength:RulesBottomSheet.kt$ </ID>
+    <ID>MaximumLineLength:SupabaseConfig.kt$SupabaseConfig$ </ID>
+    <ID>MemberNameEqualsClassName:AppContext.kt$AppContext$private lateinit var appContext: Context</ID>
+    <ID>NoWildcardImports:RulesBottomSheet.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>NoWildcardImports:RulesBottomSheet.kt$import androidx.compose.material3.*</ID>
+    <ID>NoWildcardImports:SettingsScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>NoWildcardImports:SettingsScreen.kt$import androidx.compose.material3.*</ID>
+    <ID>NoWildcardImports:SettingsScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>PrintStackTrace:PushTokenRepositoryImpl.kt$PushTokenRepositoryImpl$e</ID>
+    <ID>ReturnCount:AuthViewModel.kt$AuthViewModel$fun submit()</ID>
+    <ID>ReturnCount:AuthViewModel.kt$AuthViewModel$fun submitNewPassword()</ID>
+    <ID>ReturnCount:MatchListViewModel.kt$MatchListViewModel$private fun getOrInitDraft(matchId: String): Pair&lt;Int, Int&gt;</ID>
+    <ID>ReturnCount:MatchListViewModel.kt$MatchListViewModel$private fun loadSheetPredictions()</ID>
+    <ID>TooGenericExceptionCaught:FakePredictionRepository.kt$FakePredictionRepository$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:LeagueRepositoryImpl.kt$LeagueRepositoryImpl$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:PushTokenRepositoryImpl.kt$PushTokenRepositoryImpl$e: Exception</ID>
+    <ID>TooGenericExceptionThrown:LeagueRepositoryImpl.kt$LeagueRepositoryImpl$throw Exception("Código de convite inválido ou liga não encontrada.")</ID>
+    <ID>TooGenericExceptionThrown:LeagueRepositoryImpl.kt$LeagueRepositoryImpl$throw Exception("Este apelido já está em uso nesta liga.")</ID>
+    <ID>TooGenericExceptionThrown:LeagueRepositoryImpl.kt$LeagueRepositoryImpl$throw Exception("Falha ao recuperar ID da liga criada")</ID>
+    <ID>TooGenericExceptionThrown:LeagueRepositoryImpl.kt$LeagueRepositoryImpl$throw Exception("Liga não encontrada.")</ID>
+    <ID>TooGenericExceptionThrown:LeagueRepositoryImpl.kt$LeagueRepositoryImpl$throw Exception("Você já participa desta liga.")</ID>
+    <ID>UnusedParameter:SettingsViewModel.kt$SettingsViewModel$token: String?</ID>
+    <ID>UnusedPrivateProperty:LeagueRepositoryImpl.kt$LeagueRepositoryImpl$val dtos = supabase.postgrest["leagues"] .select { // Sintaxe PostgREST para inner join passando pela tabela associativa // Assumindo que a relação liga a tabela de members ao id do usuario // "leagues!inner(league_members!inner(user_id=eq.$userId))" não é trivial sem definir as relações corretas no banco // Uma forma mais segura sem saber o nome exato das chaves estrangeiras: }</ID>
+    <ID>UnusedPrivateProperty:SettingsViewModel.kt$SettingsViewModel$private val authRepository: AuthRepository</ID>
+    <ID>WildcardImport:RulesBottomSheet.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:RulesBottomSheet.kt$import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:SettingsScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:SettingsScreen.kt$import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:SettingsScreen.kt$import androidx.compose.runtime.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

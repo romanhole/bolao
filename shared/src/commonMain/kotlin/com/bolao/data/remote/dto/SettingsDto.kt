@@ -7,10 +7,10 @@ import kotlinx.serialization.Serializable
 data class SettingsDto(
     @SerialName("id")
     val id: Int,
-    
+
     @SerialName("min_version_code")
     val minVersionCode: Int,
-    
+
     @SerialName("latest_version_code")
     val latestVersionCode: Int,
 )

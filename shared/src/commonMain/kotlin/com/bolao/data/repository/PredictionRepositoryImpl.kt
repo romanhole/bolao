@@ -121,8 +121,8 @@ class PredictionRepositoryImpl(
             supabase
                 .from(TABLE)
                 .upsert(prediction.toDto()) {
-                    onConflict   = "match_id,user_id"
-                    defaultToNull = false   // preserva colunas não enviadas (ex: points_earned)
+                    onConflict = "match_id,user_id"
+                    defaultToNull = false // preserva colunas não enviadas (ex: points_earned)
                 }
 
             // Re-fetch após upsert para obter o ID gerado pelo banco e estado atual

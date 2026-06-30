@@ -25,8 +25,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.Stars
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
@@ -101,23 +99,23 @@ fun LoginScreen(
                 onDismissRequest = { viewModel.dismissConfirmDialog() },
                 title = {
                     Text(
-                        text       = "Verifique seu E-mail",
+                        text = "Verifique seu E-mail",
                         fontWeight = FontWeight.Bold,
-                        color      = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary
                     )
                 },
                 text = {
                     Text(
-                        text  = "Enviamos um link de confirmação para ${uiState.email}. Você precisa clicar no link para ativar sua conta antes de fazer o login.",
+                        text = "Enviamos um link de confirmação para ${uiState.email}. Você precisa clicar no link para ativar sua conta antes de fazer o login.",
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
                 confirmButton = {
                     Button(
                         onClick = { viewModel.dismissConfirmDialog() },
-                        colors  = ButtonDefaults.buttonColors(
+                        colors = ButtonDefaults.buttonColors(
                             containerColor = BolaoGreen,
-                            contentColor   = Color.Black
+                            contentColor = Color.Black
                         )
                     ) {
                         Text("Entendi", fontWeight = FontWeight.Bold)
@@ -129,14 +127,16 @@ fun LoginScreen(
                         enabled = uiState.resendCooldownSeconds == 0
                     ) {
                         Text(
-                            text = if (uiState.resendCooldownSeconds > 0)
+                            text = if (uiState.resendCooldownSeconds > 0) {
                                 "Reenviar em ${uiState.resendCooldownSeconds}s"
-                            else
-                                "Reenviar e-mail",
-                            color = if (uiState.resendCooldownSeconds > 0) 
-                                MaterialTheme.colorScheme.outline 
-                            else 
+                            } else {
+                                "Reenviar e-mail"
+                            },
+                            color = if (uiState.resendCooldownSeconds > 0) {
+                                MaterialTheme.colorScheme.outline
+                            } else {
                                 MaterialTheme.colorScheme.primary
+                            }
                         )
                     }
                 },
@@ -152,7 +152,7 @@ private fun LoginContent(
     uiState: AuthUiState,
 ) {
     Column(
-        modifier            = Modifier
+        modifier = Modifier
             .widthIn(max = 480.dp)
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
@@ -175,29 +175,30 @@ private fun LoginContent(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text  = "B",
+                text = "B",
                 style = MaterialTheme.typography.displayMedium.copy(
                     fontWeight = FontWeight.Black,
-                    color      = Color.White,
+                    color = Color.White,
                 ),
             )
         }
 
         // ── Título ───────────────────────────────────────────────────
         Text(
-            text       = "Bolão",
-            style      = MaterialTheme.typography.displaySmall,
+            text = "Bolão",
+            style = MaterialTheme.typography.displaySmall,
             fontWeight = FontWeight.Black,
-            color      = MaterialTheme.colorScheme.primary,
+            color = MaterialTheme.colorScheme.primary,
         )
 
         Text(
-            text      = if (uiState.isLoginMode)
+            text = if (uiState.isLoginMode) {
                 "Entre para fazer seus palpites"
-            else
-                "Crie sua conta gratuitamente",
-            style     = MaterialTheme.typography.bodyMedium,
-            color     = MaterialTheme.colorScheme.onSurfaceVariant,
+            } else {
+                "Crie sua conta gratuitamente"
+            },
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
 
@@ -216,74 +217,76 @@ private fun LoginContent(
                     .padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-
                 // ── Campo E-mail ──────────────────────────────────────
                 OutlinedTextField(
-                    value         = uiState.email,
+                    value = uiState.email,
                     onValueChange = viewModel::onEmailChange,
-                    label         = { Text("E-mail") },
-                    leadingIcon   = {
+                    label = { Text("E-mail") },
+                    leadingIcon = {
                         Icon(
-                            imageVector        = Icons.Rounded.Email,
+                            imageVector = Icons.Rounded.Email,
                             contentDescription = null,
-                            tint               = MaterialTheme.colorScheme.primary,
+                            tint = MaterialTheme.colorScheme.primary,
                         )
                     },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Email,
-                        imeAction    = ImeAction.Next,
+                        imeAction = ImeAction.Next,
                     ),
                     singleLine = true,
-                    modifier   = Modifier.fillMaxWidth(),
-                    shape      = RoundedCornerShape(12.dp),
-                    colors     = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor   = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                     ),
                 )
 
                 // ── Campo Senha ───────────────────────────────────────
                 OutlinedTextField(
-                    value         = uiState.password,
+                    value = uiState.password,
                     onValueChange = viewModel::onPasswordChange,
-                    label         = { Text("Senha") },
-                    leadingIcon   = {
+                    label = { Text("Senha") },
+                    leadingIcon = {
                         Icon(
-                            imageVector        = Icons.Rounded.Lock,
+                            imageVector = Icons.Rounded.Lock,
                             contentDescription = null,
-                            tint               = MaterialTheme.colorScheme.primary,
+                            tint = MaterialTheme.colorScheme.primary,
                         )
                     },
                     trailingIcon = {
                         IconButton(onClick = viewModel::togglePasswordVisibility) {
                             Icon(
-                                imageVector = if (uiState.isPasswordVisible)
+                                imageVector = if (uiState.isPasswordVisible) {
                                     Icons.Rounded.VisibilityOff
-                                else
-                                    Icons.Rounded.Visibility,
-                                contentDescription = if (uiState.isPasswordVisible)
+                                } else {
+                                    Icons.Rounded.Visibility
+                                },
+                                contentDescription = if (uiState.isPasswordVisible) {
                                     "Ocultar senha"
-                                else
-                                    "Mostrar senha",
+                                } else {
+                                    "Mostrar senha"
+                                },
                             )
                         }
                     },
-                    visualTransformation = if (uiState.isPasswordVisible)
+                    visualTransformation = if (uiState.isPasswordVisible) {
                         VisualTransformation.None
-                    else
-                        PasswordVisualTransformation(),
+                    } else {
+                        PasswordVisualTransformation()
+                    },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password,
-                        imeAction    = if (uiState.isLoginMode) ImeAction.Done else ImeAction.Next,
+                        imeAction = if (uiState.isLoginMode) ImeAction.Done else ImeAction.Next,
                     ),
                     keyboardActions = KeyboardActions(
                         onDone = { if (uiState.isLoginMode) viewModel.submit() }
                     ),
                     singleLine = true,
-                    modifier   = Modifier.fillMaxWidth(),
-                    shape      = RoundedCornerShape(12.dp),
-                    colors     = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor   = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                     ),
                 )
@@ -314,46 +317,49 @@ private fun LoginContent(
                     visible = !uiState.isLoginMode,
                 ) {
                     OutlinedTextField(
-                        value         = uiState.confirmPassword,
+                        value = uiState.confirmPassword,
                         onValueChange = viewModel::onConfirmPasswordChange,
-                        label         = { Text("Confirmar Senha") },
-                        leadingIcon   = {
+                        label = { Text("Confirmar Senha") },
+                        leadingIcon = {
                             Icon(
-                                imageVector        = Icons.Rounded.Lock,
+                                imageVector = Icons.Rounded.Lock,
                                 contentDescription = null,
-                                tint               = MaterialTheme.colorScheme.primary,
+                                tint = MaterialTheme.colorScheme.primary,
                             )
                         },
                         trailingIcon = {
                             IconButton(onClick = viewModel::toggleConfirmPasswordVisibility) {
                                 Icon(
-                                    imageVector = if (uiState.isConfirmPasswordVisible)
+                                    imageVector = if (uiState.isConfirmPasswordVisible) {
                                         Icons.Rounded.VisibilityOff
-                                    else
-                                        Icons.Rounded.Visibility,
-                                    contentDescription = if (uiState.isConfirmPasswordVisible)
+                                    } else {
+                                        Icons.Rounded.Visibility
+                                    },
+                                    contentDescription = if (uiState.isConfirmPasswordVisible) {
                                         "Ocultar senha"
-                                    else
-                                        "Mostrar senha",
+                                    } else {
+                                        "Mostrar senha"
+                                    },
                                 )
                             }
                         },
-                        visualTransformation = if (uiState.isConfirmPasswordVisible)
+                        visualTransformation = if (uiState.isConfirmPasswordVisible) {
                             VisualTransformation.None
-                        else
-                            PasswordVisualTransformation(),
+                        } else {
+                            PasswordVisualTransformation()
+                        },
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password,
-                            imeAction    = ImeAction.Done,
+                            imeAction = ImeAction.Done,
                         ),
                         keyboardActions = KeyboardActions(
                             onDone = { viewModel.submit() }
                         ),
                         singleLine = true,
-                        modifier   = Modifier.fillMaxWidth(),
-                        shape      = RoundedCornerShape(12.dp),
-                        colors     = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor   = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
                             unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                         ),
                     )
@@ -362,40 +368,40 @@ private fun LoginContent(
                 // ── Mensagem de erro ──────────────────────────────────
                 AnimatedVisibility(
                     visible = uiState.error != null,
-                    enter   = fadeIn(),
-                    exit    = fadeOut(),
+                    enter = fadeIn(),
+                    exit = fadeOut(),
                 ) {
                     Text(
-                        text     = uiState.error.orEmpty(),
-                        style    = MaterialTheme.typography.bodySmall,
-                        color    = MaterialTheme.colorScheme.error,
+                        text = uiState.error.orEmpty(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
 
                 // ── Botão de submit ───────────────────────────────────
                 Button(
-                    onClick  = viewModel::submit,
-                    enabled  = !uiState.isLoading,
+                    onClick = viewModel::submit,
+                    enabled = !uiState.isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
-                    shape  = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = BolaoGreen,
-                        contentColor   = Color.Black,
+                        contentColor = Color.Black,
                     ),
                 ) {
                     if (uiState.isLoading) {
                         CircularProgressIndicator(
-                            modifier    = Modifier.size(22.dp),
+                            modifier = Modifier.size(22.dp),
                             strokeWidth = 2.5.dp,
-                            color       = Color.Black,
+                            color = Color.Black,
                         )
                     } else {
                         Text(
-                            text       = if (uiState.isLoginMode) "Entrar" else "Criar Conta",
-                            style      = MaterialTheme.typography.labelLarge,
+                            text = if (uiState.isLoginMode) "Entrar" else "Criar Conta",
+                            style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
                         )
                     }
@@ -406,10 +412,11 @@ private fun LoginContent(
         // ── Toggle login ↔ cadastro ───────────────────────────────────
         TextButton(onClick = viewModel::toggleMode) {
             Text(
-                text  = if (uiState.isLoginMode)
+                text = if (uiState.isLoginMode) {
                     "Não tem conta? Criar agora"
-                else
-                    "Já tem conta? Entrar",
+                } else {
+                    "Já tem conta? Entrar"
+                },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -425,7 +432,7 @@ private fun ForgotPasswordContent(
     uiState: AuthUiState,
 ) {
     Column(
-        modifier            = Modifier
+        modifier = Modifier
             .widthIn(max = 480.dp)
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
@@ -448,10 +455,10 @@ private fun ForgotPasswordContent(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text  = "B",
+                text = "B",
                 style = MaterialTheme.typography.displayMedium.copy(
                     fontWeight = FontWeight.Black,
-                    color      = Color.White,
+                    color = Color.White,
                 ),
             )
         }
@@ -461,16 +468,16 @@ private fun ForgotPasswordContent(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text       = "Recuperar Senha",
-                style      = MaterialTheme.typography.displaySmall,
+                text = "Recuperar Senha",
+                style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Black,
-                color      = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.primary,
             )
 
             Text(
-                text      = "Informe seu e-mail cadastrado",
-                style     = MaterialTheme.typography.bodyMedium,
-                color     = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = "Informe seu e-mail cadastrado",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
 
@@ -580,7 +587,7 @@ private fun OtpContent(
     uiState: AuthUiState,
 ) {
     Column(
-        modifier            = Modifier
+        modifier = Modifier
             .widthIn(max = 480.dp)
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
@@ -602,25 +609,25 @@ private fun OtpContent(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text  = "B",
+                text = "B",
                 style = MaterialTheme.typography.displayMedium.copy(
                     fontWeight = FontWeight.Black,
-                    color      = Color.White,
+                    color = Color.White,
                 ),
             )
         }
 
         Text(
-            text       = "Código OTP",
-            style      = MaterialTheme.typography.displaySmall,
+            text = "Código OTP",
+            style = MaterialTheme.typography.displaySmall,
             fontWeight = FontWeight.Black,
-            color      = MaterialTheme.colorScheme.primary,
+            color = MaterialTheme.colorScheme.primary,
         )
 
         Text(
-            text      = "Enviamos um código para o seu e-mail.",
-            style     = MaterialTheme.typography.bodyMedium,
-            color     = MaterialTheme.colorScheme.onSurfaceVariant,
+            text = "Enviamos um código para o seu e-mail.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
 
@@ -718,7 +725,7 @@ fun ResetPasswordScreen(
     uiState: AuthUiState,
 ) {
     Column(
-        modifier            = Modifier
+        modifier = Modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 28.dp),
@@ -739,25 +746,25 @@ fun ResetPasswordScreen(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text  = "B",
+                text = "B",
                 style = MaterialTheme.typography.displayMedium.copy(
                     fontWeight = FontWeight.Black,
-                    color      = Color.White,
+                    color = Color.White,
                 ),
             )
         }
 
         Text(
-            text       = "Nova Senha",
-            style      = MaterialTheme.typography.displaySmall,
+            text = "Nova Senha",
+            style = MaterialTheme.typography.displaySmall,
             fontWeight = FontWeight.Black,
-            color      = MaterialTheme.colorScheme.primary,
+            color = MaterialTheme.colorScheme.primary,
         )
 
         Text(
-            text      = "Crie uma nova senha para sua conta",
-            style     = MaterialTheme.typography.bodyMedium,
-            color     = MaterialTheme.colorScheme.onSurfaceVariant,
+            text = "Crie uma nova senha para sua conta",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
 

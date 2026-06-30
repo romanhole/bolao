@@ -10,11 +10,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -25,29 +25,28 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.rounded.Info
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,13 +54,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.bolao.domain.model.League
 import com.bolao.domain.model.LeaderboardItem
+import com.bolao.domain.model.League
 import com.bolao.presentation.BackHandlerWrapper
 import com.bolao.presentation.theme.BolaoGold
 import com.bolao.presentation.theme.BolaoGreen
 import org.koin.compose.viewmodel.koinViewModel
-import org.koin.core.parameter.parametersOf
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -127,7 +125,10 @@ fun LeagueDetailScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(state.message, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
-                        Button(onClick = { viewModel.loadLeagueDetail(leagueId) }, modifier = Modifier.padding(top = 16.dp)) {
+                        Button(
+                            onClick = { viewModel.loadLeagueDetail(leagueId) },
+                            modifier = Modifier.padding(top = 16.dp)
+                        ) {
                             Text("Tentar novamente")
                         }
                     }
@@ -273,7 +274,7 @@ private fun LeagueRankingCard(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
-                    
+
                     if (isCurrentUser) {
                         Spacer(modifier = Modifier.width(6.dp))
                         Surface(
@@ -317,8 +318,12 @@ private fun LeagueRankingCard(
 /** Gera uma cor consistente para o avatar baseada no userId. */
 private fun avatarColorFor(userId: String): Color {
     val palette = listOf(
-        Color(0xFF6C63FF), Color(0xFF00C896), Color(0xFFFF6B6B),
-        Color(0xFFFFB347), Color(0xFF4FC3F7), Color(0xFFBA68C8),
+        Color(0xFF6C63FF),
+        Color(0xFF00C896),
+        Color(0xFFFF6B6B),
+        Color(0xFFFFB347),
+        Color(0xFF4FC3F7),
+        Color(0xFFBA68C8),
     )
     return palette[userId.hashCode().and(0x7fffffff) % palette.size]
 }
@@ -391,7 +396,7 @@ private fun LiveMatchCard(detail: LiveMatchDetail, modifier: Modifier = Modifier
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             // Palpites da galera
             Text(
                 text = "Palpites ao vivo:",
@@ -399,7 +404,7 @@ private fun LiveMatchCard(detail: LiveMatchDetail, modifier: Modifier = Modifier
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             if (detail.partialRanking.isEmpty()) {
                 Text("Ninguém palpitou.", style = MaterialTheme.typography.bodySmall)
             } else {

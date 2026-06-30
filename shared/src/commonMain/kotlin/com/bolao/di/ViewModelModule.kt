@@ -10,12 +10,10 @@ import com.bolao.domain.repository.LeagueRepository
 import com.bolao.domain.repository.MatchRepository
 import com.bolao.domain.repository.PredictionRepository
 import com.bolao.presentation.auth.AuthViewModel
-
 import com.bolao.presentation.leagues.LeagueDetailViewModel
 import com.bolao.presentation.leagues.LeaguesViewModel
 import com.bolao.presentation.matchlist.MatchListViewModel
 import com.bolao.presentation.settings.SettingsViewModel
-import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
@@ -33,11 +31,16 @@ import org.koin.dsl.module
  * ```
  */
 val repositoryModule = module {
-    single<MatchRepository>      { MatchRepositoryImpl(get()) }
+    single<MatchRepository> { MatchRepositoryImpl(get()) }
     single<PredictionRepository> { PredictionRepositoryImpl(get()) }
-    single<AuthRepository>       { AuthRepositoryImpl(get()) }
-    single<LeaderboardRepository>{ LeaderboardRepositoryImpl(get()) }
-    single<com.bolao.domain.repository.LeagueRepository>{ com.bolao.data.repository.LeagueRepositoryImpl(get(), get()) }
+    single<AuthRepository> { AuthRepositoryImpl(get()) }
+    single<LeaderboardRepository> { LeaderboardRepositoryImpl(get()) }
+    single<com.bolao.domain.repository.LeagueRepository> {
+        com.bolao.data.repository.LeagueRepositoryImpl(
+            get(),
+            get()
+        )
+    }
     single<com.bolao.domain.repository.SettingsRepository> { com.bolao.data.repository.SettingsRepositoryImpl(get()) }
     single<com.bolao.domain.repository.PushTokenRepository> { com.bolao.data.repository.PushTokenRepositoryImpl(get()) }
 }

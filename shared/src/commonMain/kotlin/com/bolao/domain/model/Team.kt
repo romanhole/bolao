@@ -1,7 +1,5 @@
 package com.bolao.domain.model
 
-
-
 /**
  * Entidade de domínio que representa um time de futebol.
  *

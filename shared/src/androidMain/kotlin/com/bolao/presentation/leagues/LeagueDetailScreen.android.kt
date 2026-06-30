@@ -1,8 +1,8 @@
 package com.bolao.presentation.leagues
 
 import android.content.Intent
-import com.bolao.platform.AppContext
 import com.bolao.domain.model.League
+import com.bolao.platform.AppContext
 
 /**
  * Compartilha o código de convite da liga usando o ACTION_SEND do Android.
@@ -20,4 +20,3 @@ actual fun shareLeagueInvite(league: League) {
     ).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
     AppContext.get().startActivity(chooser)
 }
-

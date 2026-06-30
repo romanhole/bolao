@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -30,6 +31,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Group
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.Star
@@ -51,14 +53,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.bolao.domain.model.GameStatus
+import com.bolao.domain.model.Match
 import com.bolao.domain.model.Team
 import com.bolao.domain.usecase.PredictionCalculator
 import com.bolao.presentation.theme.BolaoGold
@@ -69,8 +72,6 @@ import com.bolao.presentation.theme.DarkCardVariant
 import com.bolao.presentation.theme.HalfTimeAmber
 import com.bolao.presentation.theme.LiveRed
 import com.bolao.presentation.theme.LiveRedMuted
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.rounded.Group
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import kotlinx.datetime.Instant
@@ -113,6 +114,7 @@ import kotlinx.datetime.toLocalDateTime
  * @param onAwayGoalDecrement   Callback para decrementar gols do visitante
  * @param onSave                Callback para persistir o palpite atual
  */
+@Suppress("LongParameterList", "LongMethod", "FunctionNaming")
 @Composable
 fun MatchPredictionCard(
     item: MatchPredictionItem,
@@ -120,6 +122,7 @@ fun MatchPredictionCard(
     onHomeGoalDecrement: () -> Unit,
     onAwayGoalIncrement: () -> Unit,
     onAwayGoalDecrement: () -> Unit,
+    onQualifierChange: (String) -> Unit = {},
     onSave: () -> Unit,
     onShowGuessesClick: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -127,23 +130,22 @@ fun MatchPredictionCard(
     val isEditable = item.isPredictionAllowed
 
     ElevatedCard(
-        modifier  = modifier.fillMaxWidth(),
-        shape     = RoundedCornerShape(20.dp),
-        colors    = CardDefaults.elevatedCardColors(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface,
         ),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 6.dp),
     ) {
         Column {
-
             // ── Header: competição, data e badge de status ─────────────────
             MatchCardHeader(
                 competition = item.match.competition,
-                round       = item.match.round,
+                round = item.match.round,
                 scheduledAt = item.match.scheduledAt,
-                status      = item.match.status,
+                status = item.match.status,
                 stageMultiplier = item.match.stageMultiplier,
-                modifier    = Modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .background(
                         brush = Brush.horizontalGradient(
@@ -158,25 +160,25 @@ fun MatchPredictionCard(
 
             // ── Teams + Counters ──────────────────────────────────────────
             Row(
-                modifier                = Modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp, vertical = 24.dp),
-                verticalAlignment       = Alignment.CenterVertically,
-                horizontalArrangement   = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
                 // Mandante (home)
                 TeamColumn(
-                    team        = item.match.homeTeam,
-                    goalCount   = item.currentHomeGoals,
-                    isEditable  = isEditable,
+                    team = item.match.homeTeam,
+                    goalCount = item.currentHomeGoals,
+                    isEditable = isEditable,
                     onIncrement = onHomeGoalIncrement,
                     onDecrement = onHomeGoalDecrement,
-                    modifier    = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f),
                 )
 
                 // Separador "×"
                 Text(
-                    text  = "×",
+                    text = "×",
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                     modifier = Modifier.padding(horizontal = 4.dp),
@@ -184,12 +186,27 @@ fun MatchPredictionCard(
 
                 // Visitante (away)
                 TeamColumn(
-                    team        = item.match.awayTeam,
-                    goalCount   = item.currentAwayGoals,
-                    isEditable  = isEditable,
+                    team = item.match.awayTeam,
+                    goalCount = item.currentAwayGoals,
+                    isEditable = isEditable,
                     onIncrement = onAwayGoalIncrement,
                     onDecrement = onAwayGoalDecrement,
-                    modifier    = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f),
+                )
+            }
+
+            // ── Qualifier Selector (Quem avança se for mata-mata) ──
+            if (item.match.isKnockout) {
+                QualifierSelector(
+                    homeTeam = item.match.homeTeam,
+                    awayTeam = item.match.awayTeam,
+                    currentQualifier = item.currentQualifier,
+                    isEditable = isEditable,
+                    onQualifierChange = onQualifierChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 16.dp)
                 )
             }
 
@@ -267,26 +284,23 @@ fun MatchPredictionCard(
             }
 
             // ── Placar Real — exibido centralizado quando o jogo não está aberto ──
-            val homeScore = item.match.homeScore
-            val awayScore = item.match.awayScore
-            if (!isEditable && homeScore != null && awayScore != null) {
+            if (!isEditable && item.match.homeScore != null && item.match.awayScore != null) {
                 RealScoreLabel(
-                    homeScore = homeScore,
-                    awayScore = awayScore,
-                    modifier  = Modifier
-                        .fillMaxWidth()
+                    match = item.match,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
                         .padding(horizontal = 16.dp)
-                        .padding(bottom = 4.dp),
+                        .padding(bottom = 12.dp),
                 )
             }
 
             // ── Footer: save / pontos / sem palpite ───────────────────────
             MatchCardFooter(
-                item       = item,
+                item = item,
                 isEditable = isEditable,
-                onSave     = onSave,
+                onSave = onSave,
                 onShowGuessesClick = onShowGuessesClick,
-                modifier   = Modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
             )
@@ -310,19 +324,19 @@ private fun MatchCardHeader(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier              = modifier,
+        modifier = modifier,
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment     = Alignment.CenterVertically,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text      = competition,
-                style     = MaterialTheme.typography.labelMedium,
-                color     = MaterialTheme.colorScheme.primary,
-                fontWeight= FontWeight.Bold,
+                text = competition,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
             )
             Text(
-                text  = "$round · ${formatMatchDateTime(scheduledAt)}",
+                text = "$round · ${formatMatchDateTime(scheduledAt)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
@@ -338,7 +352,6 @@ private fun MatchCardHeader(
         StatusBadge(status = status)
     }
 }
-
 
 // ── Status Badge ──────────────────────────────────────────────────────────────
 
@@ -356,23 +369,38 @@ private fun StatusBadge(status: GameStatus) {
         is GameStatus.Scheduled -> Unit // Sem badge — a data já informa
 
         is GameStatus.Live ->
-            LiveBadge(minute = status.minutePlayed)
+            LiveBadge(minute = status.minutePlayed, label = "AO VIVO")
 
         is GameStatus.HalfTime ->
             StatusPill(
-                text  = "Intervalo",
+                text = "Intervalo",
                 color = HalfTimeAmber,
+            )
+
+        is GameStatus.ExtraTime ->
+            LiveBadge(minute = status.minutePlayed, label = "PRORROGAÇÃO")
+
+        is GameStatus.ExtraTimeHalfTime ->
+            StatusPill(
+                text = "Intervalo AET",
+                color = HalfTimeAmber,
+            )
+
+        is GameStatus.Penalties ->
+            StatusPill(
+                text = "● PÊNALTIS",
+                color = LiveRed,
             )
 
         is GameStatus.Finished ->
             StatusPill(
-                text  = "Encerrado",
+                text = "Encerrado",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
         is GameStatus.Interrupted ->
             StatusPill(
-                text  = status.reason,
+                text = status.reason,
                 color = LiveRed,
             )
     }
@@ -396,7 +424,7 @@ private fun StageMultiplierBadge(multiplier: Float) {
     val badgeColor = when {
         multiplier >= 2.5f -> BolaoGold
         multiplier >= 2.0f -> BolaoGold.copy(alpha = 0.85f)
-        else               -> BolaoGold.copy(alpha = 0.65f)
+        else -> BolaoGold.copy(alpha = 0.65f)
     }
     Surface(
         shape = RoundedCornerShape(50),
@@ -416,24 +444,25 @@ private fun StageMultiplierBadge(multiplier: Float) {
                 )
             }
             Text(
-                text       = label,
-                style      = MaterialTheme.typography.labelSmall,
-                color      = badgeColor,
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = badgeColor,
                 fontWeight = FontWeight.ExtraBold,
             )
         }
     }
 }
 
-/** Badge "AO VIVO" com ponto pulsante para chamar atenção. */
+/** Badge "AO VIVO" ou "PRORROGAÇÃO" com ponto pulsante para chamar atenção. */
+@Suppress("FunctionNaming")
 @Composable
-private fun LiveBadge(minute: Int) {
+private fun LiveBadge(minute: Int, label: String = "AO VIVO") {
     val transition = rememberInfiniteTransition(label = "LivePulse")
     val alpha by transition.animateFloat(
-        initialValue  = 1f,
-        targetValue   = 0.25f,
+        initialValue = 1f,
+        targetValue = 0.25f,
         animationSpec = InfiniteRepeatableSpec(
-            animation  = tween(750, easing = EaseInOutCubic),
+            animation = tween(750, easing = EaseInOutCubic),
             repeatMode = RepeatMode.Reverse,
         ),
         label = "LiveAlpha",
@@ -444,7 +473,7 @@ private fun LiveBadge(minute: Int) {
         color = LiveRedMuted,
     ) {
         Row(
-            modifier          = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(5.dp),
         ) {
@@ -456,9 +485,9 @@ private fun LiveBadge(minute: Int) {
                     .background(LiveRed.copy(alpha = alpha))
             )
             Text(
-                text       = "AO VIVO · $minute'",
-                style      = MaterialTheme.typography.labelSmall,
-                color      = LiveRed,
+                text = "$label · $minute'",
+                style = MaterialTheme.typography.labelSmall,
+                color = LiveRed,
                 fontWeight = FontWeight.Bold,
             )
         }
@@ -473,11 +502,11 @@ private fun StatusPill(text: String, color: Color) {
         color = color.copy(alpha = 0.15f),
     ) {
         Text(
-            text      = text,
-            style     = MaterialTheme.typography.labelSmall,
-            color     = color,
-            fontWeight= FontWeight.SemiBold,
-            modifier  = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            color = color,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
         )
     }
 }
@@ -498,28 +527,28 @@ private fun TeamColumn(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier              = modifier,
-        horizontalAlignment   = Alignment.CenterHorizontally,
-        verticalArrangement   = Arrangement.spacedBy(8.dp),
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         // Logo do time carregado via proxy ou placeholder se não disponível
         TeamLogoImage(team = team)
 
         // Nome do time — truncado para não quebrar o layout
         Text(
-            text      = team.name,
-            style     = MaterialTheme.typography.titleSmall,
-            fontWeight= FontWeight.SemiBold,
-            color     = MaterialTheme.colorScheme.onSurface,
+            text = team.name,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
-            maxLines  = 1,
-            overflow  = TextOverflow.Ellipsis,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
 
         // Contador de gols — interativo ou estático dependendo do status
         GoalCounter(
-            count       = goalCount,
-            isEditable  = isEditable,
+            count = goalCount,
+            isEditable = isEditable,
             onIncrement = onIncrement,
             onDecrement = onDecrement,
         )
@@ -537,7 +566,7 @@ private fun TeamLogoPlaceholder(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier          = modifier
+        modifier = modifier
             .size(56.dp)
             .clip(CircleShape)
             .background(
@@ -548,13 +577,13 @@ private fun TeamLogoPlaceholder(
                     )
                 )
             ),
-        contentAlignment  = Alignment.Center,
+        contentAlignment = Alignment.Center,
     ) {
         Text(
-            text      = team.shortName.take(3),
-            style     = MaterialTheme.typography.labelMedium,
-            fontWeight= FontWeight.ExtraBold,
-            color     = MaterialTheme.colorScheme.onPrimaryContainer,
+            text = team.shortName.take(3),
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.ExtraBold,
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
         )
     }
 }
@@ -651,22 +680,22 @@ private fun GoalCounter(
     ) { editable ->
         if (editable) {
             Row(
-                verticalAlignment     = Alignment.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
             ) {
                 // Botão decremento — desabilitado em 0
                 FilledTonalIconButton(
-                    onClick  = onDecrement,
-                    enabled  = count > 0,
+                    onClick = onDecrement,
+                    enabled = count > 0,
                     modifier = Modifier.size(36.dp),
-                    colors   = IconButtonDefaults.filledTonalIconButtonColors(
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
                         containerColor = DarkCardVariant,
                     ),
                 ) {
                     Icon(
-                        imageVector      = Icons.Rounded.Remove,
+                        imageVector = Icons.Rounded.Remove,
                         contentDescription = "Diminuir gols",
-                        modifier         = Modifier.size(18.dp),
+                        modifier = Modifier.size(18.dp),
                     )
                 }
 
@@ -682,41 +711,41 @@ private fun GoalCounter(
                     modifier = Modifier.widthIn(min = 44.dp),
                 ) { goalCount ->
                     Text(
-                        text      = goalCount.toString(),
-                        style     = MaterialTheme.typography.headlineMedium,
-                        fontWeight= FontWeight.Black,
-                        color     = MaterialTheme.colorScheme.onSurface,
+                        text = goalCount.toString(),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Center,
                     )
                 }
 
                 // Botão incremento — sempre habilitado
                 FilledIconButton(
-                    onClick  = onIncrement,
+                    onClick = onIncrement,
                     modifier = Modifier.size(36.dp),
-                    colors   = IconButtonDefaults.filledIconButtonColors(
+                    colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = BolaoGreen.copy(alpha = 0.85f),
-                        contentColor   = Color.Black,
+                        contentColor = Color.Black,
                     ),
                 ) {
                     Icon(
-                        imageVector      = Icons.Rounded.Add,
+                        imageVector = Icons.Rounded.Add,
                         contentDescription = "Aumentar gols",
-                        modifier         = Modifier.size(18.dp),
+                        modifier = Modifier.size(18.dp),
                     )
                 }
             }
         } else {
             // Modo estático: só o número, centralizado
             Box(
-                modifier          = Modifier.widthIn(min = 44.dp),
-                contentAlignment  = Alignment.Center,
+                modifier = Modifier.widthIn(min = 44.dp),
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text      = count.toString(),
-                    style     = MaterialTheme.typography.headlineMedium,
-                    fontWeight= FontWeight.Black,
-                    color     = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    text = count.toString(),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center,
                 )
             }
@@ -734,37 +763,133 @@ private fun GoalCounter(
  * Posicionado entre a área de times e o footer para não duplicar informação
  * dentro dos [TeamColumn]s individuais.
  */
+@Suppress("FunctionNaming")
 @Composable
 private fun RealScoreLabel(
-    homeScore: Int,
-    awayScore: Int,
+    match: Match,
     modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier         = modifier,
-        contentAlignment = Alignment.Center,
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
     ) {
-        Surface(
-            shape = RoundedCornerShape(8.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
         ) {
             Row(
-                modifier              = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                verticalAlignment     = Alignment.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(
-                    text      = "Placar real:",
-                    style     = MaterialTheme.typography.labelSmall,
-                    color     = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = "Placar real:",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text       = "$homeScore × $awayScore",
-                    style      = MaterialTheme.typography.labelMedium,
+                    text = match.scoreDisplay,
+                    style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
-                    color      = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
             }
+
+            // Se houver empate nos 90min e tivermos o classificado
+            val qualifier = match.actualQualifier
+            if (qualifier != null) {
+                Text(
+                    text = "✓ ${qualifier.shortName} avançou",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = BolaoGreen,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+            }
+        }
+    }
+}
+
+// ── Qualifier Selector ────────────────────────────────────────────────────────
+
+@Suppress("LongParameterList", "FunctionNaming")
+@Composable
+private fun QualifierSelector(
+    homeTeam: Team,
+    awayTeam: Team,
+    currentQualifier: String?,
+    isEditable: Boolean,
+    onQualifierChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .background(
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = "Em caso de empate, quem avança?",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            // Mandante
+            QualifierOption(
+                team = homeTeam,
+                isSelected = currentQualifier == homeTeam.id,
+                isEditable = isEditable,
+                onClick = { onQualifierChange(homeTeam.id) }
+            )
+            // Visitante
+            QualifierOption(
+                team = awayTeam,
+                isSelected = currentQualifier == awayTeam.id,
+                isEditable = isEditable,
+                onClick = { onQualifierChange(awayTeam.id) }
+            )
+        }
+    }
+}
+
+@Suppress("FunctionNaming")
+@Composable
+private fun QualifierOption(
+    team: Team,
+    isSelected: Boolean,
+    isEditable: Boolean,
+    onClick: () -> Unit
+) {
+    val borderColor = if (isSelected) BolaoGreen else Color.Transparent
+    val backgroundColor = if (isSelected) BolaoGreen.copy(alpha = 0.15f) else Color.Transparent
+
+    Surface(
+        onClick = onClick,
+        enabled = isEditable,
+        shape = RoundedCornerShape(8.dp),
+        color = backgroundColor,
+        border = androidx.compose.foundation.BorderStroke(1.dp, borderColor),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            TeamLogoImage(team = team, modifier = Modifier.size(20.dp))
+            Text(
+                text = team.shortName,
+                style = MaterialTheme.typography.labelSmall,
+                color = if (isSelected) BolaoGreen else MaterialTheme.colorScheme.onSurface,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+            )
         }
     }
 }
@@ -780,13 +905,12 @@ private fun MatchCardFooter(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
-
         // Mensagem de erro de save (com animação de aparecimento)
         AnimatedVisibility(visible = item.saveError != null) {
             Text(
-                text     = item.saveError.orEmpty(),
-                style    = MaterialTheme.typography.bodySmall,
-                color    = MaterialTheme.colorScheme.error,
+                text = item.saveError.orEmpty(),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
                 modifier = Modifier.padding(bottom = 8.dp),
             )
         }
@@ -802,25 +926,25 @@ private fun MatchCardFooter(
             // 2. Jogo aberto → botão de salvar
             isEditable -> SaveButton(
                 hasChanges = item.hasUnsavedChanges,
-                isSaving   = item.isSaving,
-                isUpdate   = item.savedPrediction != null,
-                onSave     = onSave,
+                isSaving = item.isSaving,
+                isUpdate = item.savedPrediction != null,
+                onSave = onSave,
             )
 
             // 3. Jogo em andamento sem palpite prévio → aviso
             item.savedPrediction == null -> {
                 Text(
-                    text     = "Você não fez um palpite para esta partida",
-                    style    = MaterialTheme.typography.bodySmall,
-                    color    = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign= TextAlign.Center,
+                    text = "Você não fez um palpite para esta partida",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                 )
                 if (!isEditable) {
                     ShowGuessesButton(onClick = onShowGuessesClick)
                 }
             }
-            
+
             // 4. Jogo em andamento ou encerrado sem pontuação processada
             !isEditable && item.savedPrediction != null -> {
                 ShowGuessesButton(onClick = onShowGuessesClick)
@@ -853,26 +977,26 @@ private fun ShowGuessesButton(onClick: () -> Unit) {
 @Composable
 private fun PointsBadge(points: Int) {
     Row(
-        modifier              = Modifier
+        modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(BolaoGoldDark.copy(alpha = 0.8f))
             .padding(vertical = 10.dp),
         horizontalArrangement = Arrangement.Center,
-        verticalAlignment     = Alignment.CenterVertically,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            imageVector      = Icons.Rounded.Star,
+            imageVector = Icons.Rounded.Star,
             contentDescription = null,
-            tint             = BolaoGold,
-            modifier         = Modifier.size(18.dp),
+            tint = BolaoGold,
+            modifier = Modifier.size(18.dp),
         )
         Spacer(Modifier.width(6.dp))
         Text(
-            text      = if (points == 1) "1 ponto ganho" else "$points pontos ganhos",
-            style     = MaterialTheme.typography.titleSmall,
-            fontWeight= FontWeight.Bold,
-            color     = BolaoGoldLight,
+            text = if (points == 1) "1 ponto ganho" else "$points pontos ganhos",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = BolaoGoldLight,
         )
     }
 }
@@ -892,32 +1016,32 @@ private fun SaveButton(
     onSave: () -> Unit,
 ) {
     Button(
-        onClick  = onSave,
-        enabled  = hasChanges && !isSaving,
+        onClick = onSave,
+        enabled = hasChanges && !isSaving,
         modifier = Modifier.fillMaxWidth(),
-        shape    = RoundedCornerShape(12.dp),
-        colors   = ButtonDefaults.buttonColors(
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.buttonColors(
             containerColor = BolaoGreen,
-            contentColor   = Color.Black,
+            contentColor = Color.Black,
         ),
     ) {
         if (isSaving) {
             CircularProgressIndicator(
-                modifier    = Modifier.size(18.dp),
+                modifier = Modifier.size(18.dp),
                 strokeWidth = 2.dp,
-                color       = Color.Black,
+                color = Color.Black,
             )
         } else {
             Icon(
                 imageVector = if (isUpdate) Icons.Rounded.Check else Icons.Rounded.Star,
                 contentDescription = null,
-                modifier    = Modifier.size(18.dp),
+                modifier = Modifier.size(18.dp),
             )
             Spacer(Modifier.width(8.dp))
             Text(
-                text      = if (isUpdate) "Atualizar Palpite" else "Confirmar Palpite",
-                style     = MaterialTheme.typography.labelLarge,
-                fontWeight= FontWeight.Bold,
+                text = if (isUpdate) "Atualizar Palpite" else "Confirmar Palpite",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
             )
         }
     }
@@ -935,14 +1059,18 @@ private fun formatMatchDateTime(instant: Instant): String {
     val local = instant.toLocalDateTime(TimeZone.currentSystemDefault())
 
     val dayAbbr = when (local.dayOfWeek.ordinal) {
-        0 -> "Seg"; 1 -> "Ter"; 2 -> "Qua"
-        3 -> "Qui"; 4 -> "Sex"; 5 -> "Sáb"
+        0 -> "Seg"
+        1 -> "Ter"
+        2 -> "Qua"
+        3 -> "Qui"
+        4 -> "Sex"
+        5 -> "Sáb"
         else -> "Dom"
     }
-    val day   = local.dayOfMonth.toString().padStart(2, '0')
+    val day = local.dayOfMonth.toString().padStart(2, '0')
     val month = local.monthNumber.toString().padStart(2, '0')
-    val hour  = local.hour.toString().padStart(2, '0')
-    val min   = local.minute.toString().padStart(2, '0')
+    val hour = local.hour.toString().padStart(2, '0')
+    val min = local.minute.toString().padStart(2, '0')
 
     return "$dayAbbr, $day/$month · $hour:$min"
 }

@@ -40,7 +40,7 @@ internal fun HttpClient.applyCommonConfig(): HttpClient = config {
         json(sharedJson)
     }
     install(Logging) {
-        logger   = Logger.SIMPLE
-        level    = LogLevel.HEADERS  // Mude para LogLevel.BODY em debug profundo
+        logger = Logger.SIMPLE
+        level = LogLevel.HEADERS // Mude para LogLevel.BODY em debug profundo
     }
 }

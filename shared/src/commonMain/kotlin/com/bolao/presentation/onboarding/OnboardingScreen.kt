@@ -135,9 +135,9 @@ fun OnboardingScreen(
                             tint = if (pageIndex == 2) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.height(32.dp))
-                    
+
                     // Título
                     Text(
                         text = page.title,
@@ -146,9 +146,9 @@ fun OnboardingScreen(
                         color = MaterialTheme.colorScheme.onBackground,
                         textAlign = TextAlign.Center
                     )
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     // Descrição
                     Text(
                         text = page.description,
@@ -170,7 +170,13 @@ fun OnboardingScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 repeat(onboardingPages.size) { iteration ->
-                    val color = if (pagerState.currentPage == iteration) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
+                    val color = if (pagerState.currentPage == iteration) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                            alpha = 0.2f
+                        )
+                    }
                     val width = if (pagerState.currentPage == iteration) 24.dp else 8.dp
                     Box(
                         modifier = Modifier

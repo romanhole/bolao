@@ -24,12 +24,12 @@ class FakePredictionRepository : PredictionRepository {
         listOf(
             // Palpite já pontuado para a partida encerrada (match_3)
             Prediction(
-                id            = "pred_match3_user",
-                matchId       = "match_3",
-                userId        = "user_current",
+                id = "pred_match3_user",
+                matchId = "match_3",
+                userId = "user_current",
                 predictedHome = 0,
                 predictedAway = 2,
-                pointsEarned  = 5,  // acertou o vencedor e ficou perto do placar
+                pointsEarned = 5, // acertou o vencedor e ficou perto do placar
             ),
         )
     )

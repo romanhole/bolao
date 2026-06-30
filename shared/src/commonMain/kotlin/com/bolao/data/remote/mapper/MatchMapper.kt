@@ -23,18 +23,24 @@ import kotlinx.datetime.Instant
  * `Instant.parse()` do `kotlinx-datetime` suporta ambos os formatos.
  */
 fun MatchDto.toDomain(): Match = Match(
-    id          = id,
-    homeTeam    = homeTeam.toDomain(),
-    awayTeam    = awayTeam.toDomain(),
-    homeScore   = homeScore,
-    awayScore   = awayScore,
-    status      = toGameStatus(),
+    id = id,
+    homeTeam = homeTeam.toDomain(),
+    awayTeam = awayTeam.toDomain(),
+    homeScore = homeScore,
+    awayScore = awayScore,
+    homeScore90 = homeScore90,
+    awayScore90 = awayScore90,
+    homeScoreEt = homeScoreEt,
+    awayScoreEt = awayScoreEt,
+    penaltyWinner = penaltyWinner,
+    isKnockout = isKnockout,
+    status = toGameStatus(),
     scheduledAt = Instant.parse(scheduledAt),
     competition = competition,
-    round       = round,
-    homeOdd     = homeOdd,
-    drawOdd     = drawOdd,
-    awayOdd     = awayOdd,
+    round = round,
+    homeOdd = homeOdd,
+    drawOdd = drawOdd,
+    awayOdd = awayOdd,
     stageMultiplier = stageMultiplier,
 )
 
@@ -49,11 +55,14 @@ fun MatchDto.toDomain(): Match = Match(
  * "agendada" em vez de lançar exceção.
  */
 private fun MatchDto.toGameStatus(): GameStatus = when (status) {
-    "live"        -> GameStatus.Live(minutePlayed = minutePlayed ?: 0)
-    "halftime"    -> GameStatus.HalfTime
-    "finished"    -> GameStatus.Finished
+    "live" -> GameStatus.Live(minutePlayed = minutePlayed ?: 0)
+    "halftime" -> GameStatus.HalfTime
+    "extratime" -> GameStatus.ExtraTime(minutePlayed = minutePlayed ?: 90)
+    "et_halftime" -> GameStatus.ExtraTimeHalfTime
+    "penalties" -> GameStatus.Penalties
+    "finished" -> GameStatus.Finished
     "interrupted" -> GameStatus.Interrupted(reason = interruptedReason ?: "Suspenso")
-    else          -> GameStatus.Scheduled
+    else -> GameStatus.Scheduled
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -61,9 +70,9 @@ private fun MatchDto.toGameStatus(): GameStatus = when (status) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 fun TeamDto.toDomain(): Team = Team(
-    id        = id,
-    name      = name,
+    id = id,
+    name = name,
     shortName = shortName,
-    logoUrl   = logoUrl,
+    logoUrl = logoUrl,
     apiTeamId = apiTeamId,
 )

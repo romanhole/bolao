@@ -17,14 +17,14 @@ class LeaderboardRepositoryImpl(
         val dtos = supabase.postgrest["league_leaderboard"]
             .select { filter { eq("league_id", leagueId) } }
             .decodeList<LeaderboardDto>()
-        
+
         dtos.map { dto ->
             LeaderboardItem(
-                userId               = dto.userId,
-                nickname             = dto.nickname,
-                totalPoints          = dto.totalPoints,
+                userId = dto.userId,
+                nickname = dto.nickname,
+                totalPoints = dto.totalPoints,
                 totalPredictionsMade = dto.totalPredictionsMade,
-                exactMatches         = dto.exactMatches,
+                exactMatches = dto.exactMatches,
             )
         }
     }

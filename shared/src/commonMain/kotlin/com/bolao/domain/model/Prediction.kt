@@ -1,7 +1,5 @@
 package com.bolao.domain.model
 
-
-
 /**
  * Entidade de domínio que representa o palpite de um usuário para uma partida.
  *
@@ -19,6 +17,7 @@ data class Prediction(
     val userId: String,
     val predictedHome: Int,
     val predictedAway: Int,
+    val predictedQualifier: String? = null,
     val pointsEarned: Int? = null,
 ) {
     /**
@@ -29,7 +28,7 @@ data class Prediction(
         get() = when {
             predictedHome > predictedAway -> PredictionOutcome.HomeWin
             predictedHome < predictedAway -> PredictionOutcome.AwayWin
-            else                          -> PredictionOutcome.Draw
+            else -> PredictionOutcome.Draw
         }
 
     /** Indica se o palpite já foi pontuado. */

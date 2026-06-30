@@ -34,7 +34,7 @@ interface PredictionRepository {
      * Deve lançar exceção se a janela de palpites já estiver fechada.
      *
      * @param prediction Objeto [Prediction] a ser persistido.
-     * @return           O palpite salvo com o ID gerado pelo backend.
+     * @return O palpite salvo com o ID gerado pelo backend.
      */
     suspend fun savePrediction(prediction: Prediction): Result<Prediction>
 

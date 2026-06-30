@@ -50,8 +50,6 @@ class AuthViewModel(
         authRepository.clearDeepLinkError()
     }
 
-
-
     fun togglePasswordVisibility() {
         _uiState.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
     }
@@ -125,7 +123,7 @@ class AuthViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            error     = parseAuthError(error.message),
+                            error = parseAuthError(error.message),
                         )
                     }
                 }
@@ -164,21 +162,21 @@ class AuthViewModel(
      * Traduz mensagens de erro técnicas do Supabase para textos amigáveis em português.
      */
     private fun parseAuthError(message: String?): String = when {
-        message == null                                         -> "Erro desconhecido. Tente novamente."
-        message.contains("Invalid login credentials")          -> "E-mail ou senha incorretos."
-        message.contains("Email not confirmed")                 -> "Confirme seu e-mail antes de entrar."
-        message.contains("User already registered")            -> "Este e-mail já está cadastrado."
-        message.contains("Password should be at least")        -> "A senha deve ter pelo menos 6 caracteres."
-        message.contains("Unable to validate email address")   -> "E-mail inválido."
-        message.contains("rate limit")                         -> "Muitas tentativas. Aguarde um momento."
-        else                                                    -> "Erro: $message"
+        message == null -> "Erro desconhecido. Tente novamente."
+        message.contains("Invalid login credentials") -> "E-mail ou senha incorretos."
+        message.contains("Email not confirmed") -> "Confirme seu e-mail antes de entrar."
+        message.contains("User already registered") -> "Este e-mail já está cadastrado."
+        message.contains("Password should be at least") -> "A senha deve ter pelo menos 6 caracteres."
+        message.contains("Unable to validate email address") -> "E-mail inválido."
+        message.contains("rate limit") -> "Muitas tentativas. Aguarde um momento."
+        else -> "Erro: $message"
     }
 
     // ── Fluxo Esqueci minha senha / Reset de senha ─────────────────────────────
 
     fun onForgotPasswordClick() {
         authRepository.clearDeepLinkError()
-        _uiState.update { 
+        _uiState.update {
             it.copy(
                 isForgotPasswordMode = true,
                 forgotPasswordEmail = "",
@@ -199,7 +197,7 @@ class AuthViewModel(
     }
 
     fun onBackFromForgotPassword() {
-        _uiState.update { 
+        _uiState.update {
             it.copy(
                 isForgotPasswordMode = false,
                 forgotPasswordError = null
@@ -220,11 +218,11 @@ class AuthViewModel(
                     _uiState.update { it.copy(forgotPasswordLoading = false, isOtpMode = true) }
                 }
                 .onFailure { error ->
-                    _uiState.update { 
+                    _uiState.update {
                         it.copy(
-                            forgotPasswordLoading = false, 
+                            forgotPasswordLoading = false,
                             forgotPasswordError = parseAuthError(error.message)
-                        ) 
+                        )
                     }
                 }
         }
@@ -238,30 +236,30 @@ class AuthViewModel(
         val state = _uiState.value
         val email = state.forgotPasswordEmail.trim()
         val otp = state.otpCode.trim()
-        
+
         if (otp.isBlank()) {
             _uiState.update { it.copy(otpError = "Informe o código numérico") }
             return
         }
-        
+
         viewModelScope.launch {
             _uiState.update { it.copy(otpLoading = true, otpError = null) }
             authRepository.verifyPasswordResetOtp(email, otp)
                 .onSuccess {
-                    _uiState.update { 
+                    _uiState.update {
                         it.copy(
-                            otpLoading = false, 
-                            isOtpMode = false, 
-                            isNewPasswordMode = true 
-                        ) 
+                            otpLoading = false,
+                            isOtpMode = false,
+                            isNewPasswordMode = true
+                        )
                     }
                 }
                 .onFailure { error ->
-                    _uiState.update { 
+                    _uiState.update {
                         it.copy(
-                            otpLoading = false, 
+                            otpLoading = false,
                             otpError = parseAuthError(error.message)
-                        ) 
+                        )
                     }
                 }
         }
@@ -286,7 +284,7 @@ class AuthViewModel(
     fun cancelResetPassword() {
         viewModelScope.launch {
             authRepository.logout()
-            _uiState.update { 
+            _uiState.update {
                 it.copy(
                     isForgotPasswordMode = false,
                     isOtpMode = false,
@@ -294,7 +292,7 @@ class AuthViewModel(
                     newPassword = "",
                     confirmNewPassword = "",
                     resetPasswordError = null
-                ) 
+                )
             }
         }
     }
@@ -317,7 +315,7 @@ class AuthViewModel(
             _uiState.update { it.copy(resetPasswordLoading = true, resetPasswordError = null) }
             authRepository.updatePassword(state.newPassword)
                 .onSuccess {
-                    _uiState.update { 
+                    _uiState.update {
                         it.copy(
                             resetPasswordLoading = false,
                             isForgotPasswordMode = false,
@@ -325,18 +323,17 @@ class AuthViewModel(
                             isNewPasswordMode = false,
                             newPassword = "",
                             confirmNewPassword = ""
-                        ) 
+                        )
                     }
                 }
                 .onFailure { error ->
-                    _uiState.update { 
+                    _uiState.update {
                         it.copy(
-                            resetPasswordLoading = false, 
+                            resetPasswordLoading = false,
                             resetPasswordError = parseAuthError(error.message)
-                        ) 
+                        )
                     }
                 }
         }
     }
 }
-

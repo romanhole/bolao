@@ -87,7 +87,6 @@ fun LeaguesScreen(
         contentAlignment = Alignment.TopCenter
     ) {
         Column(modifier = Modifier.fillMaxHeight().widthIn(max = 680.dp)) {
-            
             // Header: Botões de ação
             Row(
                 modifier = Modifier
@@ -102,7 +101,7 @@ fun LeaguesScreen(
                     Icon(Icons.Default.Add, contentDescription = null)
                     Text("Criar Liga", modifier = Modifier.padding(start = 8.dp))
                 }
-                
+
                 ElevatedButton(
                     onClick = { showJoinDialog = true },
                     modifier = Modifier.weight(1f)

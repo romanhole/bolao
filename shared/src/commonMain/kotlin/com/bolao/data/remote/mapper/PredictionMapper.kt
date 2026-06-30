@@ -16,12 +16,13 @@ import com.bolao.domain.model.Prediction
  * temporariamente na camada de dados.
  */
 fun PredictionDto.toDomain(): Prediction = Prediction(
-    id            = id.orEmpty(),
-    matchId       = matchId,
-    userId        = userId,
+    id = id.orEmpty(),
+    matchId = matchId,
+    userId = userId,
     predictedHome = predictedHome,
     predictedAway = predictedAway,
-    pointsEarned  = pointsEarned,
+    predictedQualifier = predictedQualifier,
+    pointsEarned = pointsEarned,
 )
 
 /**
@@ -34,10 +35,11 @@ fun PredictionDto.toDomain(): Prediction = Prediction(
  *   O backend calcula os pontos; o cliente nunca deve alterar este campo.
  */
 fun Prediction.toDto(): PredictionDto = PredictionDto(
-    id            = id.ifEmpty { null },
-    matchId       = matchId,
-    userId        = userId,
+    id = id.ifEmpty { null },
+    matchId = matchId,
+    userId = userId,
     predictedHome = predictedHome,
     predictedAway = predictedAway,
-    pointsEarned  = pointsEarned,
+    predictedQualifier = predictedQualifier,
+    pointsEarned = pointsEarned,
 )

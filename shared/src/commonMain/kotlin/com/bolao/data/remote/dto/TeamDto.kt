@@ -21,9 +21,9 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class TeamDto(
-    @SerialName("id")         val id: String,
-    @SerialName("name")       val name: String,
+    @SerialName("id") val id: String,
+    @SerialName("name") val name: String,
     @SerialName("short_name") val shortName: String,
-    @SerialName("logo_url")   val logoUrl: String = "",
+    @SerialName("logo_url") val logoUrl: String = "",
     @SerialName("api_team_id") val apiTeamId: String? = null,
 )

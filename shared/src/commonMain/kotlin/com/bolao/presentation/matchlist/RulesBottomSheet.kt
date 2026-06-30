@@ -9,7 +9,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.TrendingUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -17,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -116,9 +114,21 @@ fun RulesBottomSheet(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                RuleRow(title = "Placar Exato", value = "5 pts", desc = "1 pt da tendência + 2 pts pelo saldo do mandante + 2 pts pelo saldo do visitante.")
-                RuleRow(title = "Tendência + 1 Saldo", value = "3 pts", desc = "Acertou o vencedor/empate + gols de um dos times (Ex: Palpite 3-1, Placar 2-1).")
-                RuleRow(title = "Apenas Tendência", value = "1 pt", desc = "Acertou apenas quem venceu ou que seria empate (Ex: Palpite 2-0, Placar 3-1).")
+                RuleRow(
+                    title = "Placar Exato",
+                    value = "5 pts",
+                    desc = "1 pt da tendência + 2 pts pelo saldo do mandante + 2 pts pelo saldo do visitante."
+                )
+                RuleRow(
+                    title = "Tendência + 1 Saldo",
+                    value = "3 pts",
+                    desc = "Acertou o vencedor/empate + gols de um dos times (Ex: Palpite 3-1, Placar 2-1)."
+                )
+                RuleRow(
+                    title = "Apenas Tendência",
+                    value = "1 pt",
+                    desc = "Acertou apenas quem venceu ou que seria empate (Ex: Palpite 2-0, Placar 3-1)."
+                )
                 RuleRow(title = "Erro", value = "0 pts", desc = "Errou o vencedor ou empate.")
             }
 

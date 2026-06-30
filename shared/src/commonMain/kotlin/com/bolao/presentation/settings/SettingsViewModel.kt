@@ -11,7 +11,6 @@ import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -39,7 +38,7 @@ class SettingsViewModel(
 
     init {
         checkPermissionConsistency()
-        _uiState.update { 
+        _uiState.update {
             it.copy(
                 isNotificationsEnabled = settingsManager.getBoolean("notifications_enabled", true),
                 hoursBeforeMatch = settingsManager.getInt("notification_hours_before", 1)

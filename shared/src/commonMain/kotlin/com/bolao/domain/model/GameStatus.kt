@@ -17,6 +17,15 @@ sealed class GameStatus {
     /** Intervalo (half-time). */
     data object HalfTime : GameStatus()
 
+    /** Prorrogação em andamento. */
+    data class ExtraTime(val minutePlayed: Int) : GameStatus()
+
+    /** Intervalo da prorrogação. */
+    data object ExtraTimeHalfTime : GameStatus()
+
+    /** Cobrança de pênaltis. */
+    data object Penalties : GameStatus()
+
     /** Partida encerrada com resultado definitivo. */
     data object Finished : GameStatus()
 

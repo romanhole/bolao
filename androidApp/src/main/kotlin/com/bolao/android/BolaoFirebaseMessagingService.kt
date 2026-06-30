@@ -53,13 +53,15 @@ class BolaoFirebaseMessagingService : FirebaseMessagingService() {
         val intent = Intent(this, MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         val pendingIntent = PendingIntent.getActivity(
-            this, 0, intent,
+            this,
+            0,
+            intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_ONE_SHOT
         )
 
         val channelId = "bolao_alerts"
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-        
+
         // CUIDADO: Estamos usando android.R.drawable.ic_dialog_info apenas como placeholder para não quebrar build
         // O ideal é usar o ícone mipmap do app: R.mipmap.ic_launcher, porém precisamos expor o recurso no Android
         val notificationBuilder = NotificationCompat.Builder(this, channelId)

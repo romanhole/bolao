@@ -14,7 +14,7 @@ class SettingsRepositoryImpl(
         val dto = supabase.postgrest["app_settings"]
             .select()
             .decodeSingle<SettingsDto>()
-            
+
         AppSettings(
             minVersionCode = dto.minVersionCode,
             latestVersionCode = dto.latestVersionCode

@@ -1,7 +1,7 @@
 package com.bolao.di
 
-import com.bolao.data.network.createHttpClient
 import com.bolao.config.AppConfig
+import com.bolao.data.network.createHttpClient
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient

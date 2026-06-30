@@ -20,6 +20,7 @@ data class MatchPredictionItem(
     val savedPrediction: Prediction?,
     val currentHomeGoals: Int,
     val currentAwayGoals: Int,
+    val currentQualifier: String? = null,
     val hasUnsavedChanges: Boolean,
     val isSaving: Boolean = false,
     val saveError: String? = null,

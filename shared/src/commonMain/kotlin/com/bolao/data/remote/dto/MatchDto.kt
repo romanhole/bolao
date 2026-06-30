@@ -36,32 +36,40 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class MatchDto(
-    @SerialName("id")                  val id: String,
+    @SerialName("id") val id: String,
 
     // Times embutidos via join PostgREST — o alias deve bater com @SerialName
-    @SerialName("home_team")           val homeTeam: TeamDto,
-    @SerialName("away_team")           val awayTeam: TeamDto,
+    @SerialName("home_team") val homeTeam: TeamDto,
+    @SerialName("away_team") val awayTeam: TeamDto,
 
     // Placar — null antes do início da partida
-    @SerialName("home_score")          val homeScore: Int? = null,
-    @SerialName("away_score")          val awayScore: Int? = null,
+    @SerialName("home_score") val homeScore: Int? = null,
+    @SerialName("away_score") val awayScore: Int? = null,
+
+    // Placar congelado aos 90 min, prorrogação e pênaltis
+    @SerialName("home_score_90") val homeScore90: Int? = null,
+    @SerialName("away_score_90") val awayScore90: Int? = null,
+    @SerialName("home_score_et") val homeScoreEt: Int? = null,
+    @SerialName("away_score_et") val awayScoreEt: Int? = null,
+    @SerialName("penalty_winner") val penaltyWinner: String? = null,
+    @SerialName("is_knockout") val isKnockout: Boolean = false,
 
     // Odds e Multiplicador (Nullable pois podem não estar disponíveis ainda)
-    @SerialName("home_odd")            val homeOdd: Double? = null,
-    @SerialName("draw_odd")            val drawOdd: Double? = null,
-    @SerialName("away_odd")            val awayOdd: Double? = null,
-    @SerialName("stage_multiplier")    val stageMultiplier: Float = 1.0f,
+    @SerialName("home_odd") val homeOdd: Double? = null,
+    @SerialName("draw_odd") val drawOdd: Double? = null,
+    @SerialName("away_odd") val awayOdd: Double? = null,
+    @SerialName("stage_multiplier") val stageMultiplier: Float = 1.0f,
 
     // Status e dados auxiliares do estado
-    @SerialName("status")              val status: String = "scheduled",
-    @SerialName("minute_played")       val minutePlayed: Int? = null,
-    @SerialName("interrupted_reason")  val interruptedReason: String? = null,
+    @SerialName("status") val status: String = "scheduled",
+    @SerialName("minute_played") val minutePlayed: Int? = null,
+    @SerialName("interrupted_reason") val interruptedReason: String? = null,
 
     // Data/hora no formato ISO 8601 com timezone (TIMESTAMPTZ do PostgreSQL)
-    @SerialName("scheduled_at")        val scheduledAt: String,
+    @SerialName("scheduled_at") val scheduledAt: String,
 
     // Metadados da competição
-    @SerialName("competition_id")      val competitionId: String,
-    @SerialName("competition")         val competition: String,
-    @SerialName("round")               val round: String,
+    @SerialName("competition_id") val competitionId: String,
+    @SerialName("competition") val competition: String,
+    @SerialName("round") val round: String,
 )

@@ -12,7 +12,7 @@ class PredictionCalculatorTest {
     fun testBasePoints_ExactScore_Returns5Points() {
         // Palpite: 2x1, Placar: 2x1 (Exato = 1 tendência + 2 mandante + 2 visitante)
         val points = PredictionCalculator.calculateEarnedPoints(
-            predHome = 2, predAway = 1, actualHome = 2, actualAway = 1,
+            predHome = 2, predAway = 1, actualHome90 = 2, actualAway90 = 1,
             stageMultiplier = 1.0f, homeOdd = 1.5, drawOdd = 3.5, awayOdd = 5.0
         )
         // Expected: 5 base * 1.0 → ROUND(5.0) + 0 zebra = 5
@@ -23,7 +23,7 @@ class PredictionCalculatorTest {
     fun testBasePoints_TrendAndOneScore_Returns3Points() {
         // Palpite: 3x1, Placar: 2x1 (Acertou Vitória e Gols do Visitante)
         val points = PredictionCalculator.calculateEarnedPoints(
-            predHome = 3, predAway = 1, actualHome = 2, actualAway = 1,
+            predHome = 3, predAway = 1, actualHome90 = 2, actualAway90 = 1,
             stageMultiplier = 1.0f, homeOdd = 1.5, drawOdd = 3.5, awayOdd = 5.0
         )
         // Expected: 1 tendência + 2 gols visitante = 3
@@ -34,7 +34,7 @@ class PredictionCalculatorTest {
     fun testBasePoints_OnlyTrend_Returns1Point() {
         // Palpite: 3x0, Placar: 2x1 (Acertou apenas Vitória)
         val points = PredictionCalculator.calculateEarnedPoints(
-            predHome = 3, predAway = 0, actualHome = 2, actualAway = 1,
+            predHome = 3, predAway = 0, actualHome90 = 2, actualAway90 = 1,
             stageMultiplier = 1.0f, homeOdd = 1.5, drawOdd = 3.5, awayOdd = 5.0
         )
         // Expected: 1 tendência = 1
@@ -45,7 +45,7 @@ class PredictionCalculatorTest {
     fun testBasePoints_WrongTrend_Returns0Points() {
         // Palpite: 1x2, Placar: 2x1 (Errou)
         val points = PredictionCalculator.calculateEarnedPoints(
-            predHome = 1, predAway = 2, actualHome = 2, actualAway = 1,
+            predHome = 1, predAway = 2, actualHome90 = 2, actualAway90 = 1,
             stageMultiplier = 1.0f, homeOdd = 1.5, drawOdd = 3.5, awayOdd = 5.0
         )
         // Expected: 0
@@ -59,7 +59,7 @@ class PredictionCalculatorTest {
         // Palpite: 2x1, Placar: 2x1 (5 pts base)
         // Fase: Oitavas de Final → 1.5x
         val points = PredictionCalculator.calculateEarnedPoints(
-            predHome = 2, predAway = 1, actualHome = 2, actualAway = 1,
+            predHome = 2, predAway = 1, actualHome90 = 2, actualAway90 = 1,
             stageMultiplier = 1.5f, homeOdd = 1.5, drawOdd = 3.5, awayOdd = 5.0
         )
         // Expected: ROUND(5 * 1.5) + 0 zebra = ROUND(7.5) = 8
@@ -71,7 +71,7 @@ class PredictionCalculatorTest {
         // Palpite: 3x0, Placar: 2x1 (1 pt base)
         // Fase: Oitavas de Final → 1.5x
         val points = PredictionCalculator.calculateEarnedPoints(
-            predHome = 3, predAway = 0, actualHome = 2, actualAway = 1,
+            predHome = 3, predAway = 0, actualHome90 = 2, actualAway90 = 1,
             stageMultiplier = 1.5f, homeOdd = 1.5, drawOdd = 3.5, awayOdd = 5.0
         )
         // Expected: ROUND(1 * 1.5) + 0 zebra = ROUND(1.5) = 2
@@ -83,7 +83,7 @@ class PredictionCalculatorTest {
         // Palpite: 2x1, Placar: 2x1 (5 pts base)
         // Fase: Quartas / Semifinal → 2.0x
         val points = PredictionCalculator.calculateEarnedPoints(
-            predHome = 2, predAway = 1, actualHome = 2, actualAway = 1,
+            predHome = 2, predAway = 1, actualHome90 = 2, actualAway90 = 1,
             stageMultiplier = 2.0f, homeOdd = 1.5, drawOdd = 3.5, awayOdd = 5.0
         )
         // Expected: ROUND(5 * 2.0) + 0 zebra = 10
@@ -95,7 +95,7 @@ class PredictionCalculatorTest {
         // Palpite: 2x1, Placar: 2x1 (5 pts base)
         // Fase: Final → 2.5x
         val points = PredictionCalculator.calculateEarnedPoints(
-            predHome = 2, predAway = 1, actualHome = 2, actualAway = 1,
+            predHome = 2, predAway = 1, actualHome90 = 2, actualAway90 = 1,
             stageMultiplier = 2.5f, homeOdd = 1.5, drawOdd = 3.5, awayOdd = 5.0
         )
         // Expected: ROUND(5 * 2.5) + 0 zebra = ROUND(12.5) = 13
@@ -107,7 +107,7 @@ class PredictionCalculatorTest {
         // Palpite: 3x0, Placar: 2x1 (1 pt base)
         // Fase: Final → 2.5x
         val points = PredictionCalculator.calculateEarnedPoints(
-            predHome = 3, predAway = 0, actualHome = 2, actualAway = 1,
+            predHome = 3, predAway = 0, actualHome90 = 2, actualAway90 = 1,
             stageMultiplier = 2.5f, homeOdd = 1.5, drawOdd = 3.5, awayOdd = 5.0
         )
         // Expected: ROUND(1 * 2.5) + 0 zebra = ROUND(2.5) = 3
@@ -121,7 +121,7 @@ class PredictionCalculatorTest {
         // Palpite: 1x1, Placar: 1x1 (5 pts base)
         // Empate Odd: 3.5 (faixa >= 3.0 → +2 zebra)
         val points = PredictionCalculator.calculateEarnedPoints(
-            predHome = 1, predAway = 1, actualHome = 1, actualAway = 1,
+            predHome = 1, predAway = 1, actualHome90 = 1, actualAway90 = 1,
             stageMultiplier = 1.0f, homeOdd = 2.0, drawOdd = 3.5, awayOdd = 4.0
         )
         // Expected: 5 + 2 = 7
@@ -133,7 +133,7 @@ class PredictionCalculatorTest {
         // Palpite: 0x1, Placar: 0x1 (5 pts base)
         // Visitante Odd: 6.0 (faixa >= 5.0 → +4 zebra)
         val points = PredictionCalculator.calculateEarnedPoints(
-            predHome = 0, predAway = 1, actualHome = 0, actualAway = 1,
+            predHome = 0, predAway = 1, actualHome90 = 0, actualAway90 = 1,
             stageMultiplier = 1.0f, homeOdd = 1.3, drawOdd = 4.0, awayOdd = 6.0
         )
         // Expected: 5 + 4 = 9
@@ -145,7 +145,7 @@ class PredictionCalculatorTest {
         // Palpite: 1x0, Placar: 1x0 (5 pts base)
         // Mandante Odd: 10.0 (faixa >= 9.0 → +7 zebra)
         val points = PredictionCalculator.calculateEarnedPoints(
-            predHome = 1, predAway = 0, actualHome = 1, actualAway = 0,
+            predHome = 1, predAway = 0, actualHome90 = 1, actualAway90 = 0,
             stageMultiplier = 1.0f, homeOdd = 10.0, drawOdd = 4.0, awayOdd = 1.1
         )
         // Expected: 5 + 7 = 12
@@ -156,7 +156,7 @@ class PredictionCalculatorTest {
     fun testZebraBonus_WithMultiplier_1_5x() {
         // Palpite: 1x1, Placar: 1x1 (5 pts base), Fase Oitavas 1.5x, Zebra Odd 3.5 (+2)
         val points = PredictionCalculator.calculateEarnedPoints(
-            predHome = 1, predAway = 1, actualHome = 1, actualAway = 1,
+            predHome = 1, predAway = 1, actualHome90 = 1, actualAway90 = 1,
             stageMultiplier = 1.5f, homeOdd = 2.0, drawOdd = 3.5, awayOdd = 4.0
         )
         // Expected: ROUND(5 * 1.5) + 2 zebra = 8 + 2 = 10
@@ -167,7 +167,7 @@ class PredictionCalculatorTest {
     fun testZebraBonus_WithMultiplier_2_5x() {
         // Palpite: 0x1, Placar: 0x1 (5 pts base), Fase Final 2.5x, Zebra Odd 6.0 (+4)
         val points = PredictionCalculator.calculateEarnedPoints(
-            predHome = 0, predAway = 1, actualHome = 0, actualAway = 1,
+            predHome = 0, predAway = 1, actualHome90 = 0, actualAway90 = 1,
             stageMultiplier = 2.5f, homeOdd = 1.3, drawOdd = 4.0, awayOdd = 6.0
         )
         // Expected: ROUND(5 * 2.5) + 4 zebra = 13 + 4 = 17

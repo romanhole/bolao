@@ -2,8 +2,8 @@ package com.bolao.presentation.matchlist
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bolao.domain.model.Prediction
 import com.bolao.domain.model.League
+import com.bolao.domain.model.Prediction
 import com.bolao.domain.repository.AuthRepository
 import com.bolao.domain.repository.LeaderboardRepository
 import com.bolao.domain.repository.LeagueRepository
@@ -58,9 +58,10 @@ class MatchListViewModel(
 
     /**
      * Edições locais ainda não salvas no backend.
-     * matchId → Pair(homeGoals, awayGoals)
      */
-    private val _draftEdits = MutableStateFlow<Map<String, Pair<Int, Int>>>(emptyMap())
+    private data class DraftEdit(val home: Int, val away: Int, val qualifier: String? = null)
+
+    private val _draftEdits = MutableStateFlow<Map<String, DraftEdit>>(emptyMap())
 
     /** Override local para atualizar a UI imediatamente enquanto o realtime não chega. */
     private val _savedPredictionsOverride = MutableStateFlow<Map<String, Prediction>>(emptyMap())
@@ -73,14 +74,14 @@ class MatchListViewModel(
 
     /** Estado interno por partida — isSaving e mensagem de erro. */
     private data class PerMatchMeta(
-        val isSaving: Boolean  = false,
+        val isSaving: Boolean = false,
         val saveError: String? = null,
     )
 
     private data class StateData(
         val matches: List<com.bolao.domain.model.Match>,
         val savedPredictions: List<Prediction>,
-        val drafts: Map<String, Pair<Int, Int>>,
+        val drafts: Map<String, DraftEdit>,
         val meta: Map<String, PerMatchMeta>,
         val currentRound: String?
     )
@@ -114,7 +115,7 @@ class MatchListViewModel(
             // Aguarda o userId real — App.kt garante que estamos autenticados aqui
             val user = authRepository.currentUser.filterNotNull().first()
             _currentUserId.value = user.userId
-            
+
             // Busca as ligas que o usuário participa
             leagueRepository.getUserLeagues().collect { leagues ->
                 _userLeagues.value = leagues
@@ -135,6 +136,7 @@ class MatchListViewModel(
      * - Flow de edições locais (em memória)
      * - Flow de estado de save por partida (em memória)
      */
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
     private fun observeData() {
         val clockTick = kotlinx.coroutines.flow.flow {
             while (true) {
@@ -167,7 +169,7 @@ class MatchListViewModel(
                 val drafts = data.drafts
                 val meta = data.meta
                 val currentRound = data.currentRound
-                
+
                 val rawRounds = matches.map { it.round }.distinct()
                 val orderMap = mapOf(
                     "Fase de Grupos" to 1,
@@ -182,12 +184,12 @@ class MatchListViewModel(
                     "Final" to 10
                 )
                 val availableRounds = rawRounds.sortedBy { orderMap[it] ?: 99 }
-                
+
                 var activeRound = currentRound
                 if (activeRound == null && matches.isNotEmpty()) {
-                    val firstRelevant = matches.firstOrNull { 
-                        it.status is com.bolao.domain.model.GameStatus.Scheduled || 
-                        it.status is com.bolao.domain.model.GameStatus.Live 
+                    val firstRelevant = matches.firstOrNull {
+                        it.status is com.bolao.domain.model.GameStatus.Scheduled ||
+                            it.status is com.bolao.domain.model.GameStatus.Live
                     }
                     activeRound = firstRelevant?.round ?: availableRounds.firstOrNull()
                     if (activeRound != null) {
@@ -199,36 +201,42 @@ class MatchListViewModel(
                 val predByMatchId = savedPredictions.associateBy { it.matchId }
 
                 val items = filteredMatches.map { match ->
-                    val saved     = predByMatchId[match.id]
-                    val draft     = drafts[match.id]
+                    val saved = predByMatchId[match.id]
+                    val draft = drafts[match.id]
                     val savedHome = saved?.predictedHome ?: 0
                     val savedAway = saved?.predictedAway ?: 0
                     val matchMeta = meta[match.id] ?: PerMatchMeta()
-
+                    val hasUnsavedChangesValue = saved == null || (
+                        draft != null && (
+                            draft.home != savedHome ||
+                                draft.away != savedAway ||
+                                draft.qualifier != saved.predictedQualifier
+                            )
+                        )
                     MatchPredictionItem(
-                        match             = match,
-                        savedPrediction   = saved,
-                        currentHomeGoals  = draft?.first  ?: savedHome,
-                        currentAwayGoals  = draft?.second ?: savedAway,
-                        hasUnsavedChanges = saved == null || (draft != null &&
-                            (draft.first != savedHome || draft.second != savedAway)),
-                        isSaving          = matchMeta.isSaving,
-                        saveError         = matchMeta.saveError,
+                        match = match,
+                        savedPrediction = saved,
+                        currentHomeGoals = draft?.home ?: savedHome,
+                        currentAwayGoals = draft?.away ?: savedAway,
+                        currentQualifier = draft?.qualifier ?: saved?.predictedQualifier,
+                        hasUnsavedChanges = hasUnsavedChangesValue,
+                        isSaving = matchMeta.isSaving,
+                        saveError = matchMeta.saveError,
                         isPredictionAllowed = match.isPredictionAllowed,
                     )
                 }
                 MatchListUiState.Success(items, availableRounds, activeRound)
             }
-            .catch { e ->
-                _uiState.value = MatchListUiState.Error(
-                    e.message ?: "Erro ao carregar partidas"
-                )
-            }
-            .collect { state ->
-                if (state is MatchListUiState.Success) {
-                    _uiState.value = state
+                .catch { e ->
+                    _uiState.value = MatchListUiState.Error(
+                        e.message ?: "Erro ao carregar partidas"
+                    )
                 }
-            }
+                .collect { state ->
+                    if (state is MatchListUiState.Success) {
+                        _uiState.value = state
+                    }
+                }
         }
     }
 
@@ -244,8 +252,8 @@ class MatchListViewModel(
      */
     fun updateHomeGoals(matchId: String, delta: Int) {
         val current = getOrInitDraft(matchId)
-        val newHome = (current.first + delta).coerceAtLeast(0)
-        _draftEdits.update { it + (matchId to Pair(newHome, current.second)) }
+        val newHome = (current.home + delta).coerceAtLeast(0)
+        _draftEdits.update { it + (matchId to current.copy(home = newHome)) }
     }
 
     /**
@@ -254,8 +262,16 @@ class MatchListViewModel(
      */
     fun updateAwayGoals(matchId: String, delta: Int) {
         val current = getOrInitDraft(matchId)
-        val newAway = (current.second + delta).coerceAtLeast(0)
-        _draftEdits.update { it + (matchId to Pair(current.first, newAway)) }
+        val newAway = (current.away + delta).coerceAtLeast(0)
+        _draftEdits.update { it + (matchId to current.copy(away = newAway)) }
+    }
+
+    /**
+     * Atualiza o palpite de qual time se classifica.
+     */
+    fun updateQualifier(matchId: String, qualifier: String) {
+        val current = getOrInitDraft(matchId)
+        _draftEdits.update { it + (matchId to current.copy(qualifier = qualifier)) }
     }
 
     /**
@@ -264,18 +280,19 @@ class MatchListViewModel(
      */
     fun savePrediction(matchId: String) {
         // Se o usuário não mexeu nos contadores, o draft será nulo. Assumimos o 0x0 inicial da tela.
-        val draft = _draftEdits.value[matchId] ?: Pair(0, 0)
+        val draft = _draftEdits.value[matchId] ?: DraftEdit(0, 0)
 
         viewModelScope.launch {
             // Sinaliza "salvando" para desabilitar o botão e mostrar spinner
             _perMatchMeta.update { it + (matchId to PerMatchMeta(isSaving = true)) }
 
             val prediction = Prediction(
-                id            = "",             // O backend gera o ID via UUID
-                matchId       = matchId,
-                userId        = _currentUserId.value,  // userId REAL do Supabase Auth
-                predictedHome = draft.first,
-                predictedAway = draft.second,
+                id = "", // O backend gera o ID via UUID
+                matchId = matchId,
+                userId = _currentUserId.value, // userId REAL do Supabase Auth
+                predictedHome = draft.home,
+                predictedAway = draft.away,
+                predictedQualifier = draft.qualifier,
             )
 
             predictionRepository.savePrediction(prediction)
@@ -288,9 +305,11 @@ class MatchListViewModel(
                 }
                 .onFailure { error ->
                     _perMatchMeta.update {
-                        it + (matchId to PerMatchMeta(
-                            saveError = error.message ?: "Erro ao salvar palpite. Tente novamente."
-                        ))
+                        it + (
+                            matchId to PerMatchMeta(
+                                saveError = error.message ?: "Erro ao salvar palpite. Tente novamente."
+                            )
+                            )
                     }
                 }
         }
@@ -310,16 +329,17 @@ class MatchListViewModel(
      * Retorna o draft existente para [matchId], ou inicializa a partir
      * do palpite já salvo (para que o usuário parta do valor que já confirmou).
      */
-    private fun getOrInitDraft(matchId: String): Pair<Int, Int> {
+    @Suppress("ReturnCount")
+    private fun getOrInitDraft(matchId: String): DraftEdit {
         _draftEdits.value[matchId]?.let { return it }
 
         val currentState = _uiState.value
         if (currentState is MatchListUiState.Success) {
-            val item  = currentState.items.find { it.match.id == matchId }
+            val item = currentState.items.find { it.match.id == matchId }
             val saved = item?.savedPrediction
-            return Pair(saved?.predictedHome ?: 0, saved?.predictedAway ?: 0)
+            return DraftEdit(saved?.predictedHome ?: 0, saved?.predictedAway ?: 0, saved?.predictedQualifier)
         }
-        return Pair(0, 0)
+        return DraftEdit(0, 0)
     }
 
     // ── Controle do Bottom Sheet de Palpites do Grupo ─────────────────────────
@@ -345,7 +365,7 @@ class MatchListViewModel(
     private fun loadSheetPredictions() {
         val matchId = _showPredictionsSheetForMatchId.value ?: return
         val leagueId = _selectedLeagueId.value ?: return
-        
+
         // Obter o estado atual da partida para usar os placares e odds reativos
         val currentState = _uiState.value
         if (currentState !is MatchListUiState.Success) return
@@ -353,7 +373,7 @@ class MatchListViewModel(
 
         viewModelScope.launch {
             _sheetIsLoading.value = true
-            
+
             // 1. Busca os membros da liga selecionada
             val leaderboardResult = leaderboardRepository.getLeaderboard(leagueId)
             val members = leaderboardResult.getOrNull() ?: emptyList()
@@ -362,30 +382,34 @@ class MatchListViewModel(
                 _sheetIsLoading.value = false
                 return@launch
             }
-            
+
             // 2. Busca os palpites desta partida apenas para estes membros
             val userIds = members.map { it.userId }
             val predictionsResult = predictionRepository.getMatchPredictionsByUsers(matchId, userIds)
             val predictions = predictionsResult.getOrNull() ?: emptyList()
-            
+
             // 3. Calcula os pontos ganhos
             val scores = members.mapNotNull { member ->
                 val pred = predictions.find { it.userId == member.userId } ?: return@mapNotNull null
                 val pts = PredictionCalculator.calculateEarnedPoints(
                     predHome = pred.predictedHome,
                     predAway = pred.predictedAway,
-                    actualHome = match.homeScore ?: 0,
-                    actualAway = match.awayScore ?: 0,
+                    actualHome90 = match.homeScore90 ?: match.homeScore ?: 0,
+                    actualAway90 = match.awayScore90 ?: match.awayScore ?: 0,
                     stageMultiplier = match.stageMultiplier,
                     homeOdd = match.homeOdd,
                     drawOdd = match.drawOdd,
-                    awayOdd = match.awayOdd
+                    awayOdd = match.awayOdd,
+                    isKnockout = match.isKnockout,
+                    predictedQualifier = pred.predictedQualifier,
+                    actualQualifier = match.penaltyWinner,
                 )
                 LiveMatchUserScore(
                     userId = member.userId,
                     nickname = member.nickname,
                     predictedHome = pred.predictedHome,
                     predictedAway = pred.predictedAway,
+                    predictedQualifier = pred.predictedQualifier,
                     partialPoints = pts
                 )
             }.sortedWith(
@@ -396,7 +420,7 @@ class MatchListViewModel(
                         kotlin.math.abs(it.predictedHome - actualHome) + kotlin.math.abs(it.predictedAway - actualAway)
                     }
             )
-            
+
             _sheetPredictions.value = scores
             _sheetIsLoading.value = false
         }

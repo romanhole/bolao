@@ -24,4 +24,3 @@ actual fun createHttpClient(): HttpClient =
             }
         }
     }.applyCommonConfig()
-
