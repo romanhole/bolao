@@ -114,6 +114,7 @@ import kotlinx.datetime.toLocalDateTime
  * @param onAwayGoalDecrement   Callback para decrementar gols do visitante
  * @param onSave                Callback para persistir o palpite atual
  */
+@Suppress("LongParameterList", "LongMethod", "FunctionNaming")
 @Composable
 fun MatchPredictionCard(
     item: MatchPredictionItem,
@@ -453,6 +454,7 @@ private fun StageMultiplierBadge(multiplier: Float) {
 }
 
 /** Badge "AO VIVO" ou "PRORROGAÇÃO" com ponto pulsante para chamar atenção. */
+@Suppress("FunctionNaming")
 @Composable
 private fun LiveBadge(minute: Int, label: String = "AO VIVO") {
     val transition = rememberInfiniteTransition(label = "LivePulse")
@@ -761,6 +763,7 @@ private fun GoalCounter(
  * Posicionado entre a área de times e o footer para não duplicar informação
  * dentro dos [TeamColumn]s individuais.
  */
+@Suppress("FunctionNaming")
 @Composable
 private fun RealScoreLabel(
     match: Match,
@@ -809,6 +812,7 @@ private fun RealScoreLabel(
 
 // ── Qualifier Selector ────────────────────────────────────────────────────────
 
+@Suppress("LongParameterList", "FunctionNaming")
 @Composable
 private fun QualifierSelector(
     homeTeam: Team,
@@ -856,6 +860,7 @@ private fun QualifierSelector(
     }
 }
 
+@Suppress("FunctionNaming")
 @Composable
 private fun QualifierOption(
     team: Team,

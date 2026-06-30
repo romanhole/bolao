@@ -157,6 +157,7 @@ fun MatchListScreen(
     }
 }
 
+@Suppress("LongParameterList", "FunctionNaming")
 @Composable
 private fun MatchListContent(
     items: List<MatchPredictionItem>,

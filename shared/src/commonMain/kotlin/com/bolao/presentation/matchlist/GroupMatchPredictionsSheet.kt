@@ -39,6 +39,7 @@ import com.bolao.domain.model.League
 import com.bolao.presentation.leagues.LiveMatchUserScore
 import com.bolao.presentation.theme.BolaoGold
 
+@Suppress("LongParameterList", "FunctionNaming")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupMatchPredictionsSheet(
@@ -128,6 +129,7 @@ fun GroupMatchPredictionsSheet(
     }
 }
 
+@Suppress("LongMethod", "FunctionNaming")
 @Composable
 private fun PredictionRow(
     match: com.bolao.domain.model.Match?,
@@ -212,7 +214,11 @@ private fun PredictionRow(
                 }
             }
             if (score.predictedQualifier != null && match != null) {
-                val qualifierName = if (score.predictedQualifier == "home") match.homeTeam.shortName else match.awayTeam.shortName
+                val qualifierName = if (score.predictedQualifier == "home") {
+                    match.homeTeam.shortName
+                } else {
+                    match.awayTeam.shortName
+                }
                 Surface(
                     shape = RoundedCornerShape(4.dp),
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
@@ -235,8 +241,7 @@ private fun PredictionRow(
         ) {
             Text(
                 text = "(${score.predictedHome}-${score.predictedAway})",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
                 modifier = Modifier.padding(end = 8.dp)
             )
             Text(

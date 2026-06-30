@@ -12,11 +12,11 @@ import com.bolao.domain.repository.MatchRepository
 import com.bolao.domain.repository.PredictionRepository
 import com.bolao.domain.usecase.PredictionCalculator
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -72,6 +72,7 @@ class LeagueDetailViewModel(
         loadLeagueDetail(id, silent = true)
     }
 
+    @Suppress("LongMethod")
     fun loadLeagueDetail(leagueId: String, silent: Boolean = false) {
         currentLeagueId = leagueId
         if (!silent) _uiState.value = LeagueDetailUiState.Loading

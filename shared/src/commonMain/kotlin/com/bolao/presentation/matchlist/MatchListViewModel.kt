@@ -60,7 +60,7 @@ class MatchListViewModel(
      * Edições locais ainda não salvas no backend.
      */
     private data class DraftEdit(val home: Int, val away: Int, val qualifier: String? = null)
-    
+
     private val _draftEdits = MutableStateFlow<Map<String, DraftEdit>>(emptyMap())
 
     /** Override local para atualizar a UI imediatamente enquanto o realtime não chega. */
@@ -136,6 +136,7 @@ class MatchListViewModel(
      * - Flow de edições locais (em memória)
      * - Flow de estado de save por partida (em memória)
      */
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
     private fun observeData() {
         val clockTick = kotlinx.coroutines.flow.flow {
             while (true) {
@@ -205,17 +206,20 @@ class MatchListViewModel(
                     val savedHome = saved?.predictedHome ?: 0
                     val savedAway = saved?.predictedAway ?: 0
                     val matchMeta = meta[match.id] ?: PerMatchMeta()
-
+                    val hasUnsavedChangesValue = saved == null || (
+                        draft != null && (
+                            draft.home != savedHome ||
+                                draft.away != savedAway ||
+                                draft.qualifier != saved.predictedQualifier
+                            )
+                        )
                     MatchPredictionItem(
                         match = match,
                         savedPrediction = saved,
                         currentHomeGoals = draft?.home ?: savedHome,
                         currentAwayGoals = draft?.away ?: savedAway,
                         currentQualifier = draft?.qualifier ?: saved?.predictedQualifier,
-                        hasUnsavedChanges = saved == null || (
-                            draft != null &&
-                                (draft.home != savedHome || draft.away != savedAway || draft.qualifier != saved.predictedQualifier)
-                            ),
+                        hasUnsavedChanges = hasUnsavedChangesValue,
                         isSaving = matchMeta.isSaving,
                         saveError = matchMeta.saveError,
                         isPredictionAllowed = match.isPredictionAllowed,
@@ -325,6 +329,7 @@ class MatchListViewModel(
      * Retorna o draft existente para [matchId], ou inicializa a partir
      * do palpite já salvo (para que o usuário parta do valor que já confirmou).
      */
+    @Suppress("ReturnCount")
     private fun getOrInitDraft(matchId: String): DraftEdit {
         _draftEdits.value[matchId]?.let { return it }
 

@@ -58,6 +58,7 @@ object PredictionCalculator {
      * Calcula os pontos ganhos baseados no resultado real do jogo.
      * Mesma lógica aplicada no backend via Trigger no Supabase.
      */
+    @Suppress("LongParameterList", "CyclomaticComplexMethod")
     fun calculateEarnedPoints(
         predHome: Int,
         predAway: Int,
@@ -98,8 +99,8 @@ object PredictionCalculator {
         }
 
         var qualifierBonus = 0
-        if (actualHome90 == actualAway90 && isKnockout && predictedQualifier != null && actualQualifier != null) {
-            if (predictedQualifier == actualQualifier) {
+        if (actualHome90 == actualAway90 && isKnockout) {
+            if (predictedQualifier != null && predictedQualifier == actualQualifier) {
                 qualifierBonus = 2
             }
         }

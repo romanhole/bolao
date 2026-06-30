@@ -58,7 +58,9 @@ data class Match(
     /** Time que de fato se classificou após um empate nos 90min (calculado no app para UI) */
     val actualQualifier: Team?
         get() {
-            if (!isKnockout || homeScore90 == null || awayScore90 == null || homeScore90 != awayScore90) return null
+            if (!isKnockout) return null
+            if (homeScore90 == null || awayScore90 == null) return null
+            if (homeScore90 != awayScore90) return null
             return when {
                 penaltyWinner == "home" -> homeTeam
                 penaltyWinner == "away" -> awayTeam
