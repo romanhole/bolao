@@ -205,7 +205,8 @@ fun RulesBottomSheet(
                 RuleRow(
                     title = "Acertou o classificado",
                     value = "+2 pts",
-                    desc = "Se o jogo for para prorrogação/pênaltis, você ganha +2 pts caso tenha escolhido o time que avançou, mesmo que erre o placar dos 90 min."
+                    desc = "Se o jogo for para prorrogação/pênaltis, você ganha +2 pts " +
+                        "caso tenha escolhido o time que avançou, mesmo que erre o placar dos 90 min."
                 )
             }
 
