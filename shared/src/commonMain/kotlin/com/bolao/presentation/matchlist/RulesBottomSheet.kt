@@ -187,6 +187,30 @@ fun RulesBottomSheet(
 
             Spacer(modifier = Modifier.height(1.dp).fillMaxWidth().background(MaterialTheme.colorScheme.outlineVariant))
 
+            // Qualifier points
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = "4. Bônus de Classificação (Mata-Mata)",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                Text(
+                    text = "Em jogos eliminatórios, todo palpite exige a escolha de 'Quem avança em caso de empate'.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                RuleRow(
+                    title = "Acertou o classificado",
+                    value = "+2 pts",
+                    desc = "Se o jogo for para prorrogação/pênaltis, você ganha +2 pts caso tenha escolhido o time que avançou, mesmo que erre o placar dos 90 min."
+                )
+            }
+
+            Spacer(modifier = Modifier.height(1.dp).fillMaxWidth().background(MaterialTheme.colorScheme.outlineVariant))
+
             // Info warning
             Row(
                 modifier = Modifier

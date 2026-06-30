@@ -71,6 +71,8 @@ object PredictionCalculator {
         isKnockout: Boolean = false,
         predictedQualifier: String? = null,
         actualQualifier: String? = null,
+        homeTeamId: String? = null,
+        awayTeamId: String? = null,
     ): Int {
         val predDiff = predHome - predAway
         val actualDiff = actualHome90 - actualAway90
@@ -99,8 +101,13 @@ object PredictionCalculator {
         }
 
         var qualifierBonus = 0
-        if (actualHome90 == actualAway90 && isKnockout) {
-            if (predictedQualifier != null && predictedQualifier == actualQualifier) {
+        if (actualHome90 == actualAway90 && isKnockout && actualQualifier != null) {
+            val userPredQualifier = when (predictedQualifier) {
+                homeTeamId -> "home"
+                awayTeamId -> "away"
+                else -> null
+            }
+            if (userPredQualifier != null && userPredQualifier == actualQualifier) {
                 qualifierBonus = 2
             }
         }

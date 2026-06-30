@@ -132,6 +132,8 @@ class LeagueDetailViewModel(
                                                 isKnockout = match.isKnockout,
                                                 predictedQualifier = pred.predictedQualifier,
                                                 actualQualifier = match.penaltyWinner,
+                                                homeTeamId = match.homeTeam.id,
+                                                awayTeamId = match.awayTeam.id,
                                             )
                                             LiveMatchUserScore(
                                                 userId = item.userId,
