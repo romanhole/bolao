@@ -362,6 +362,7 @@ class MatchListViewModel(
         loadSheetPredictions()
     }
 
+    @Suppress("CyclomaticComplexMethod", "LongMethod", "ReturnCount")
     private fun loadSheetPredictions() {
         val matchId = _showPredictionsSheetForMatchId.value ?: return
         val leagueId = _selectedLeagueId.value ?: return
@@ -401,7 +402,9 @@ class MatchListViewModel(
                         (match.awayScore ?: 0) > (match.homeScore ?: 0) -> "away"
                         else -> null
                     }
-                } else null
+                } else {
+                    null
+                }
 
                 val pts = PredictionCalculator.calculateEarnedPoints(
                     predHome = pred.predictedHome,
