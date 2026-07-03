@@ -72,7 +72,7 @@ class LeagueDetailViewModel(
         loadLeagueDetail(id, silent = true)
     }
 
-    @Suppress("LongMethod")
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
     fun loadLeagueDetail(leagueId: String, silent: Boolean = false) {
         currentLeagueId = leagueId
         if (!silent) _uiState.value = LeagueDetailUiState.Loading
@@ -120,6 +120,21 @@ class LeagueDetailViewModel(
                                     val partials = baseLeaderboard.mapNotNull { item ->
                                         val pred = matchPredictions.find { it.userId == item.userId }
                                         if (pred != null) {
+                                            val calculatedQualifier =
+                                                if (match.homeScore90 == match.awayScore90 && match.isKnockout) {
+                                                    when {
+                                                        match.penaltyWinner == "home" -> "home"
+                                                        match.penaltyWinner == "away" -> "away"
+                                                        (match.homeScoreEt ?: 0) > (match.awayScoreEt ?: 0) -> "home"
+                                                        (match.awayScoreEt ?: 0) > (match.homeScoreEt ?: 0) -> "away"
+                                                        (match.homeScore ?: 0) > (match.awayScore ?: 0) -> "home"
+                                                        (match.awayScore ?: 0) > (match.homeScore ?: 0) -> "away"
+                                                        else -> null
+                                                    }
+                                                } else {
+                                                    null
+                                                }
+
                                             val pts = PredictionCalculator.calculateEarnedPoints(
                                                 predHome = pred.predictedHome,
                                                 predAway = pred.predictedAway,
@@ -131,7 +146,7 @@ class LeagueDetailViewModel(
                                                 awayOdd = match.awayOdd,
                                                 isKnockout = match.isKnockout,
                                                 predictedQualifier = pred.predictedQualifier,
-                                                actualQualifier = match.penaltyWinner,
+                                                actualQualifier = calculatedQualifier,
                                                 homeTeamId = match.homeTeam.id,
                                                 awayTeamId = match.awayTeam.id,
                                             )

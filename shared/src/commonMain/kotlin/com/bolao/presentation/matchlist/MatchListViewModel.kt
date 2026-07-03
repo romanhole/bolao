@@ -362,6 +362,7 @@ class MatchListViewModel(
         loadSheetPredictions()
     }
 
+    @Suppress("CyclomaticComplexMethod", "LongMethod", "ReturnCount")
     private fun loadSheetPredictions() {
         val matchId = _showPredictionsSheetForMatchId.value ?: return
         val leagueId = _selectedLeagueId.value ?: return
@@ -391,6 +392,20 @@ class MatchListViewModel(
             // 3. Calcula os pontos ganhos
             val scores = members.mapNotNull { member ->
                 val pred = predictions.find { it.userId == member.userId } ?: return@mapNotNull null
+                val calculatedQualifier = if (match.homeScore90 == match.awayScore90 && match.isKnockout) {
+                    when {
+                        match.penaltyWinner == "home" -> "home"
+                        match.penaltyWinner == "away" -> "away"
+                        (match.homeScoreEt ?: 0) > (match.awayScoreEt ?: 0) -> "home"
+                        (match.awayScoreEt ?: 0) > (match.homeScoreEt ?: 0) -> "away"
+                        (match.homeScore ?: 0) > (match.awayScore ?: 0) -> "home"
+                        (match.awayScore ?: 0) > (match.homeScore ?: 0) -> "away"
+                        else -> null
+                    }
+                } else {
+                    null
+                }
+
                 val pts = PredictionCalculator.calculateEarnedPoints(
                     predHome = pred.predictedHome,
                     predAway = pred.predictedAway,
@@ -402,7 +417,7 @@ class MatchListViewModel(
                     awayOdd = match.awayOdd,
                     isKnockout = match.isKnockout,
                     predictedQualifier = pred.predictedQualifier,
-                    actualQualifier = match.penaltyWinner,
+                    actualQualifier = calculatedQualifier,
                     homeTeamId = match.homeTeam.id,
                     awayTeamId = match.awayTeam.id,
                 )
