@@ -1,26 +1,26 @@
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const BZZOIRO_API_KEY = Deno.env.get("BZZOIRO_API_KEY") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   try {
     // 1. Initialize Supabase Client with Admin privileges
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
       auth: { persistSession: false }
     });
 
-    // 2. Fetch matches from DB that might be live (6h ago up to 15m in future)
+    // 2. Fetch matches from DB that might be live or recently finished (6h ago up to 15m in future)
+    // We include 'finished' in the window (not excluded) so that the final score can still be corrected
+    // if the API updates it after marking the match as done.
     const now = new Date();
     const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString();
     const fifteenMinsFuture = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
 
     const { data: activeMatches, error: matchError } = await supabase
       .from("matches")
-      .select("api_fixture_id, home_score, away_score, home_score_90, away_score_90, status")
-      .neq("status", "finished")
+      .select("api_fixture_id, home_score, away_score, home_score_90, away_score_90, status, scheduled_at")
       .neq("status", "interrupted")
       .gte("scheduled_at", sixHoursAgo)
       .lte("scheduled_at", fifteenMinsFuture);
@@ -78,6 +78,10 @@ serve(async (req) => {
       let rawStatus = String(event.status).toLowerCase();
       let rawPeriod = event.period ? String(event.period).toLowerCase() : "";
 
+      // Time lock: only allow "live" if the match's scheduled time has actually arrived or passed
+      const scheduledTime = new Date(matchInDb.scheduled_at).getTime();
+      const isBeforeKickoff = Date.now() < scheduledTime;
+
       if (rawStatus === "halftime" || rawStatus === "ht" || rawPeriod === "halftime" || rawPeriod === "ht" || rawPeriod === "half-time") {
         dbStatus = "halftime";
       } else if (rawStatus === "finished" || rawStatus === "ended" || rawPeriod === "finished" || rawStatus === "ft") {
@@ -92,7 +96,7 @@ serve(async (req) => {
         rawStatus === "inprogress" || rawStatus === "live" || rawStatus === "1st_half" || rawStatus === "2nd_half" ||
         rawPeriod === "1st_half" || rawPeriod === "2nd_half" || rawPeriod === "1t" || rawPeriod === "2t"
       ) {
-        dbStatus = "live";
+        dbStatus = isBeforeKickoff ? "scheduled" : "live";
       } else if (rawStatus === "cancelled" || rawStatus === "postponed") {
         dbStatus = "interrupted";
       } else {
@@ -101,24 +105,39 @@ serve(async (req) => {
 
       let updateData: any = {
         status: dbStatus,
-        minute_played: ["live", "halftime", "extratime", "et_halftime", "penalties"].includes(dbStatus) ? (event.current_minute || null) : null
+        minute_played: ["live", "halftime", "extratime", "et_halftime", "penalties"].includes(dbStatus) ? (event.current_minute ?? null) : null
       };
 
+      const apiHomeScore = event.home_score ?? null;
+      const apiAwayScore = event.away_score ?? null;
+
       if (["extratime", "et_halftime", "penalties"].includes(dbStatus)) {
-        updateData.home_score_et = event.home_score || 0;
-        updateData.away_score_et = event.away_score || 0;
-        
+        // In extra time: the API score includes ET goals, store it in home_score_et
+        if (apiHomeScore !== null) updateData.home_score_et = apiHomeScore;
+        if (apiAwayScore !== null) updateData.away_score_et = apiAwayScore;
+
+        // Freeze the 90-min score only once (when first entering ET)
         if (matchInDb.home_score_90 === null) {
-          // Congela o placar usando o valor que já tínhamos no DB (o placar antes da prorrogação)
-          updateData.home_score_90 = matchInDb.home_score || 0;
-          updateData.away_score_90 = matchInDb.away_score || 0;
+          updateData.home_score_90 = matchInDb.home_score ?? 0;
+          updateData.away_score_90 = matchInDb.away_score ?? 0;
         }
       } else if (dbStatus === "finished") {
-        updateData.home_score = event.home_score || 0;
-        updateData.away_score = event.away_score || 0;
+        // Always update the final score when finished so corrections from the API land correctly
+        if (apiHomeScore !== null) updateData.home_score = apiHomeScore;
+        if (apiAwayScore !== null) updateData.away_score = apiAwayScore;
+
+        // If home_score_90 was never set (game ended in normal time), set it now from the final score
+        if (matchInDb.home_score_90 === null) {
+          // Only set 90-min score if there was no extra time recorded (i.e. pure normal-time finish)
+          if (matchInDb.home_score_et === null) {
+            updateData.home_score_90 = apiHomeScore ?? matchInDb.home_score ?? 0;
+            updateData.away_score_90 = apiAwayScore ?? matchInDb.away_score ?? 0;
+          }
+        }
       } else {
-        updateData.home_score = event.home_score || 0;
-        updateData.away_score = event.away_score || 0;
+        // Live / halftime: just update the running score
+        if (apiHomeScore !== null) updateData.home_score = apiHomeScore;
+        if (apiAwayScore !== null) updateData.away_score = apiAwayScore;
       }
 
       // 4. Update the matches table
@@ -146,7 +165,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ 
       message: `Successfully processed ${events.length} events.`,
-      debug: debugLogs 
+      debug: debugLogs
     }), {
       headers: { "Content-Type": "application/json" },
     });
