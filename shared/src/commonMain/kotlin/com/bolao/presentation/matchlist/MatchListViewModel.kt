@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -60,6 +62,15 @@ class MatchListViewModel(
      * Edições locais ainda não salvas no backend.
      */
     private data class DraftEdit(val home: Int, val away: Int, val qualifier: String? = null)
+
+    private val _refreshTrigger = MutableStateFlow(0)
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    fun refresh() {
+        _isRefreshing.value = true
+        _refreshTrigger.value += 1
+    }
 
     private val _draftEdits = MutableStateFlow<Map<String, DraftEdit>>(emptyMap())
 
@@ -147,7 +158,10 @@ class MatchListViewModel(
 
         viewModelScope.launch {
             val combinedData = combine(
-                matchRepository.observeMatchesByCompetition(COMPETITION_ID),
+                _refreshTrigger.flatMapLatest {
+                    matchRepository.observeMatchesByCompetition(COMPETITION_ID)
+                        .onEach { _isRefreshing.value = false }
+                },
                 combine(
                     predictionRepository.observePredictionsByUser(_currentUserId.value, COMPETITION_ID),
                     _savedPredictionsOverride

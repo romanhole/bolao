@@ -18,10 +18,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -48,6 +50,7 @@ fun MatchListScreen(
     val selectedLeagueId by viewModel.selectedLeagueId.collectAsState()
     val sheetPredictions by viewModel.sheetPredictions.collectAsState()
     val sheetIsLoading by viewModel.sheetIsLoading.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
 
     val currentUserId by viewModel.currentUserId.collectAsState()
 
@@ -99,7 +102,13 @@ fun MatchListScreen(
                     }
                 }
 
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+                @OptIn(ExperimentalMaterial3Api::class)
+                PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh = { viewModel.refresh() },
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.TopCenter
+                ) {
                     Column(modifier = Modifier.fillMaxHeight().widthIn(max = 680.dp)) {
                         if (state.availableRounds.isNotEmpty()) {
                             androidx.compose.material3.ScrollableTabRow(
