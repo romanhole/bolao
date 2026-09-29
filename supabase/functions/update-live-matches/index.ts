@@ -111,33 +111,31 @@ Deno.serve(async (req) => {
       const apiHomeScore = event.home_score ?? null;
       const apiAwayScore = event.away_score ?? null;
 
-      if (["extratime", "et_halftime", "penalties"].includes(dbStatus)) {
-        // In extra time: the API score includes ET goals, store it in home_score_et
-        if (apiHomeScore !== null) updateData.home_score_et = apiHomeScore;
-        if (apiAwayScore !== null) updateData.away_score_et = apiAwayScore;
+      const etHome = event.extra_time_score?.home ?? null;
+      const etAway = event.extra_time_score?.away ?? null;
 
-        // Freeze the 90-min score only once (when first entering ET)
-        if (matchInDb.home_score_90 === null) {
-          updateData.home_score_90 = matchInDb.home_score ?? 0;
-          updateData.away_score_90 = matchInDb.away_score ?? 0;
-        }
-      } else if (dbStatus === "finished") {
-        // Always update the final score when finished so corrections from the API land correctly
-        if (apiHomeScore !== null) updateData.home_score = apiHomeScore;
-        if (apiAwayScore !== null) updateData.away_score = apiAwayScore;
+      const penHome = event.penalty_shootout?.home ?? null;
+      const penAway = event.penalty_shootout?.away ?? null;
 
-        // If home_score_90 was never set (game ended in normal time), set it now from the final score
-        if (matchInDb.home_score_90 === null) {
-          // Only set 90-min score if there was no extra time recorded (i.e. pure normal-time finish)
-          if (matchInDb.home_score_et === null) {
-            updateData.home_score_90 = apiHomeScore ?? matchInDb.home_score ?? 0;
-            updateData.away_score_90 = apiAwayScore ?? matchInDb.away_score ?? 0;
-          }
-        }
-      } else {
-        // Live / halftime: just update the running score
-        if (apiHomeScore !== null) updateData.home_score = apiHomeScore;
-        if (apiAwayScore !== null) updateData.away_score = apiAwayScore;
+      let finalHome = apiHomeScore;
+      let finalAway = apiAwayScore;
+      if (finalHome !== null && etHome !== null) finalHome += etHome;
+      if (finalAway !== null && etAway !== null) finalAway += etAway;
+
+      // Update 90-min score
+      if (apiHomeScore !== null) updateData.home_score_90 = apiHomeScore;
+      if (apiAwayScore !== null) updateData.away_score_90 = apiAwayScore;
+
+      // Update final running score
+      if (finalHome !== null) updateData.home_score = finalHome;
+      if (finalAway !== null) updateData.away_score = finalAway;
+
+      if (etHome !== null) updateData.home_score_et = finalHome;
+      if (etAway !== null) updateData.away_score_et = finalAway;
+
+      if (penHome !== null && penAway !== null) {
+        if (penHome > penAway) updateData.penalty_winner = 'home';
+        else if (penAway > penHome) updateData.penalty_winner = 'away';
       }
 
       // 4. Update the matches table
