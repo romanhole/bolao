@@ -284,12 +284,36 @@ serve(async (req) => {
       const scheduledDateObj = new Date(event.event_date || event.scheduled_at || new Date().toISOString());
       const finalRoundName = mapRound(event, scheduledDateObj);
 
+      const apiHomeScore = typeof event.home_score === 'number' ? event.home_score : null;
+      const apiAwayScore = typeof event.away_score === 'number' ? event.away_score : null;
+      
+      const etHome = event.extra_time_score?.home ?? null;
+      const etAway = event.extra_time_score?.away ?? null;
+      const penHome = event.penalty_shootout?.home ?? null;
+      const penAway = event.penalty_shootout?.away ?? null;
+
+      let finalHome = apiHomeScore;
+      let finalAway = apiAwayScore;
+      if (finalHome !== null && etHome !== null) finalHome += etHome;
+      if (finalAway !== null && etAway !== null) finalAway += etAway;
+      
+      let penaltyWinner = null;
+      if (penHome !== null && penAway !== null) {
+        if (penHome > penAway) penaltyWinner = 'home';
+        else if (penAway > penHome) penaltyWinner = 'away';
+      }
+
       return {
         api_fixture_id: String(event.id),
         home_team_id: dbTeamMap.get(homeId),
         away_team_id: dbTeamMap.get(awayId),
-        home_score: typeof event.home_score === 'number' ? event.home_score : null,
-        away_score: typeof event.away_score === 'number' ? event.away_score : null,
+        home_score: finalHome,
+        away_score: finalAway,
+        home_score_90: apiHomeScore,
+        away_score_90: apiAwayScore,
+        home_score_et: etHome !== null ? finalHome : null,
+        away_score_et: etAway !== null ? finalAway : null,
+        penalty_winner: penaltyWinner,
         status: dbStatus,
         minute_played: (dbStatus === "live" || dbStatus === "halftime") ? (event.current_minute || null) : null,
         scheduled_at: scheduledDateObj.toISOString(),
