@@ -57,9 +57,15 @@ O usuário pode receber um bônus de risco caso o seu palpite coincida com uma a
 
 ## Qualidade e Testes
 
-A segurança das regras de negócio do Bolão é garantida em duas camadas:
+A segurança das regras de negócio e das telas do Bolão é garantida em camadas:
 1. **Testes Unitários**: O projeto utiliza `kotlin-test` para garantir que o motor de cálculo (`PredictionCalculator`) obedeça a todos os cenários matemáticos possíveis.
 2. **Automação (Git Hook)**: O repositório está configurado para barrar qualquer `git commit` caso um desenvolvedor quebre a lógica de pontuação. O `pre-commit` hook roda automaticamente a task `./gradlew testDebugUnitTest`.
+3. **Testes de UI (Compose + Robolectric)**: em `shared/src/androidUnitTest/kotlin/com/bolao/ui/`, rodam na JVM sem emulador e sem rede — os repositórios são substituídos por fakes (`shared/src/commonTest/kotlin/com/bolao/testing/`) injetados pelo Koin, e os elementos são localizados pelas tags de `TestTags`. No CI rodam no job **Compose UI Tests**, que publica os relatórios como artefato.
+   ```bash
+   ./gradlew :shared:testDebugUnitTest -PtestScope=ui     # só testes de UI (*UiTest)
+   ./gradlew :shared:testDebugUnitTest -PtestScope=unit   # só testes unitários
+   ./gradlew :shared:testDebugUnitTest                    # todos
+   ```
 
 ## Ambientes e Configuração
 

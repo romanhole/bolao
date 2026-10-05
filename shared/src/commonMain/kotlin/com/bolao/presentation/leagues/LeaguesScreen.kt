@@ -40,10 +40,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.bolao.domain.model.League
+import com.bolao.presentation.TestTags
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -96,7 +98,7 @@ fun LeaguesScreen(
             ) {
                 ElevatedButton(
                     onClick = { showCreateDialog = true },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).testTag(TestTags.LEAGUES_CREATE_BUTTON)
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null)
                     Text("Criar Liga", modifier = Modifier.padding(start = 8.dp))
@@ -104,7 +106,7 @@ fun LeaguesScreen(
 
                 ElevatedButton(
                     onClick = { showJoinDialog = true },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).testTag(TestTags.LEAGUES_JOIN_BUTTON)
                 ) {
                     Icon(Icons.Default.GroupAdd, contentDescription = null)
                     Text("Entrar", modifier = Modifier.padding(start = 8.dp))
@@ -115,12 +117,16 @@ fun LeaguesScreen(
             when (val state = uiState) {
                 is LeaguesUiState.Loading -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
+                        CircularProgressIndicator(modifier = Modifier.testTag(TestTags.LEAGUES_LOADING))
                     }
                 }
                 is LeaguesUiState.Error -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(state.message, color = MaterialTheme.colorScheme.error)
+                        Text(
+                            state.message,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.testTag(TestTags.LEAGUES_ERROR),
+                        )
                     }
                 }
                 is LeaguesUiState.Success -> {
@@ -129,7 +135,8 @@ fun LeaguesScreen(
                             Text(
                                 "Você não participa de nenhuma liga privada. Crie uma ou entre com um código de convite!",
                                 textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.testTag(TestTags.LEAGUES_EMPTY),
                             )
                         }
                     } else {
@@ -140,7 +147,8 @@ fun LeaguesScreen(
                             items(state.leagues) { league ->
                                 LeagueCard(
                                     league = league,
-                                    onClick = { onLeagueClick(league.id) }
+                                    onClick = { onLeagueClick(league.id) },
+                                    modifier = Modifier.testTag(TestTags.leagueCard(league.id)),
                                 )
                             }
                         }
@@ -167,21 +175,26 @@ fun LeaguesScreen(
                         value = name,
                         onValueChange = { name = it },
                         label = { Text("Nome da Liga") },
-                        singleLine = true
+                        singleLine = true,
+                        modifier = Modifier.testTag(TestTags.CREATE_LEAGUE_NAME_FIELD),
                     )
                     OutlinedTextField(
                         value = nickname,
                         onValueChange = { nickname = it },
                         label = { Text("Seu Apelido nesta Liga") },
-                        singleLine = true
+                        singleLine = true,
+                        modifier = Modifier.testTag(TestTags.CREATE_LEAGUE_NICKNAME_FIELD),
                     )
                 }
             },
             confirmButton = {
-                Button(onClick = {
-                    showCreateDialog = false
-                    viewModel.createLeague(name, nickname)
-                }) {
+                Button(
+                    onClick = {
+                        showCreateDialog = false
+                        viewModel.createLeague(name, nickname)
+                    },
+                    modifier = Modifier.testTag(TestTags.CREATE_LEAGUE_CONFIRM),
+                ) {
                     Text("Criar")
                 }
             },
@@ -205,21 +218,26 @@ fun LeaguesScreen(
                         value = code,
                         onValueChange = { code = it },
                         label = { Text("Código de Convite") },
-                        singleLine = true
+                        singleLine = true,
+                        modifier = Modifier.testTag(TestTags.JOIN_LEAGUE_CODE_FIELD),
                     )
                     OutlinedTextField(
                         value = nickname,
                         onValueChange = { nickname = it },
                         label = { Text("Seu Apelido nesta Liga") },
-                        singleLine = true
+                        singleLine = true,
+                        modifier = Modifier.testTag(TestTags.JOIN_LEAGUE_NICKNAME_FIELD),
                     )
                 }
             },
             confirmButton = {
-                Button(onClick = {
-                    showJoinDialog = false
-                    viewModel.joinLeague(code, nickname)
-                }) {
+                Button(
+                    onClick = {
+                        showJoinDialog = false
+                        viewModel.joinLeague(code, nickname)
+                    },
+                    modifier = Modifier.testTag(TestTags.JOIN_LEAGUE_CONFIRM),
+                ) {
                     Text("Entrar")
                 }
             },
@@ -232,13 +250,15 @@ fun LeaguesScreen(
     }
 }
 
+@Suppress("FunctionNaming")
 @Composable
 private fun LeagueCard(
     league: League,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        modifier = modifier.fillMaxWidth().clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )

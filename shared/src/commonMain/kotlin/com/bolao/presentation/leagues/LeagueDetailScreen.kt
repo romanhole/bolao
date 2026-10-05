@@ -51,12 +51,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.bolao.domain.model.LeaderboardItem
 import com.bolao.domain.model.League
 import com.bolao.presentation.BackHandlerWrapper
+import com.bolao.presentation.TestTags
 import com.bolao.presentation.theme.BolaoGold
 import com.bolao.presentation.theme.BolaoGreen
 import org.koin.compose.viewmodel.koinViewModel
@@ -84,7 +86,7 @@ fun LeagueDetailScreen(
             TopAppBar(
                 title = {
                     val title = (uiState as? LeagueDetailUiState.Success)?.league?.name ?: "Liga"
-                    Text(title, fontWeight = FontWeight.Bold)
+                    Text(title, fontWeight = FontWeight.Bold, modifier = Modifier.testTag(TestTags.LEAGUE_DETAIL_TITLE))
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -117,11 +119,16 @@ fun LeagueDetailScreen(
         ) {
             when (val state = uiState) {
                 is LeagueDetailUiState.Loading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center).testTag(TestTags.LEAGUE_DETAIL_LOADING)
+                    )
                 }
                 is LeagueDetailUiState.Error -> {
                     Column(
-                        modifier = Modifier.align(Alignment.Center).padding(24.dp),
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(24.dp)
+                            .testTag(TestTags.LEAGUE_DETAIL_ERROR),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(state.message, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
@@ -176,6 +183,7 @@ fun LeagueDetailScreen(
                                         modifier = Modifier
                                             .padding(horizontal = 16.dp)
                                             .animateItem()
+                                            .testTag(TestTags.rankingRow(item.userId))
                                     )
                                 }
                             }

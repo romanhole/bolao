@@ -33,4 +33,74 @@ jobs:
         run: ./gradlew :androidApp:assembleDebug
 
       - name: Run Unit Tests
-        run: ./gradlew :shared:testDebugUnitTest
+        # testScope=unit exclui as classes *UiTest, que rodam no job "Compose UI Tests"
+        run: ./gradlew :shared:testDebugUnitTest -PtestScope=unit
+
+      - name: Upload unit test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-reports
+          path: |
+            shared/build/reports/tests/testDebugUnitTest/
+            shared/build/test-results/testDebugUnitTest/
+          if-no-files-found: ignore
+
+  compose-ui-tests:
+    name: Compose UI Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Sem secrets do Supabase de propósito: os testes de UI usam fakes injetados
+    # pelo Koin e não podem depender de rede nem do ambiente de teste/produção.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      # O Robolectric baixa o "android-all" (framework Android para a JVM) na
+      # primeira execução; o cache evita ~100 MB de download a cada PR.
+      - name: Cache Robolectric android-all
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/robolectric
+          key: robolectric-${{ hashFiles('gradle/libs.versions.toml') }}
+          restore-keys: robolectric-
+
+      - name: Grant execute permission to gradlew
+        run: chmod +x gradlew
+
+      - name: Run Compose UI Tests (Robolectric)
+        run: ./gradlew :shared:testDebugUnitTest -PtestScope=ui
+
+      - name: Test summary
+        if: always()
+        run: |
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import glob, xml.etree.ElementTree as ET
+          rows, total_time, total = [], 0.0, 0
+          for f in sorted(glob.glob("shared/build/test-results/testDebugUnitTest/*.xml")):
+              suite = ET.parse(f).getroot()
+              for case in suite.iter("testcase"):
+                  failed = case.find("failure") is not None or case.find("error") is not None
+                  t = float(case.get("time", 0))
+                  total_time += t
+                  total += 1
+                  rows.append(f"| {case.get('classname').split('.')[-1]} | {case.get('name')} | {'❌' if failed else '✅'} | {t:.2f}s |")
+          print(f"### Compose UI Tests — {total} testes, {total_time:.1f}s de execução\n")
+          print("| Classe | Teste | Status | Tempo |\n|---|---|---|---|")
+          print("\n".join(rows))
+          PY
+
+      - name: Upload UI test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-ui-test-reports
+          path: |
+            shared/build/reports/tests/testDebugUnitTest/
+            shared/build/test-results/testDebugUnitTest/
+          if-no-files-found: warn
