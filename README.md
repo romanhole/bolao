@@ -104,6 +104,8 @@ Para empacotar o aplicativo como um Progressive Web App rodando via WebAssembly,
 Todos os binários, recursos HTML, JS e o ServiceWorker do PWA serão gerados na pasta: `shared/build/dist/wasmJs/productionExecutable/`. Hospede o conteúdo dessa pasta em qualquer provedor de hospedagem web.
 
 ### 2. Android App Bundle (Google Play Store)
+> **A keystore não é versionada.** Arquivos `*.jks`/`*.keystore` e os `.aab`/`.apk` gerados estão no `.gitignore`. Guarde a keystore de upload (e suas senhas) fora do repositório, em um backup seguro, e aponte `RELEASE_STORE_FILE` para ela no `local.properties`.
+
 A variante de release já vem ofuscada com o ProGuard/R8. Com o `local.properties` preenchido com as chaves da sua Keystore, gere o arquivo de produção executando:
 ```bash
 ./gradlew clean :androidApp:bundleRelease
