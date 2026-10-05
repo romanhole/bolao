@@ -1,3 +1,4 @@
+import java.time.Duration
 import java.util.Properties
 
 plugins {
@@ -204,7 +205,7 @@ tasks.withType<Test>().configureEach {
     // Robolectric + Compose precisa de mais que os 512 MB padrão do worker de teste
     maxHeapSize = "2g"
     // Falha rápido se algum teste travar, em vez de prender o runner até o timeout do job
-    timeout.set(java.time.Duration.ofMinutes(10))
+    timeout.set(Duration.ofMinutes(10))
     // Lista cada teste (com status) no log do CI; falhas com stack trace completo
     testLogging {
         events("passed", "skipped", "failed")
