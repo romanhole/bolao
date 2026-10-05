@@ -18,6 +18,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 /**
  * Tela de Ligas: carregamento, erro, criar liga e entrar em liga por código.
@@ -25,6 +26,7 @@ import org.robolectric.annotation.Config
  */
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [UiTestConfig.SDK], qualifiers = UiTestConfig.PHONE_QUALIFIERS)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class LeaguesScreenUiTest {
 
     private val leagueRepository = FakeLeagueRepository(

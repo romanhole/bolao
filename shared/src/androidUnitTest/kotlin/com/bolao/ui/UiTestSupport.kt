@@ -27,6 +27,8 @@ import org.koin.dsl.module
  * Configuração Robolectric comum aos testes de UI.
  * - SDK 34: último que o Robolectric roda em JDK 17 (o do CI); o app compila com 36.
  * - Tela de celular comum (411x914dp), para os layouts "Compact" do app.
+ * - Cada classe usa `@GraphicsMode(NATIVE)`: o modo LEGACY simula a quebra de linha de
+ *   texto (ShadowLineBreaker) sem liberar memória, e a suíte estourava o heap.
  */
 object UiTestConfig {
     const val SDK = 34

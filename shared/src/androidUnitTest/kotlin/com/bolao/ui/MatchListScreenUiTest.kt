@@ -18,6 +18,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 /**
  * Tela de Palpites: registrar um palpite numa partida aberta.
@@ -25,6 +26,7 @@ import org.robolectric.annotation.Config
  */
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [UiTestConfig.SDK], qualifiers = UiTestConfig.PHONE_QUALIFIERS)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class MatchListScreenUiTest {
 
     private val match = TestData.scheduledMatch()

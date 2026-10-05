@@ -16,6 +16,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 /**
  * Classificação da liga: ordena por pontos e desempata por placares exatos.
@@ -23,6 +24,7 @@ import org.robolectric.annotation.Config
  */
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [UiTestConfig.SDK], qualifiers = UiTestConfig.PHONE_QUALIFIERS)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class LeagueDetailScreenUiTest {
 
     private val league = TestData.leagueAmigos
