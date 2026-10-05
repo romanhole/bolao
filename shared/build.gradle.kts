@@ -185,6 +185,9 @@ android {
         // Robolectric precisa dos recursos/manifest mesclados (tema, ComponentActivity de teste)
         unitTests.isIncludeAndroidResources = true
     }
+
+    // Manifest só de teste (ver comentário no arquivo): libera o minSdk do Kamel nos testes
+    sourceSets.getByName("test").manifest.srcFile("src/androidUnitTest/AndroidManifest.xml")
 }
 
 // ── Separação entre testes unitários e testes de UI no CI ─────────────────────

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Manifest usado só nos testes unitários/UI (Robolectric).
+  Com unitTests.isIncludeAndroidResources = true o AGP mescla o manifest de teste, e o
+  kamel-decoder-animated-image declara minSdk 28 (o módulo usa 26). Os testes nunca
+  carregam imagens (os times de teste não têm apiTeamId), então liberamos o Kamel aqui.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-sdk tools:overrideLibrary="io.kamel.image" />
+</manifest>
