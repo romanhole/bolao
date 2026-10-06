@@ -1,3 +1,4 @@
+import java.time.Duration
 import java.util.Properties
 
 plugins {
@@ -137,6 +138,19 @@ kotlin {
         commonTest.dependencies {
             implementation(kotlin("test"))
         }
+
+        // ── androidUnitTest: testes de UI Compose na JVM (Robolectric) ───────
+        // Rodam no mesmo `testDebugUnitTest` dos testes unitários, sem emulador.
+        val androidUnitTest by getting {
+            dependencies {
+                implementation(libs.androidx.compose.ui.test.junit4)
+                // Registra a ComponentActivity vazia usada por createComposeRule()
+                implementation(libs.androidx.compose.ui.test.manifest)
+                implementation(libs.androidx.test.ext.junit)
+                implementation(libs.robolectric)
+                implementation(libs.junit)
+            }
+        }
     }
 }
 
@@ -166,6 +180,36 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    testOptions {
+        // Robolectric precisa dos recursos/manifest mesclados (tema, ComponentActivity de teste)
+        unitTests.isIncludeAndroidResources = true
+    }
+
+    // Manifest só de teste (ver comentário no arquivo): libera o minSdk do Kamel nos testes
+    sourceSets.getByName("test").manifest.srcFile("src/androidUnitTest/AndroidManifest.xml")
+}
+
+// ── Separação entre testes unitários e testes de UI no CI ─────────────────────
+// Por convenção, classes de teste de UI terminam em "UiTest".
+//   ./gradlew :shared:testDebugUnitTest -PtestScope=unit  → só testes unitários
+//   ./gradlew :shared:testDebugUnitTest -PtestScope=ui    → só testes de UI
+//   ./gradlew :shared:testDebugUnitTest                   → todos (uso local)
+val testScope = providers.gradleProperty("testScope").orNull
+tasks.withType<Test>().configureEach {
+    when (testScope) {
+        "ui" -> filter.includeTestsMatching("*UiTest")
+        "unit" -> filter.excludeTestsMatching("*UiTest")
+    }
+    // Robolectric + Compose precisa de mais que os 512 MB padrão do worker de teste
+    maxHeapSize = "2g"
+    // Falha rápido se algum teste travar, em vez de prender o runner até o timeout do job
+    timeout.set(Duration.ofMinutes(10))
+    // Lista cada teste (com status) no log do CI; falhas com stack trace completo
+    testLogging {
+        events("passed", "skipped", "failed")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
     }
 }
 

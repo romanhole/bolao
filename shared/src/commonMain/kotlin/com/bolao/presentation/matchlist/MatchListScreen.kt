@@ -31,8 +31,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.bolao.presentation.TestTags
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -71,7 +73,7 @@ fun MatchListScreen(
         when (val state = uiState) {
             is MatchListUiState.Loading -> {
                 CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
+                    modifier = Modifier.align(Alignment.Center).testTag(TestTags.MATCHES_LOADING),
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
@@ -80,7 +82,7 @@ fun MatchListScreen(
                 ErrorContent(
                     message = state.message,
                     onRetry = { /* TODO */ },
-                    modifier = Modifier.align(Alignment.Center),
+                    modifier = Modifier.align(Alignment.Center).testTag(TestTags.MATCHES_ERROR),
                 )
             }
 
@@ -201,6 +203,7 @@ private fun MatchListContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
+                    .testTag(TestTags.matchCard(item.match.id))
                     // Anima o aparecimento dos cards
                     .animateItem(),
             )

@@ -56,6 +56,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -64,6 +65,7 @@ import com.bolao.domain.model.GameStatus
 import com.bolao.domain.model.Match
 import com.bolao.domain.model.Team
 import com.bolao.domain.usecase.PredictionCalculator
+import com.bolao.presentation.TestTags
 import com.bolao.presentation.theme.BolaoGold
 import com.bolao.presentation.theme.BolaoGoldDark
 import com.bolao.presentation.theme.BolaoGoldLight
@@ -169,6 +171,8 @@ fun MatchPredictionCard(
                 // Mandante (home)
                 TeamColumn(
                     team = item.match.homeTeam,
+                    matchId = item.match.id,
+                    side = TestTags.SIDE_HOME,
                     goalCount = item.currentHomeGoals,
                     isEditable = isEditable,
                     onIncrement = onHomeGoalIncrement,
@@ -187,6 +191,8 @@ fun MatchPredictionCard(
                 // Visitante (away)
                 TeamColumn(
                     team = item.match.awayTeam,
+                    matchId = item.match.id,
+                    side = TestTags.SIDE_AWAY,
                     goalCount = item.currentAwayGoals,
                     isEditable = isEditable,
                     onIncrement = onAwayGoalIncrement,
@@ -517,9 +523,12 @@ private fun StatusPill(text: String, color: Color) {
  * Coluna com logo do time, nome e contador de gols.
  * O layout é centrado horizontalmente para ambos os lados ficarem simétricos.
  */
+@Suppress("FunctionNaming", "LongParameterList")
 @Composable
 private fun TeamColumn(
     team: Team,
+    matchId: String,
+    side: String,
     goalCount: Int,
     isEditable: Boolean,
     onIncrement: () -> Unit,
@@ -547,6 +556,8 @@ private fun TeamColumn(
 
         // Contador de gols — interativo ou estático dependendo do status
         GoalCounter(
+            matchId = matchId,
+            side = side,
             count = goalCount,
             isEditable = isEditable,
             onIncrement = onIncrement,
@@ -664,8 +675,11 @@ private fun ShimmerPlaceholder(
  *
  * A transição entre os modos usa AnimatedContent com fadeIn/fadeOut.
  */
+@Suppress("FunctionNaming", "LongParameterList")
 @Composable
 private fun GoalCounter(
+    matchId: String,
+    side: String,
     count: Int,
     isEditable: Boolean,
     onIncrement: () -> Unit,
@@ -687,7 +701,7 @@ private fun GoalCounter(
                 FilledTonalIconButton(
                     onClick = onDecrement,
                     enabled = count > 0,
-                    modifier = Modifier.size(36.dp),
+                    modifier = Modifier.size(36.dp).testTag(TestTags.goalDecrement(matchId, side)),
                     colors = IconButtonDefaults.filledTonalIconButtonColors(
                         containerColor = DarkCardVariant,
                     ),
@@ -716,13 +730,14 @@ private fun GoalCounter(
                         fontWeight = FontWeight.Black,
                         color = MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Center,
+                        modifier = Modifier.testTag(TestTags.goalValue(matchId, side)),
                     )
                 }
 
                 // Botão incremento — sempre habilitado
                 FilledIconButton(
                     onClick = onIncrement,
-                    modifier = Modifier.size(36.dp),
+                    modifier = Modifier.size(36.dp).testTag(TestTags.goalIncrement(matchId, side)),
                     colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = BolaoGreen.copy(alpha = 0.85f),
                         contentColor = Color.Black,
@@ -747,6 +762,7 @@ private fun GoalCounter(
                     fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center,
+                    modifier = Modifier.testTag(TestTags.goalValue(matchId, side)),
                 )
             }
         }
@@ -929,6 +945,7 @@ private fun MatchCardFooter(
                 isSaving = item.isSaving,
                 isUpdate = item.savedPrediction != null,
                 onSave = onSave,
+                modifier = Modifier.testTag(TestTags.saveButton(item.match.id)),
             )
 
             // 3. Jogo em andamento sem palpite prévio → aviso
@@ -1008,17 +1025,19 @@ private fun PointsBadge(points: Int) {
  * @param isSaving   Exibe spinner e desabilita durante o save
  * @param isUpdate   Altera o label para "Atualizar" se já havia palpite salvo
  */
+@Suppress("FunctionNaming")
 @Composable
 private fun SaveButton(
     hasChanges: Boolean,
     isSaving: Boolean,
     isUpdate: Boolean,
     onSave: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Button(
         onClick = onSave,
         enabled = hasChanges && !isSaving,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = BolaoGreen,
