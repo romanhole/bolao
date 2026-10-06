@@ -44,6 +44,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import com.bolao.domain.model.League
 import com.bolao.presentation.TestTags
 import org.koin.compose.viewmodel.koinViewModel
@@ -168,6 +169,11 @@ fun LeaguesScreen(
         var nickname by remember { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { showCreateDialog = false },
+            // Largura definida pelo conteúdo (280–560dp do Material 3) com margem lateral, em vez
+            // da largura padrão da plataforma: com campo de texto dentro, a largura padrão faz o
+            // Robolectric medir a janela do diálogo em loop e os testes de UI travam.
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+            modifier = Modifier.padding(horizontal = 24.dp),
             title = { Text("Criar Nova Liga") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -211,6 +217,11 @@ fun LeaguesScreen(
         var nickname by remember { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { showJoinDialog = false },
+            // Largura definida pelo conteúdo (280–560dp do Material 3) com margem lateral, em vez
+            // da largura padrão da plataforma: com campo de texto dentro, a largura padrão faz o
+            // Robolectric medir a janela do diálogo em loop e os testes de UI travam.
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+            modifier = Modifier.padding(horizontal = 24.dp),
             title = { Text("Entrar em uma Liga") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
