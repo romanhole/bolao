@@ -63,7 +63,7 @@ Valores válidos em `matches.status`: `scheduled`, `live`, `halftime`, `extratim
 |---|---|
 | PAR-05 | Uma partida **nunca** vira `live` antes do `scheduled_at` (trava de horário na `update-live-matches`): se a API disser que está em andamento antes da hora, o status fica `scheduled`. |
 | PAR-06 | `cancelled`/`postponed` da API viram `interrupted` na `update-live-matches` (e `cancelled` na `sync-world-cup-schedule`). Partidas interrompidas não pontuam. |
-| PAR-07 | A pontuação só é calculada quando o status **transita para `finished`** (ver PON-09). |
+| PAR-07 | A pontuação só é calculada para partidas `finished` (ver PON-09). |
 
 ### 3.3 Semântica dos campos de placar (definida em 29/09/2026)
 
@@ -91,8 +91,8 @@ Valores válidos em `matches.status`: `scheduled`, `live`, `halftime`, `extratim
 | PAL-03 | **Janela de palpite:** só é possível criar ou editar **antes do `scheduled_at`** da partida. Garantido por RLS (`scheduled_at > now()`, migration `time_lock_rls`). No app, a edição também exige status `scheduled`. |
 | PAL-04 | O palpite só existe depois que o usuário toca em **"Confirmar Palpite"**. Se ele confirmar sem mexer nos contadores, o palpite salvo é **0 x 0**. Sem palpite confirmado = **0 pontos** (não existe palpite automático). |
 | PAL-05 | Em partidas de **mata-mata**, o card sempre mostra o seletor **"Em caso de empate, quem avança?"**, independentemente do placar palpitado. |
-| PAL-06 | O seletor grava o **UUID do time** (`teams.id`) em `predictions.predicted_qualifier` — não `'home'`/`'away'`. |
-| PAL-07 | **Visibilidade:** os palpites dos outros membros da liga ficam **ocultos até a partida começar**. O botão "Ver palpites da galera" só aparece quando a partida não está mais aberta a palpites. (Ver [DIV-04](#12-divergências-conhecidas-e-decisões-pendentes) sobre a proteção no banco.) |
+| PAL-06 | O seletor grava o **UUID do time** (`teams.id`) em `predictions.predicted_qualifier` — não `'home'`/`'away'`. O banco rejeita qualquer valor que não seja um dos dois times da partida (trigger `validate_predicted_qualifier`). |
+| PAL-07 | **Visibilidade:** os palpites dos outros membros da liga ficam **ocultos até a partida começar**. Garantido no banco pela RLS `predictions_select_league_members`: palpites de terceiros só são legíveis quando `scheduled_at <= now()`, o mesmo instante em que o palpite trava (PAL-03). Na UI, o botão "Ver palpites da galera" só aparece quando a partida não está mais aberta a palpites. |
 | PAL-08 | Um usuário só vê palpites de pessoas com quem compartilha **ao menos uma liga** (RLS `predictions_select_league_members`). |
 
 ---
@@ -154,14 +154,14 @@ Só se o usuário **acertou a tendência**. Usa a odd do resultado que aconteceu
 | Independência | É **independente da tendência**: o usuário pode errar o placar/tendência e ainda ganhar os +2. |
 | Sem seleção | `predicted_qualifier` nulo = sem bônus. |
 
-> ⚠️ **Decisão revogada — não reintroduzir:** em 30/06/2026 existiu uma versão (`qualifier_fix_v2.sql`) que **deduzia o classificado a partir do placar palpitado** (se palpitou 2x1 para o mandante, considerava o mandante como escolhido) e só usava o seletor em palpites de empate. Isso foi **substituído** pela regra acima ("prioridade do seletor").
+> ⚠️ **Decisão revogada — não reintroduzir:** em 30/06/2026 existiu uma versão (`qualifier_fix_v2.sql`, hoje só no histórico do git) que **deduzia o classificado a partir do placar palpitado** (se palpitou 2x1 para o mandante, considerava o mandante como escolhido) e só usava o seletor em palpites de empate. Isso foi **substituído** pela regra acima ("prioridade do seletor").
 
 ### 5.6 Quando a pontuação é gravada (PON-09)
 
 | ID | Regra |
 |---|---|
-| PON-09 | O trigger `trigger_calculate_prediction_points` (AFTER UPDATE em `matches`) recalcula **todos os palpites da partida** apenas quando `status` muda **de qualquer valor para `finished`**. |
-| PON-10 | Corrigir placar de uma partida já `finished` **não** recalcula sozinho. Para recalcular: mudar o status para outro valor e voltar para `finished` (ex.: `scheduled` → `finished`). (Ver [DIV-05](#12-divergências-conhecidas-e-decisões-pendentes).) |
+| PON-09 | O trigger `trigger_calculate_prediction_points` (AFTER UPDATE em `matches`) recalcula **todos os palpites da partida** quando o `status` passa a ser `finished` **e também**, com a partida já encerrada, sempre que muda algum dado que entra no cálculo: placares (90', prorrogação, final), `penalty_winner`, odds, `stage_multiplier`, `is_knockout` ou times. Correções de placar feitas pela API depois do apito final atualizam os pontos automaticamente. |
+| PON-10 | Recálculo manual, quando necessário: `SELECT public.recalculate_match_points('<match_id>');` (só backend/dashboard; usuários não podem executar). Não use mais o truque de trocar o status para `scheduled` e voltar para `finished`. Para listar palpites com pontos desatualizados, veja o comentário no topo da migration `20261007000000_scoring_trigger_consolidation.sql`. |
 
 ### 5.7 Casos de referência (use como teste)
 
@@ -272,11 +272,12 @@ Ao mudar uma regra de pontuação, **todos** os itens da linha precisam mudar ju
 
 | Regra | Onde está |
 |---|---|
-| Fórmula de pontos (base, zebra, multiplicador, classificação) | **Oficial:** função SQL `public.calculate_prediction_points()` — a versão vigente em produção é a de `realtime_fix.sql` (ver DIV-01). **Espelho:** `shared/src/commonMain/kotlin/com/bolao/domain/usecase/PredictionCalculator.kt`. **Testes:** `shared/src/commonTest/kotlin/com/bolao/domain/usecase/PredictionCalculatorTest.kt`. **Texto ao usuário:** `RulesBottomSheet.kt`, `README.md`, `OnboardingScreen.kt`. |
+| Fórmula de pontos (base, zebra, multiplicador, classificação) | **Oficial:** função SQL `public.prediction_points(match, prediction)`, chamada pelo trigger `calculate_prediction_points` via `recalculate_match_points` (migration `20261007000000_scoring_trigger_consolidation.sql`). Os casos da seção 5.7 foram validados contra ela. **Espelho:** `shared/src/commonMain/kotlin/com/bolao/domain/usecase/PredictionCalculator.kt`. **Testes:** `shared/src/commonTest/kotlin/com/bolao/domain/usecase/PredictionCalculatorTest.kt`. **Texto ao usuário:** `RulesBottomSheet.kt`, `README.md`, `OnboardingScreen.kt`. |
 | Quem se classificou (PAR-09) | Trigger SQL; `Match.actualQualifier` (`domain/model/Match.kt`); bloco `calculatedQualifier` duplicado em `MatchListViewModel.kt` e `LeagueDetailViewModel.kt`. |
 | Multiplicador e mata-mata por fase | Migrations `20260611000001_auto_stage_multiplier.sql` e `20260629000000_knockout_stage_points.sql`; nomes das fases em `supabase/functions/sync-world-cup-schedule/index.ts`; ordem das abas em `MatchListViewModel.kt`; badge em `MatchPredictionCard.kt`. |
 | Placar 90'/prorrogação/pênaltis | `supabase/functions/update-live-matches/index.ts` e `sync-world-cup-schedule/index.ts`. |
 | Trava de horário | RLS em `20260527000001_time_lock_rls.sql`; `Match.isPredictionAllowed`; trava de "live" em `update-live-matches`. |
+| Ocultar palpites até o início (PAL-07) | RLS em `20261007000001_hide_predictions_until_kickoff.sql`; botão "Ver palpites da galera" em `MatchPredictionCard.kt`. |
 | Odds e congelamento | `supabase/functions/update-upcoming-odds/index.ts`. |
 | Ranking | View `league_leaderboard`; ordenação em `LeagueDetailViewModel.kt`. |
 | Notificações | `supabase/functions/notify-upcoming-matches/index.ts`; opções em `SettingsScreen.kt`. |
@@ -289,11 +290,7 @@ Itens em que o código atual **não** está alinhado com as regras acima, ou em 
 
 | ID | Divergência | Impacto |
 |---|---|---|
-| DIV-01 | A versão vigente do trigger de pontos foi aplicada pelo script solto `realtime_fix.sql`, e **não existe como migration**. A última migration (`20260629000000_knockout_stage_points.sql`) compara `predicted_qualifier` com `'home'/'away'`, e não com o UUID do time. | Recriar o banco só pelas migrations **quebra o bônus de classificação** (PON-08). É preciso transformar `realtime_fix.sql` em migration. |
-| DIV-02 | A migration `20260629000000` cria `CHECK (predicted_qualifier IN ('home','away'))`, mas o app grava o UUID do time (PAL-06). Em produção a constraint provavelmente foi removida à mão. | Em banco novo, salvar palpite de mata-mata com seletor **falha**. |
 | DIV-03 | A tela de regras diz "todo palpite exige a escolha de quem avança", mas o app **permite salvar sem escolher** o classificado. | **Decisão pendente:** obrigar a escolha no mata-mata ou ajustar o texto. |
-| DIV-04 | PAL-07 (ocultar palpites até o início) só existe na **UI**. A RLS `predictions_select_league_members` deixa membros lerem palpites alheios a qualquer momento pela API. | Quem souber usar a API pode ver palpites antes do jogo. Para proteger de verdade, a RLS precisa exigir `scheduled_at <= now()` para palpites de terceiros. |
-| DIV-05 | A `update-live-matches` continua atualizando o placar de partidas `finished` por até 6 h, mas o trigger só recalcula na transição para `finished` (PON-10). | Correções de placar feitas pela API depois do apito final **não** atualizam os pontos. |
 | DIV-06 | A view `league_leaderboard` conta "placar exato" comparando com `home_score`/`away_score` (que incluem a prorrogação), enquanto a pontuação usa o placar dos 90'. | Em mata-mata com prorrogação, o desempate pode divergir dos pontos. **Decisão pendente:** usar o placar dos 90' na view. |
 | DIV-07 | "Terceiro Lugar" é mata-mata, mas não casa com nenhuma regra de multiplicador (fica ×1.0). Não há decisão registrada. | **Decisão pendente:** confirmar ×1.0 ou definir outro multiplicador. |
 | DIV-08 | O ranking ao vivo (VIV-01/02) só considera status `live` e `halftime`. Em `extratime`, `et_halftime` e `penalties` a parcial **some** do ranking até a partida encerrar. | Ranking "pisca" na prorrogação. |
@@ -304,12 +301,24 @@ Itens em que o código atual **não** está alinhado com as regras acima, ou em 
 
 ---
 
+### Resolvidas
+
+Os IDs não são reaproveitados.
+
+| ID | Resolução |
+|---|---|
+| DIV-01 | Em 2026-10-07 o cálculo vigente (bônus de classificação só pelo seletor) virou a migration `20261007000000_scoring_trigger_consolidation.sql`. Os scripts soltos `realtime_fix.sql`, `qualifier_fix_v2.sql` e `qualifier_fix_v3.sql` foram removidos (continuam no histórico do git). |
+| DIV-02 | Em 2026-10-07 o `CHECK ('home','away')` foi removido e trocado pela validação de que `predicted_qualifier` é um dos times da partida. Valores legados `'home'`/`'away'`, se houver, foram convertidos para o UUID do time. |
+| DIV-04 | Em 2026-10-07 a RLS passou a esconder palpites de terceiros até `scheduled_at` (migration `20261007000001_hide_predictions_until_kickoff.sql`). |
+| DIV-05 | Em 2026-10-07 o trigger passou a recalcular partidas já encerradas quando placar, odds ou fase mudam (PON-09). Partidas encerradas antes disso **não** foram recalculadas automaticamente. |
+
 ## 13. Histórico de decisões
 
 Registre aqui toda mudança de regra (data, decisão, commit/PR). Mais recentes no topo.
 
 | Data | Decisão | Referência |
 |---|---|---|
+| 2026-10-07 | Pontos recalculados automaticamente quando dados de uma partida encerrada são corrigidos; recálculo manual por `recalculate_match_points`. Palpites de terceiros ocultos no banco até o início da partida. `predicted_qualifier` validado como UUID de um dos times. | migrations `20261007000000`, `20261007000001` |
 | 2026-09-29 | Semântica dos placares: `*_score_90` = tempo regulamentar (vem da API), `*_score_et` = acumulado com prorrogação, `*_score` = 90' + prorrogação (sem pênaltis), `penalty_winner` a partir da disputa de pênaltis. | `bf44c77` (PR #7) |
 | 2026-07-02 | **Bônus de classificação usa só o seletor** ("prioridade do seletor"); o placar palpitado é ignorado. Classificado real: pênaltis > prorrogação > placar final. | `f1b93a5` (PR #4), `realtime_fix.sql` |
 | 2026-06-30 | (Revogada em 02/07) Classificado deduzido do placar palpitado, seletor só para palpites de empate. | `9a9d18a` (PR #3), `qualifier_fix_v2.sql` |
