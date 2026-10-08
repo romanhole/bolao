@@ -27,6 +27,8 @@ Aplicativo de palpites esportivos Premium construído inteiramente com **Kotlin 
 
 ## Sistema de Pontuação (Zebra e Multiplicadores)
 
+> A fonte de verdade de todas as regras de negócio (inclusive o bônus de classificação do mata-mata) é o arquivo [`REGRAS_DE_NEGOCIO.md`](REGRAS_DE_NEGOCIO.md). Este resumo pode estar incompleto.
+
 Toda a lógica central de cálculo de pontuações está **protegida no servidor (PostgreSQL)** através de funções (PL/pgSQL) e Triggers, de forma que as pontuações são atualizadas de forma autônoma sem processamento crítico no app do cliente.
 
 ### 1. Pontuação Base
