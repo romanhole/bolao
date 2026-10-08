@@ -94,6 +94,7 @@ Valores válidos em `matches.status`: `scheduled`, `live`, `halftime`, `extratim
 | PAL-06 | O seletor grava o **UUID do time** (`teams.id`) em `predictions.predicted_qualifier` — não `'home'`/`'away'`. O banco rejeita qualquer valor que não seja um dos dois times da partida (trigger `validate_predicted_qualifier`). |
 | PAL-07 | **Visibilidade:** os palpites dos outros membros da liga ficam **ocultos até a partida começar**. Garantido no banco pela RLS `predictions_select_league_members`: palpites de terceiros só são legíveis quando `scheduled_at <= now()`, o mesmo instante em que o palpite trava (PAL-03). Na UI, o botão "Ver palpites da galera" só aparece quando a partida não está mais aberta a palpites. |
 | PAL-08 | Um usuário só vê palpites de pessoas com quem compartilha **ao menos uma liga** (RLS `predictions_select_league_members`). |
+| PAL-09 | **Times provisórios:** partidas de mata-mata podem nascer com times provisórios (ex.: "W95" = vencedor do jogo 95) que a sync troca depois pelos reais. Se o time escolhido no seletor **sai** da partida, a escolha passa automaticamente para o time que entrou **no mesmo lado** (mandante → mandante, visitante → visitante). Se o time escolhido continua na partida (ex.: mandante e visitante só trocaram de lugar), a escolha não muda. Se a partida já estiver encerrada, os pontos são recalculados. Implementado pelo trigger `trigger_remap_predicted_qualifier` (decidido em 08/10/2026). |
 
 ---
 
@@ -277,6 +278,7 @@ Ao mudar uma regra de pontuação, **todos** os itens da linha precisam mudar ju
 | Multiplicador e mata-mata por fase | Migrations `20260611000001_auto_stage_multiplier.sql` e `20260629000000_knockout_stage_points.sql`; nomes das fases em `supabase/functions/sync-world-cup-schedule/index.ts`; ordem das abas em `MatchListViewModel.kt`; badge em `MatchPredictionCard.kt`. |
 | Placar 90'/prorrogação/pênaltis | `supabase/functions/update-live-matches/index.ts` e `sync-world-cup-schedule/index.ts`. |
 | Trava de horário | RLS em `20260527000001_time_lock_rls.sql`; `Match.isPredictionAllowed`; trava de "live" em `update-live-matches`. |
+| Seletor acompanha o lado quando o time muda (PAL-09) | Trigger `trigger_remap_predicted_qualifier` (migration `20261008000000_remap_qualifier_on_team_change.sql`). |
 | Ocultar palpites até o início (PAL-07) | RLS em `20261007000001_hide_predictions_until_kickoff.sql`; botão "Ver palpites da galera" em `MatchPredictionCard.kt`. |
 | Odds e congelamento | `supabase/functions/update-upcoming-odds/index.ts`. |
 | Ranking | View `league_leaderboard`; ordenação em `LeagueDetailViewModel.kt`. |
@@ -298,7 +300,6 @@ Itens em que o código atual **não** está alinhado com as regras acima, ou em 
 | DIV-10 | O texto do onboarding diz que, na zebra, "a pontuação do jogo é multiplicada"; a fórmula da tela de regras omite o bônus de classificação; o potencial máximo (PON-11) não inclui os +2 de classificação. | Só texto/UX, mas confunde o usuário. |
 | DIV-11 | `removeMember` e `renewInviteCode` existem no ViewModel/repositório, mas não estão expostos na UI. `renewInviteCode` grava o código fixo `"NEWCODE"` e não existem políticas RLS de UPDATE/DELETE para ligas e membros. | Funcionalidade **não implementada**: não trate como regra vigente. Sair de liga, remover membro e renovar código ainda não existem. |
 | DIV-12 | O `README.md` não menciona o bônus de classificação nem o terceiro lugar, e descreve a faixa máxima de zebra como "acima de 9.00" (a regra é ≥ 9.00). | Documentação incompleta; este arquivo prevalece. |
-| DIV-13 | Quando uma partida de mata-mata é cadastrada com times provisórios (ex.: "W95" = vencedor do jogo 95) e a `sync-world-cup-schedule` depois troca pelos times reais, o `predicted_qualifier` de quem já tinha palpitado continua apontando para o time provisório e o bônus de classificação nunca é concedido. Em prod isso afetou 2 palpites de ARG x SWI (quartas; 1x1 nos 90', ARG avançou na prorrogação): ambos escolheram "W95". | **Decisão pendente:** (a) ao trocar os times de uma partida, remapear o seletor pelo lado (mandante/visitante) e (b) decidir se os 2 palpites de ARG x SWI devem ganhar os +2. Isso só é possível se "W95" era o lado mandante, ou seja, ARG. |
 
 ---
 
@@ -312,6 +313,7 @@ Os IDs não são reaproveitados.
 | DIV-02 | Em 2026-10-07 o `CHECK ('home','away')` foi removido e trocado pela validação de que `predicted_qualifier` é um dos times da partida. Valores legados `'home'`/`'away'`, se houver, foram convertidos para o UUID do time. |
 | DIV-04 | Em 2026-10-07 a RLS passou a esconder palpites de terceiros até `scheduled_at` (migration `20261007000001_hide_predictions_until_kickoff.sql`). |
 | DIV-05 | Em 2026-10-07 o trigger passou a recalcular partidas já encerradas quando placar, odds ou fase mudam (PON-09). Partidas encerradas antes disso **não** foram recalculadas automaticamente. |
+| DIV-13 | Em 2026-10-08: trigger `trigger_remap_predicted_qualifier` (PAL-09, migration `20261008000000`). Os 2 palpites de ARG x SWI (quartas, `api_fixture_id` 8386) que escolheram "W95" foram corrigidos à mão, por decisão do dono, para ARG (lado mandante, que avançou na prorrogação), e os dois ganharam os +2 de classificação. |
 
 ## 13. Histórico de decisões
 
@@ -319,6 +321,7 @@ Registre aqui toda mudança de regra (data, decisão, commit/PR). Mais recentes 
 
 | Data | Decisão | Referência |
 |---|---|---|
+| 2026-10-08 | O seletor "quem avança" acompanha o lado (mandante/visitante) quando um time provisório é trocado pelo real (PAL-09). Correção retroativa: +2 de classificação para os 2 palpites de ARG x SWI que escolheram "W95". Remoção da função órfã `calculate_earned_points` (lógica revogada). | migrations `20261008000000`, `20261008000001` |
 | 2026-10-07 | Pontos recalculados automaticamente quando dados de uma partida encerrada são corrigidos; recálculo manual por `recalculate_match_points`. Palpites de terceiros ocultos no banco até o início da partida. `predicted_qualifier` validado como UUID de um dos times. | migrations `20261007000000`, `20261007000001` |
 | 2026-09-29 | Semântica dos placares: `*_score_90` = tempo regulamentar (vem da API), `*_score_et` = acumulado com prorrogação, `*_score` = 90' + prorrogação (sem pênaltis), `penalty_winner` a partir da disputa de pênaltis. | `bf44c77` (PR #7) |
 | 2026-07-02 | **Bônus de classificação usa só o seletor** ("prioridade do seletor"); o placar palpitado é ignorado. Classificado real: pênaltis > prorrogação > placar final. | `f1b93a5` (PR #4), `realtime_fix.sql` |
